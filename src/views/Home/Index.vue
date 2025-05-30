@@ -148,68 +148,72 @@
 
     <!-- 右侧区域：占 1/3 宽度 -->
     <el-col :xl="8" :lg="8" :md="24" :sm="24" :xs="24">
-      <!-- 横幅模块 -->
-      <el-card shadow="never" class="mb-6px">
-        <el-skeleton :loading="loading" animated>
-          <div class="text-center py-20">
-            <img src="@/assets/imgs/banner.png" alt="" style="width: 100%; object-fit: cover;" />
-          </div>
-        </el-skeleton>
-      </el-card>
-
-      <!-- 今日日程模块 -->
-      <el-card shadow="never" class="mb-8px">
-        <template #header>
-          <div class="h-3 flex justify-between">
-            <span><Icon icon="ion:grid-outline" class="mr-8px" />今日日程 ></span>
-            <el-link type="primary" :underline="false">更多</el-link>
-          </div>
-        </template>
-        <el-skeleton :loading="loading" animated>
-          <div class="mb-8px">
-            <div class="flex items-center">
-              <div class="w-4px h-4px bg-blue-500 rounded-full mr-8px"></div>
-              <div class="text-14px">14:00 大会议室开产品评审会</div>
+      <div class="right-container">
+        <!-- 横幅模块 - 15%高度 -->
+        <el-card shadow="never" class="banner-module">
+          <el-skeleton :loading="loading" animated>
+            <div class="text-center py-20">
+              <img src="@/assets/imgs/banner.png" alt="" style="width: 100%; object-fit: cover;" />
             </div>
-          </div>
-          <div>
-            <div class="flex items-center">
-              <div class="w-4px h-4px bg-blue-500 rounded-full mr-8px"></div>
-              <div class="text-14px">16:30 快手大厦拜访客户</div>
-            </div>
-          </div>
-        </el-skeleton>
-      </el-card>
+          </el-skeleton>
+        </el-card>
 
-      <!-- 消息模块 (原通知公告) -->
-      <el-card shadow="never">
-        <template #header>
-          <div class="h-3 flex justify-between">
-            <span><Icon icon="ion:grid-outline" class="mr-8px" />消息 ></span>
-            <el-link type="primary" :underline="false">{{ t('action.more') }}</el-link>
-          </div>
-        </template>
-        <el-skeleton :loading="loading" animated>
-          <div v-for="(item, index) in notice" :key="`dynamics-${index}`">
-            <div class="flex items-center">
-              <el-avatar :src="avatar" :size="35" class="mr-16px" shape="square">
-                <img src="@/assets/imgs/avatar.gif" alt="" style="object-fit: cover;" />
-              </el-avatar>
-              <div>
-                <div class="text-14px">
-                  <Highlight :keys="item.keys.map((v) => t(v))">
-                    {{ item.type }} : {{ item.title }}
-                  </Highlight>
-                </div>
-                <div class="mt-16px text-12px text-gray-400">
-                  {{ formatTime(item.date, 'yyyy-MM-dd') }}
-                </div>
+        <!-- 今日日程模块 - 15%高度 -->
+        <el-card shadow="never" class="schedule-module">
+          <template #header>
+            <div class="h-3 flex justify-between">
+              <span><Icon icon="ion:grid-outline" class="mr-8px" />今日日程 ></span>
+              <el-link type="primary" :underline="false">更多</el-link>
+            </div>
+          </template>
+          <el-skeleton :loading="loading" animated>
+            <div class="mb-8px">
+              <div class="flex items-center">
+                <div class="w-4px h-4px bg-blue-500 rounded-full mr-8px"></div>
+                <div class="text-14px">14:00 大会议室开产品评审会</div>
               </div>
             </div>
-            <el-divider />
+            <div>
+              <div class="flex items-center">
+                <div class="w-4px h-4px bg-blue-500 rounded-full mr-8px"></div>
+                <div class="text-14px">16:30 快手大厦拜访客户</div>
+              </div>
+            </div>
+          </el-skeleton>
+        </el-card>
+
+        <!-- 消息模块 - 余下全部高度，带滚动条 -->
+        <el-card shadow="never" class="message-module">
+          <template #header>
+            <div class="h-3 flex justify-between">
+              <span><Icon icon="ion:grid-outline" class="mr-8px" />消息 ></span>
+              <el-link type="primary" :underline="false">{{ t('action.more') }}</el-link>
+            </div>
+          </template>
+          <div class="message-content">
+            <el-skeleton :loading="loading" animated>
+              <div v-for="(item, index) in notice" :key="`dynamics-${index}`">
+                <div class="flex items-center">
+                  <el-avatar :src="avatar" :size="35" class="mr-16px" shape="square">
+                    <img src="@/assets/imgs/avatar.gif" alt="" style="object-fit: cover;" />
+                  </el-avatar>
+                  <div>
+                    <div class="text-14px">
+                      <Highlight :keys="item.keys.map((v) => t(v))">
+                        {{ item.type }} : {{ item.title }}
+                      </Highlight>
+                    </div>
+                    <div class="mt-16px text-12px text-gray-400">
+                      {{ formatTime(item.date, 'yyyy-MM-dd') }}
+                    </div>
+                  </div>
+                </div>
+                <el-divider />
+              </div>
+            </el-skeleton>
           </div>
-        </el-skeleton>
-      </el-card>
+        </el-card>
+      </div>
     </el-col>
   </el-row>
 </template>
@@ -399,6 +403,55 @@ getAllApi()
 .el-avatar {
   :deep(img) {
     object-fit: cover;
+  }
+}
+
+.right-container {
+  height: calc(100vh - 200px); // 根据实际需要调整总高度
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.banner-module {
+  height: 19%;
+  min-height: 120px;
+}
+
+.schedule-module {
+  height: 20%;
+  min-height: 120px;
+}
+
+.message-module {
+  flex: 1; // 占据剩余空间
+  display: flex;
+  flex-direction: column;
+
+  .message-content {
+    flex: 1;
+    overflow-y: auto;
+    max-height: calc(100% - 60px); // 减去header高度
+    padding-right: 8px;
+
+    // 自定义滚动条样式
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+
+      &:hover {
+        background: #a8a8a8;
+      }
+    }
   }
 }
 </style>
