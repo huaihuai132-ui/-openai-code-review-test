@@ -1,93 +1,29 @@
-**严肃声明：现在、未来都不会有商业版本，所有代码全部开源!！**
-
-**「我喜欢写代码，乐此不疲」**  
-**「我喜欢做开源，以此为乐」**
-
-我 🐶 在上海艰苦奋斗，早中晚在 top3 大厂认真搬砖，夜里为开源做贡献。
-
-如果这个项目让你有所收获，记得 Star 关注哦，这对我是非常不错的鼓励与支持。
-
-## 🐶 新手必读
-
-* nodejs > 16.18.0 && pnpm > 8.6.0 (强制使用pnpm)
-* 演示地址【Vue3 + element-plus】：<http://dashboard-vue3.yudao.iocoder.cn>
-* 演示地址【Vue3 + vben5.0(ant-design-vue)】：<http://dashboard-vben.yudao.iocoder.cn>
-* 演示地址【Vue2 + element-ui】：<http://dashboard.yudao.iocoder.cn>
-* 启动文档：<https://doc.iocoder.cn/quick-start/>
-* 视频教程：<https://doc.iocoder.cn/video/>
-
+<p align="center">
+ <img src="https://img.shields.io/badge/Spring%20Boot-3.4.5-blue.svg" alt="Downloads">
+ <img src="https://img.shields.io/badge/Vue-3.2-blue.svg" alt="Downloads">
+ <img src="https://img.shields.io/github/license/YunaiV/ruoyi-vue-pro" alt="Downloads" />
+</p>
 ## 🐯 平台简介
 
-**芋道**，以开发者为中心，打造中国第一流的快速开发平台，全部开源，个人与企业可 100% 免费使用。
+**鹰潭工业控股集团OA系统**
 
-* 采用 [vue-element-plus-admin](https://gitee.com/kailong110120130/vue-element-plus-admin) 实现
-* 改换 saas，自动引入等功能
-* 使用 Element Plus 免费开源的中后台模版，具备如下特性：
+* Java 后端：JDK 17/21 + Spring Boot 3.2
+* 管理后台的电脑端：Vue3 
+* 管理后台的移动端：采用 `uni-app` 方案，一份代码多终端适配，同时支持 APP、小程序、H5！
+* 后端采用 Spring Boot 多模块架构、MySQL + MyBatis Plus、Redis + Redisson
+* 数据库使用 MySQL
+* 消息队列可使用 Event、Redis、RabbitMQ、Kafka、RocketMQ 等
+* 权限认证使用 Spring Security & Token & Redis，支持多终端、多种用户的认证系统，支持 SSO 单点登录
+* 支持加载动态权限菜单，按钮级别权限控制，Redis 缓存提升性能
+* 支持 SaaS 多租户，可自定义每个租户的权限，提供透明化的多租户底层封装
+* 工作流使用 Flowable，支持动态表单、在线设计流程、会签 / 或签、多种任务分配方式
+* 高效率开发，使用代码生成器可以一键生成 Java、Vue 前后端代码、SQL 脚本、接口文档，支持单表、树表、主子表
+* 实时通信，采用 Spring WebSocket 实现，内置 Token 身份校验，支持 WebSocket 集群
+* 集成微信小程序、微信公众号、企业微信、钉钉等三方登陆，集成支付宝、微信等支付与退款
+* 集成阿里云、腾讯云等短信渠道，集成 MinIO、阿里云、腾讯云、七牛云等云存储服务
+* 集成报表设计器、大屏设计器，通过拖拽即可生成酷炫的报表与大屏
 
-![首页](.image/demo/vue3-ep.png)
-
-* **最新技术栈**：使用 Vue3、Vite4 等前端前沿技术开发
-* **TypeScript**: 应用程序级 JavaScript 的语言
-* **主题**: 可配置的主题
-* **国际化**：内置完善的国际化方案
-* **权限**：内置完善的动态路由权限生成方案
-* **组件**：二次封装了多个常用的组件
-* **示例**：内置丰富的示例
-
-## 技术栈
-
-| 框架                                                                   | 说明               | 版本     |
-|----------------------------------------------------------------------|------------------|--------|
-| [Vue](https://staging-cn.vuejs.org/)                                 | Vue 框架           | 3.3.8  |
-| [Vite](https://cn.vitejs.dev//)                                      | 开发与构建工具          | 4.5.0  |
-| [Element Plus](https://element-plus.org/zh-CN/)                      | Element Plus     | 2.4.2  |
-| [TypeScript](https://www.typescriptlang.org/docs/)                   | JavaScript 的超集   | 5.2.2  |
-| [pinia](https://pinia.vuejs.org/)                                    | Vue 存储库 替代 vuex5 | 2.1.7  |
-| [vueuse](https://vueuse.org/)                                        | 常用工具集            | 10.6.1 |
-| [vue-i18n](https://kazupon.github.io/vue-i18n/zh/introduction.html/) | 国际化              | 9.6.5  |
-| [vue-router](https://router.vuejs.org/)                              | Vue 路由           | 4.2.5  |
-| [unocss](https://uno.antfu.me/)                                      | 原子 css           | 0.57.4 |
-| [iconify](https://icon-sets.iconify.design/)                         | 在线图标库            | 3.1.1  |
-| [wangeditor](https://www.wangeditor.com/)                            | 富文本编辑器           | 5.1.23 |
-
-## 开发工具
-
-推荐 VS Code 开发，配合插件如下：
-
-| 插件名                           | 功能                  |
-|-------------------------------|---------------------|
-| Vue - Official                | Vue 与 TypeScript 支持 |
-| unocss                        | unocss for vscode   |
-| Iconify IntelliSense          | Iconify 预览和搜索       |
-| i18n Ally                     | 国际化智能提示             |
-| Stylelint                     | Css    格式化          |
-| Prettier                      | 代码格式化               |
-| ESLint                        | 脚本代码检查              |
-| DotENV                        | env 文件高亮            |
-
-## 🔥 后端架构
-
-支持 Spring Boot、Spring Cloud 两种架构：
-
-① Spring Boot 单体架构：<https://doc.iocoder.cn>
-
-![架构图](/.image/common/ruoyi-vue-pro-architecture.png)
-
-② Spring Cloud 微服务架构：<https://cloud.iocoder.cn>
-
-![架构图](/.image/common/yudao-cloud-architecture.png)
-
-## 内置功能
-
-系统内置多种多种业务功能，可以用于快速你的业务系统：
-
-系统内置多种多种业务功能，可以用于快速你的业务系统：
-
-![功能分层](/.image/common/ruoyi-vue-pro-biz.png)
-
-* 通用模块（必选）：系统功能、基础设施
-* 通用模块（可选）：工作流程、支付系统、数据报表、会员中心
-* 业务系统（按需）：ERP 系统、CRM 系统、商城系统、微信公众号、AI 大模型
+## 🐼 内置功能
 
 ### 系统功能
 
@@ -113,17 +49,13 @@
 | 🚀  | 应用管理  | 管理 SSO 单点登录的应用，支持多种 OAuth2 授权方式 |
 | 🚀  | 地区管理  | 展示省份、城市、区镇等城市信息，支持 IP 对应城市      |
 
-![功能图](/.image/common/system-feature.png)
-
 ### 工作流程
-
-![功能图](/.image/common/bpm-feature.png)
 
 基于 Flowable 构建，可支持信创（国产）数据库，满足中国特色流程操作：
 
-| BPMN 设计器                    | 钉钉/飞书设计器                      |
-|-----------------------------|-------------------------------|
-| ![](.image/工作流设计器-bpmn.jpg) | ![](.image/工作流设计器-simple.jpg) |
+| BPMN 设计器                     | 钉钉/飞书设计器                       |
+|------------------------------|--------------------------------|
+| ![](/.image/工作流设计器-bpmn.jpg) | ![](/.image/工作流设计器-simple.jpg) |
 
 > 历经头部企业生产验证，工作流引擎须标配仿钉钉/飞书 + BPMN 双设计器！！！
 >
@@ -156,16 +88,6 @@
 | 延迟节点       | 执行到该节点，审批等待一段时间再执行，支持固定时长、固定日期等                                                     | ✅    |
 | 拓展设置       | 流程前置/后置通知，节点（任务）前置、后置通知，流程报表，自动审批去重，自定流程编号、标题、摘要，流程报表等                              | ✅    |
 
-### 支付系统
-
-|     | 功能   | 描述                        |
-|-----|------|---------------------------|
-| 🚀  | 应用信息 | 配置商户的应用信息，对接支付宝、微信等多个支付渠道 |
-| 🚀  | 支付订单 | 查看用户发起的支付宝、微信等的【支付】订单     |
-| 🚀  | 退款订单 | 查看用户发起的支付宝、微信等的【退款】订单     |
-| 🚀  | 回调通知 | 查看支付回调业务的【支付】【退款】的通知结果    |
-| 🚀  | 接入示例 | 提供接入支付系统的【支付】【退款】的功能实战    |
-
 ### 基础设施
 
 |     | 功能        | 描述                                           |
@@ -189,8 +111,6 @@
 | 🚀  | 日志服务      | 轻量级日志中心，查看远程服务器的日志                           |
 | 🚀  | 单元测试      | 基于 JUnit + Mockito 实现单元测试，保证功能的正确性、代码的质量等    |
 
-![功能图](/.image/common/infra-feature.png)
-
 ### 数据报表
 
 |     | 功能    | 描述                 |
@@ -213,82 +133,62 @@
 | 🚀  | 图文草稿箱  | 新增常用的图文素材到草稿箱，可发布到公众号         |
 | 🚀  | 图文发表记录 | 查看已发布成功的图文素材，支持删除操作           |
 
-### 商城系统
+### 会员中心
 
-演示地址：<https://doc.iocoder.cn/mall-preview/>
-
-![功能图](/.image/common/mall-feature.png)
-
-![功能图](/.image/common/mall-preview.png)
+|     | 功能   | 描述                               |
+|-----|------|----------------------------------|
+| 🚀  | 会员管理 | 会员是 C 端的消费者，该功能用于会员的搜索与管理        |
+| 🚀  | 会员标签 | 对会员的标签进行创建、查询、修改、删除等操作           |
+| 🚀  | 会员等级 | 对会员的等级、成长值进行管理，可用于订单折扣等会员权益      |
+| 🚀  | 会员分组 | 对会员进行分组，用于用户画像、内容推送等运营手段         |
+| 🚀  | 积分签到 | 回馈给签到、消费等行为的积分，会员可订单抵现、积分兑换等途径消耗 |
 
 ### ERP 系统
 
-演示地址：<https://doc.iocoder.cn/erp-preview/>
-
-![功能图](/.image/common/erp-feature.png)
-
 ### CRM 系统
-
-演示地址：<https://doc.iocoder.cn/crm-preview/>
-
-![功能图](/.image/common/crm-feature.png)
 
 ### AI 大模型
 
-演示地址：<https://doc.iocoder.cn/ai-preview/>
+## 🐨 技术栈
 
-![功能图](/.image/common/ai-feature.png)
+### 模块
 
-![功能图](/.image/common/ai-preview.gif)
+| 项目                    | 说明                 |
+|-----------------------|--------------------|
+| `ytgkoa-dependencies`  | Maven 依赖版本管理       |
+| `ytgkoa-framework`     | Java 框架拓展          |
+| `ytgkoa-server`        | 管理后台 + 用户 APP 的服务端 |
+| `ytgkoa-module-system` | 系统功能的 Module 模块    |
+| `ytgkoa-module-member` | 会员中心的 Module 模块    |
+| `ytgkoa-module-infra`  | 基础设施的 Module 模块    |
+| `ytgkoa-module-bpm`    | 工作流程的 Module 模块    |
+| `ytgkoa-module-erp`    | ERP 系统的 Module 模块  |
+| `ytgkoa-module-crm`    | CRM 系统的 Module 模块  |
+| `ytgkoa-module-ai`     | AI 大模型的 Module 模块  |
+| `ytgkoa-module-mp`     | 微信公众号的 Module 模块   |
+| `ytgkoa-module-report` | 大屏报表 Module 模块     |
 
-## 🐷 演示图
+### 框架
 
-### 系统功能
-
-| 模块       | biu                         | biu                       | biu                      |
-|----------|-----------------------------|---------------------------|--------------------------|
-| 登录 & 首页  | ![登录](/.image/登录.jpg)       | ![首页](/.image/首页.jpg)     | ![个人中心](/.image/个人中心.jpg) |
-| 用户 & 应用  | ![用户管理](/.image/用户管理.jpg)   | ![令牌管理](/.image/令牌管理.jpg) | ![应用管理](/.image/应用管理.jpg) |
-| 租户 & 套餐  | ![租户管理](/.image/租户管理.jpg)   | ![租户套餐](/.image/租户套餐.png) | -                        |
-| 部门 & 岗位  | ![部门管理](/.image/部门管理.jpg)   | ![岗位管理](/.image/岗位管理.jpg) | -                        |
-| 菜单 & 角色  | ![菜单管理](/.image/菜单管理.jpg)   | ![角色管理](/.image/角色管理.jpg) | -                        |
-| 审计日志     | ![操作日志](/.image/操作日志.jpg)   | ![登录日志](/.image/登录日志.jpg) | -                        |
-| 短信       | ![短信渠道](/.image/短信渠道.jpg)   | ![短信模板](/.image/短信模板.jpg) | ![短信日志](/.image/短信日志.jpg) |
-| 字典 & 敏感词 | ![字典类型](/.image/字典类型.jpg)   | ![字典数据](/.image/字典数据.jpg) | ![敏感词](/.image/敏感词.jpg)  |
-| 错误码 & 通知 | ![错误码管理](/.image/错误码管理.jpg) | ![通知公告](/.image/通知公告.jpg) | -                        |
-
-### 工作流程
-
-| 模块      | biu                             | biu                             | biu                             |
-|---------|---------------------------------|---------------------------------|---------------------------------|
-| 流程模型    | ![流程模型-列表](/.image/流程模型-列表.jpg) | ![流程模型-设计](/.image/流程模型-设计.jpg) | ![流程模型-定义](/.image/流程模型-定义.jpg) |
-| 表单 & 分组 | ![流程表单](/.image/流程表单.jpg)       | ![用户分组](/.image/用户分组.jpg)       | -                               |
-| 我的流程    | ![我的流程-列表](/.image/我的流程-列表.jpg) | ![我的流程-发起](/.image/我的流程-发起.jpg) | ![我的流程-详情](/.image/我的流程-详情.jpg) |
-| 待办 & 已办 | ![任务列表-审批](/.image/任务列表-审批.jpg) | ![任务列表-待办](/.image/任务列表-待办.jpg) | ![任务列表-已办](/.image/任务列表-已办.jpg) |
-| OA 请假   | ![OA请假-列表](/.image/OA请假-列表.jpg) | ![OA请假-发起](/.image/OA请假-发起.jpg) | ![OA请假-详情](/.image/OA请假-详情.jpg) |
-
-### 基础设施
-
-| 模块            | biu                           | biu                         | biu                       |
-|---------------|-------------------------------|-----------------------------|---------------------------|
-| 代码生成          | ![代码生成](/.image/代码生成.jpg)     | ![生成效果](/.image/生成效果.jpg)   | -                         |
-| 文档            | ![系统接口](/.image/系统接口.jpg)     | ![数据库文档](/.image/数据库文档.jpg) | -                         |
-| 文件 & 配置       | ![文件配置](/.image/文件配置.jpg)     | ![文件管理](/.image/文件管理2.jpg)  | ![配置管理](/.image/配置管理.jpg) |
-| 定时任务          | ![定时任务](/.image/定时任务.jpg)     | ![任务日志](/.image/任务日志.jpg)   | -                         |
-| API 日志        | ![访问日志](/.image/访问日志.jpg)     | ![错误日志](/.image/错误日志.jpg)   | -                         |
-| MySQL & Redis | ![MySQL](/.image/MySQL.jpg)   | ![Redis](/.image/Redis.jpg) | -                         |
-| 监控平台          | ![Java监控](/.image/Java监控.jpg) | ![链路追踪](/.image/链路追踪.jpg)   | ![日志中心](/.image/日志中心.jpg) |
-
-### 支付系统
-
-| 模块      | biu                       | biu                             | biu                             |
-|---------|---------------------------|---------------------------------|---------------------------------|
-| 商家 & 应用 | ![商户信息](/.image/商户信息.jpg) | ![应用信息-列表](/.image/应用信息-列表.jpg) | ![应用信息-编辑](/.image/应用信息-编辑.jpg) |
-| 支付 & 退款 | ![支付订单](/.image/支付订单.jpg) | ![退款订单](/.image/退款订单.jpg)       | ---                             |
-
-### 数据报表
-
-| 模块    | biu                             | biu                             | biu                                   |
-|-------|---------------------------------|---------------------------------|---------------------------------------|
-| 报表设计器 | ![数据报表](/.image/报表设计器-数据报表.jpg) | ![图形报表](/.image/报表设计器-图形报表.jpg) | ![报表设计器-打印设计](/.image/报表设计器-打印设计.jpg) |
-| 大屏设计器 | ![大屏列表](/.image/大屏设计器-列表.jpg)   | ![大屏预览](/.image/大屏设计器-预览.jpg)   | ![大屏编辑](/.image/大屏设计器-编辑.jpg)         |
+| 框架                                                                                          | 说明               | 版本             | 学习指南                                                           |
+|---------------------------------------------------------------------------------------------|------------------|----------------|----------------------------------------------------------------|
+| [Spring Boot](https://spring.io/projects/spring-boot)                                       | 应用开发框架           | 3.4.5          | [文档](https://github.com/YunaiV/SpringBoot-Labs)                |
+| [MySQL](https://www.mysql.com/cn/)                                                          | 数据库服务器           | 5.7 / 8.0+     |                                                                |
+| [Druid](https://github.com/alibaba/druid)                                                   | JDBC 连接池、监控组件    | 1.2.23         | [文档](http://www.iocoder.cn/Spring-Boot/datasource-pool/?ytgkoa) |
+| [MyBatis Plus](https://mp.baomidou.com/)                                                    | MyBatis 增强工具包    | 3.5.7          | [文档](http://www.iocoder.cn/Spring-Boot/MyBatis/?ytgkoa)         |
+| [Dynamic Datasource](https://dynamic-datasource.com/)                                       | 动态数据源            | 4.3.1          | [文档](http://www.iocoder.cn/Spring-Boot/datasource-pool/?ytgkoa) |
+| [Redis](https://redis.io/)                                                                  | key-value 数据库    | 5.0 / 6.0 /7.0 |                                                                |
+| [Redisson](https://github.com/redisson/redisson)                                            | Redis 客户端        | 3.32.0         | [文档](http://www.iocoder.cn/Spring-Boot/Redis/?ytgkoa)           |
+| [Spring MVC](https://github.com/spring-projects/spring-framework/tree/master/spring-webmvc) | MVC 框架           | 6.1.10         | [文档](http://www.iocoder.cn/SpringMVC/MVC/?ytgkoa)               |
+| [Spring Security](https://github.com/spring-projects/spring-security)                       | Spring 安全框架      | 6.3.1          | [文档](http://www.iocoder.cn/Spring-Boot/Spring-Security/?ytgkoa) |
+| [Hibernate Validator](https://github.com/hibernate/hibernate-validator)                     | 参数校验组件           | 8.0.1          | [文档](http://www.iocoder.cn/Spring-Boot/Validation/?ytgkoa)      |
+| [Flowable](https://github.com/flowable/flowable-engine)                                     | 工作流引擎            | 7.0.0          | [文档](https://doc.iocoder.cn/bpm/)                              |
+| [Quartz](https://github.com/quartz-scheduler)                                               | 任务调度组件           | 2.3.2          | [文档](http://www.iocoder.cn/Spring-Boot/Job/?ytgkoa)             |
+| [Springdoc](https://springdoc.org/)                                                         | Swagger 文档       | 2.3.0          | [文档](http://www.iocoder.cn/Spring-Boot/Swagger/?ytgkoa)         |
+| [SkyWalking](https://skywalking.apache.org/)                                                | 分布式应用追踪系统        | 9.0.0          | [文档](http://www.iocoder.cn/Spring-Boot/SkyWalking/?ytgkoa)      |
+| [Spring Boot Admin](https://github.com/codecentric/spring-boot-admin)                       | Spring Boot 监控平台 | 3.3.2          | [文档](http://www.iocoder.cn/Spring-Boot/Admin/?ytgkoa)           |
+| [Jackson](https://github.com/FasterXML/jackson)                                             | JSON 工具库         | 2.17.1         |                                                                |
+| [MapStruct](https://mapstruct.org/)                                                         | Java Bean 转换     | 1.6.3          | [文档](http://www.iocoder.cn/Spring-Boot/MapStruct/?ytgkoa)       |
+| [Lombok](https://projectlombok.org/)                                                        | 消除冗长的 Java 代码    | 1.18.34        | [文档](http://www.iocoder.cn/Spring-Boot/Lombok/?ytgkoa)          |
+| [JUnit](https://junit.org/junit5/)                                                          | Java 单元测试框架      | 5.10.1         | -                                                              |
+| [Mockito](https://github.com/mockito/mockito)                                               | Java Mock 框架     | 5.7.0          | -                                                              |
