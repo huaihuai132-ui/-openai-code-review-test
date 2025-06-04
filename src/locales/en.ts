@@ -156,6 +156,11 @@ export default {
     login: 'Login',
     home: 'Home',
     analysis: 'Analysis',
+    calendar: 'Calendar',
+    approval: 'Approval',
+    meet: 'Meet',
+    assignment: 'Assignment',
+    documents: 'Documents',
     workplace: 'Workplace'
   },
   analysis: {

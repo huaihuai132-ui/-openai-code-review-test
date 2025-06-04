@@ -23,14 +23,19 @@ const { getPrefixCls } = useDesign()
 
 const prefixCls = getPrefixCls('user-info')
 
-const avatar = computed(() => userStore.user.avatar || avatarImg)
-const userName = computed(() => userStore.user.nickname ?? 'Admin')
+const avatar = computed(() =>
+  userStore.user.avatar === '' || !userStore.user.avatar
+    ? avatarImg
+    : userStore.user.avatar
+)
+const userName = computed(() => userStore.user.nickname ?? '张三')
 
 // 锁定屏幕
 const lockStore = useLockStore()
 const getIsLock = computed(() => lockStore.getLockInfo?.isLock ?? false)
 const dialogVisible = ref<boolean>(false)
 const lockScreen = () => {
+  console.log(userStore.user.avatar);
   dialogVisible.value = true
 }
 
@@ -49,15 +54,12 @@ const loginOut = async () => {
 const toProfile = async () => {
   push('/user/profile')
 }
-const toDocument = () => {
-  window.open('https://doc.iocoder.cn/')
-}
 </script>
 
 <template>
   <ElDropdown class="custom-hover" :class="prefixCls" trigger="click">
     <div class="flex items-center">
-<!--      <ElAvatar :src="avatar" alt="" class="w-[calc(var(&#45;&#45;logo-height)-25px)] rounded-[50%]" />-->
+      <ElAvatar :src="avatar" alt="" class="w-[calc(var(--logo-height)-25px)] rounded-[50%]" />
       <span class="pl-[5px] text-14px text-[var(--top-header-text-color)] <lg:hidden">
         {{ userName }}
       </span>
@@ -68,10 +70,6 @@ const toDocument = () => {
           <Icon icon="ep:tools" />
           <div @click="toProfile">{{ t('common.profile') }}</div>
         </ElDropdownItem>
-<!--        <ElDropdownItem>-->
-<!--          <Icon icon="ep:menu" />-->
-<!--          <div @click="toDocument">{{ t('common.document') }}</div>-->
-<!--        </ElDropdownItem>-->
         <ElDropdownItem divided>
           <Icon icon="ep:lock" />
           <div @click="lockScreen">{{ t('lock.lockScreen') }}</div>

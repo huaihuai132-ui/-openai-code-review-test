@@ -158,6 +158,11 @@ export default {
     socialLogin: '社交登录',
     home: '首页',
     analysis: '分析页',
+    calendar: '日历',
+    approval: '审批',
+    meet: '会议',
+    assignment: '任务',
+    documents: '文档',
     workplace: '工作台'
   },
   analysis: {

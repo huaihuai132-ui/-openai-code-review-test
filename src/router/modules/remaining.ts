@@ -71,6 +71,101 @@ const remainingRouter: AppRouteRecordRaw[] = [
     ]
   },
   {
+    path: '/',
+    component: Layout,
+    name: 'Calendar',
+    meta: {},
+    children: [
+      {
+        path: 'calendar',
+        component: () => import('@/views/Calendar/Index.vue'),
+        name: 'Calendar',
+        meta: {
+          title: t('router.calendar'),
+          icon: 'ep:calendar',
+          noCache: false,
+          affix: true
+        }
+      }
+    ]
+  },
+  {
+    path: '/',
+    component: Layout,
+    name: 'Approval',
+    meta: {},
+    children: [
+      {
+        path: 'approval',
+        component: () => import('@/views/Approval/Index.vue'),
+        name: 'Approval',
+        meta: {
+          title: t('router.approval'),
+          icon: 'ep:stamp',
+          noCache: false,
+          affix: true
+        }
+      }
+    ]
+  },
+  {
+    path: '/',
+    component: Layout,
+    name: 'Assignment',
+    meta: {},
+    children: [
+      {
+        path: 'assignment',
+        component: () => import('@/views/Assignment/Index.vue'),
+        name: 'Assignment',
+        meta: {
+          title: t('router.assignment'),
+          icon: 'ep:memo',
+          noCache: false,
+          affix: true
+        }
+      }
+    ]
+  },
+  {
+    path: '/',
+    component: Layout,
+    name: 'Meet',
+    meta: {},
+    children: [
+      {
+        path: 'meet',
+        component: () => import('@/views/Meet/Index.vue'),
+        name: 'Meet',
+        meta: {
+          title: t('router.meet'),
+          icon: 'ep:data-analysis',
+          noCache: false,
+          affix: true
+        }
+      }
+    ]
+  },
+  {
+    path: '/',
+    component: Layout,
+    name: 'Documents',
+    meta: {},
+    children: [
+      {
+        path: 'documents',
+        component: () => import('@/views/Documents/Index.vue'),
+        name: 'Documents',
+        meta: {
+          title: t('router.documents'),
+          icon: 'ep:folder-opened',
+          noCache: false,
+          affix: true
+        }
+      }
+    ]
+  },
+  {
     path: '/user',
     component: Layout,
     name: 'UserInfo',
@@ -342,24 +437,6 @@ const remainingRouter: AppRouteRecordRaw[] = [
           title: '修改流程',
           activeMenu: '/bpm/manager/model'
         }
-      }
-    ]
-  },
-  {
-    path: '/member',
-    component: Layout,
-    name: 'MemberCenter',
-    meta: { hidden: true },
-    children: [
-      {
-        path: 'user/detail/:id',
-        name: 'MemberUserDetail',
-        meta: {
-          title: '会员详情',
-          noCache: true,
-          hidden: true
-        },
-        component: () => import('@/views/member/user/detail/index.vue')
       }
     ]
   },
