@@ -28,7 +28,7 @@ const getUnreadCount = async () => {
 // 跳转我的站内信
 const goMyList = () => {
   push({
-    name: 'MyNotifyMessage'
+    name: 'Message'
   })
 }
 

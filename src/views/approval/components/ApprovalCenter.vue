@@ -2,12 +2,7 @@
   <div class="approval-center">
     <div class="sidebar">
       <div class="search-container">
-        <el-input
-          v-model="searchText"
-          placeholder="模糊搜索单据"
-          prefix-icon="Search"
-          class="w-100"
-        />
+        <el-input v-model="searchText" placeholder="模糊搜索单据" prefix-icon="Search" class="w-100" />
       </div>
 
       <div class="category-section">
@@ -17,33 +12,33 @@
           <i class="el-icon-arrow-down"></i>
         </div>
 
-        <div class="category-item active">
+        <div class="category-item active" @click="selectCategory('all')">
           <span>全部</span>
           <span v-if="activeCategory === 'all'" class="badge">13</span>
         </div>
 
-        <div class="category-item">
+        <div class="category-item" @click="selectCategory('baoxiao')">
           <span>报销</span>
         </div>
 
-        <div class="category-item">
+        <div class="category-item" @click="selectCategory('project')">
           <span>项目</span>
           <span class="badge">1</span>
         </div>
 
-        <div class="category-item">
+        <div class="category-item" @click="selectCategory('workhour')">
           <span>工时</span>
         </div>
 
-        <div class="category-item">
+        <div class="category-item" @click="selectCategory('duizhang')">
           <span>对账</span>
         </div>
 
-        <div class="category-item">
+        <div class="category-item" @click="selectCategory('invoice')">
           <span>发票</span>
         </div>
 
-        <div class="category-item">
+        <div class="category-item" @click="selectCategory('guozi')">
           <span>国资</span>
         </div>
       </div>
@@ -65,13 +60,13 @@
       </div>
     </div>
 
-    <div class="main-content">
+    <div class="main-content" :class="{ 'has-active-card': activeCard !== null }">
       <div class="filter-bar">
-        <div class="filter-item">
+        <div class="filter-item" @click="filterClick('time')">
           <span>所有时间</span>
           <i class="el-icon-arrow-down"></i>
         </div>
-        <div class="filter-item">
+        <div class="filter-item" @click="filterClick('arrive')">
           <span>到达排</span>
           <i class="el-icon-arrow-down"></i>
         </div>
@@ -197,13 +192,15 @@
       </div>
     </div>
 
+    <div class="overlay" v-if="activeCard !== null" @click="activeCard = null"></div>
+
     <div class="detail-panel" v-if="activeCard !== null">
       <div class="detail-header">
-        <span class="title">市内交通费</span>
+        <span class="title">{{ ['市内交通费', '差旅报销单', '借款单', '支出单'][activeCard] }}</span>
         <span class="status">审批中</span>
         <div class="actions">
           <span>编号：20220819039342</span>
-          <i class="el-icon-more"></i>
+          <i class="el-icon-close" @click="activeCard = null"></i>
         </div>
       </div>
 
@@ -291,7 +288,7 @@
           <el-button type="danger" @click="reject">驳回</el-button>
 
           <div class="more-actions">
-            <el-button icon="el-icon-more-outline"/>
+            <el-button icon="el-icon-more-outline" />
             <div class="action-text">备注</div>
             <div class="action-text">修改申请类型</div>
           </div>
@@ -306,13 +303,23 @@ import { ref } from 'vue';
 
 const searchText = ref('');
 const activeCategory = ref('all');
-const activeCard = ref(null);
+const activeCard = ref<number | null>(null);
 const employeeId = ref('');
 const ticketOption = ref('1');
 
-const selectCard = (index: number) => {
-  activeCard.value = index;
-};
+function selectCard(idx: number) {
+  activeCard.value = idx;
+  console.log('点击了卡片', idx);
+}
+
+function selectCategory(cat: string) {
+  activeCategory.value = cat;
+  console.log('点击了分类', cat);
+}
+
+function filterClick(type: string) {
+  console.log('点击了筛选', type);
+}
 
 const approve = () => {
   console.log('Approve clicked');
@@ -328,6 +335,7 @@ const reject = () => {
   display: flex;
   height: 100%;
   overflow: hidden;
+  position: relative;
 }
 
 .sidebar {
@@ -385,6 +393,11 @@ const reject = () => {
   overflow-y: auto;
 }
 
+.main-content.has-active-card {
+  filter: blur(2px);
+  pointer-events: none;
+}
+
 .filter-bar {
   display: flex;
   gap: 20px;
@@ -410,15 +423,18 @@ const reject = () => {
 }
 
 .card-item {
-  background-color: #fff;
-  border-radius: 5px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px 0 rgba(64, 158, 255, 0.08);
+  margin-bottom: 20px;
   padding: 20px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: box-shadow 0.3s, transform 0.3s;
 }
 
 .card-item:hover {
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px 0 rgba(64, 158, 255, 0.18);
+  transform: translateY(-2px) scale(1.03);
 }
 
 .card-header {
@@ -467,6 +483,23 @@ const reject = () => {
   border-left: 1px solid #ebeef5;
   padding: 20px;
   overflow-y: auto;
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }
 
 .detail-header {
@@ -492,6 +525,18 @@ const reject = () => {
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+.actions i.el-icon-close {
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.actions i.el-icon-close:hover {
+  background-color: #f0f0f0;
+  color: #409EFF;
 }
 
 .info-section {
@@ -570,5 +615,26 @@ const reject = () => {
 .action-text {
   color: #606266;
   cursor: pointer;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 5;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 </style>

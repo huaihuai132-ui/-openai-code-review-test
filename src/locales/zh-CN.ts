@@ -163,6 +163,7 @@ export default {
     meet: '会议',
     assignment: '任务',
     documents: '文档',
+    message: '消息',
     workplace: '工作台'
   },
   analysis: {

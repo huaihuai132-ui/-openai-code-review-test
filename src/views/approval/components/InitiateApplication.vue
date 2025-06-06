@@ -1,12 +1,7 @@
 <template>
   <div class="initiate-application">
     <div class="search-container">
-      <el-input
-        v-model="searchText"
-        placeholder="输入申请名称查询"
-        prefix-icon="Search"
-        class="w-50"
-      />
+      <el-input v-model="searchText" placeholder="输入申请名称查询" prefix-icon="Search" class="w-50" />
     </div>
 
     <div class="category-container">
@@ -121,6 +116,9 @@
 import { ref } from 'vue';
 
 const searchText = ref('');
+function navigateTo(type: string) {
+  console.log('点击了申请类型：', type);
+}
 </script>
 
 <style scoped lang="scss">
@@ -174,10 +172,13 @@ const searchText = ref('');
   padding: 15px;
   cursor: pointer;
   transition: all 0.3s;
+  background: #fff;
 }
 
 .card-item:hover {
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px 0 rgba(64, 158, 255, 0.12);
+  border-color: #409EFF;
+  transform: translateY(-2px) scale(1.03);
 }
 
 .card-icon {

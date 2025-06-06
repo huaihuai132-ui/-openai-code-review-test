@@ -161,6 +161,7 @@ export default {
     meet: 'Meet',
     assignment: 'Assignment',
     documents: 'Documents',
+    message: 'Message',
     workplace: 'Workplace'
   },
   analysis: {
