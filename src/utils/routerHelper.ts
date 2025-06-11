@@ -3,6 +3,7 @@ import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import { isUrl } from '@/utils/is'
 import { cloneDeep, omit } from 'lodash-es'
 import qs from 'qs'
+import { h, defineAsyncComponent } from 'vue'
 
 const modules = import.meta.glob('../views/**/*.{vue,tsx}')
 /**
@@ -10,13 +11,55 @@ const modules = import.meta.glob('../views/**/*.{vue,tsx}')
  * @param componentPath 例:/bpm/oa/leave/detail
  */
 export const registerComponent = (componentPath: string) => {
+  if (!componentPath) {
+    console.warn('注册组件失败: 组件路径为空')
+    return defineAsyncComponent({
+      loader: () => Promise.reject('组件路径为空'),
+      loadingComponent: () => h('div', { class: 'p-20px text-center' }, '加载中...'),
+      errorComponent: () => h('div', { class: 'p-20px text-center text-red-500' }, '组件路径为空'),
+      delay: 200,
+      timeout: 3000
+    })
+  }
+
+  // 标准化路径（移除开头的斜杠）
+  const normalizedPath = componentPath.startsWith('/') ? componentPath.substring(1) : componentPath
+
+  // 查找匹配的组件
   for (const item in modules) {
-    if (item.includes(componentPath)) {
+    if (item.includes(normalizedPath)) {
       // 使用异步组件的方式来动态加载组件
-      // @ts-ignore
-      return defineAsyncComponent(modules[item])
+      return defineAsyncComponent({
+        loader: modules[item] as any,
+        loadingComponent: () => h('div', { class: 'p-20px text-center' }, '加载中...'),
+        errorComponent: () => h('div', { class: 'p-20px text-center text-red-500' }, `加载组件失败: ${normalizedPath}`),
+        delay: 200,
+        timeout: 10000,
+        onError(error, retry, fail, attempts) {
+          console.error(`组件 "${normalizedPath}" 加载失败 (尝试 ${attempts}/3):`, error)
+          if (attempts <= 3) {
+            retry()
+          } else {
+            fail()
+          }
+        }
+      })
     }
   }
+
+  // 未找到组件时返回占位组件
+  console.warn(`注册组件失败: 未找到组件路径 "${normalizedPath}"`)
+  return defineAsyncComponent({
+    loader: () => Promise.reject(`未找到组件: ${normalizedPath}`),
+    loadingComponent: () => h('div', { class: 'p-20px text-center' }, '加载中...'),
+    errorComponent: () => h('div', { class: 'p-20px text-center' }, [
+      h('div', { class: 'text-18px font-bold mb-10px text-red-500' }, '组件未找到'),
+      h('div', { class: 'text-14px text-gray-500' }, `路径: ${normalizedPath}`),
+      h('div', { class: 'mt-10px text-14px' }, '请检查组件路径是否正确')
+    ]),
+    delay: 200,
+    timeout: 3000
+  })
 }
 /* Layout */
 export const Layout = () => import('@/layout/Layout.vue')

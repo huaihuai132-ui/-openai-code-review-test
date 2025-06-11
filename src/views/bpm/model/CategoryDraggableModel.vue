@@ -3,37 +3,23 @@
     <!-- 头部：分类名 -->
     <div class="flex items-center">
       <el-tooltip content="拖动排序" v-if="isCategorySorting">
-        <Icon
-          :size="22"
-          icon="ic:round-drag-indicator"
-          class="ml-10px category-drag-icon cursor-move text-#8a909c"
-        />
+        <Icon :size="22" icon="ic:round-drag-indicator" class="ml-10px category-drag-icon cursor-move text-#8a909c" />
       </el-tooltip>
       <h3 class="ml-20px mr-8px text-18px">{{ categoryInfo.name }}</h3>
       <div class="color-gray-600 text-16px"> ({{ categoryInfo.modelList?.length || 0 }}) </div>
     </div>
     <!-- 头部：操作 -->
     <div class="flex-1 flex" v-show="!isCategorySorting">
-      <div
-        v-if="categoryInfo.modelList.length > 0"
-        class="ml-20px flex items-center"
-        :class="[
-          'transition-transform duration-300 cursor-pointer',
-          isExpand ? 'rotate-180' : 'rotate-0'
-        ]"
-        @click="isExpand = !isExpand"
-      >
+      <div v-if="categoryInfo.modelList.length > 0" class="ml-20px flex items-center" :class="[
+        'transition-transform duration-300 cursor-pointer',
+        isExpand ? 'rotate-180' : 'rotate-0'
+      ]" @click="isExpand = !isExpand">
         <Icon icon="ep:arrow-down-bold" color="#999" />
       </div>
       <div class="ml-auto flex items-center" :class="isModelSorting ? 'mr-15px' : 'mr-45px'">
         <template v-if="!isModelSorting">
-          <el-button
-            v-if="categoryInfo.modelList.length > 0"
-            link
-            type="info"
-            class="mr-20px"
-            @click.stop="handleModelSort"
-          >
+          <el-button v-if="categoryInfo.modelList.length > 0" link type="info" class="mr-20px"
+            @click.stop="handleModelSort">
             <Icon icon="fa:sort-amount-desc" class="mr-5px" />
             排序
           </el-button>
@@ -41,10 +27,7 @@
             <Icon icon="fa:plus" class="mr-5px" />
             新建
           </el-button>
-          <el-dropdown
-            @command="(command) => handleCategoryCommand(command, categoryInfo)"
-            placement="bottom"
-          >
+          <el-dropdown @command="(command) => handleCategoryCommand(command, categoryInfo)" placement="bottom">
             <el-button link type="info">
               <Icon icon="ep:setting" class="mr-5px" />
               分类
@@ -68,24 +51,13 @@
   <!-- 模型列表 -->
   <el-collapse-transition>
     <div v-show="isExpand">
-      <el-table
-        v-if="modelList && modelList.length > 0"
-        :class="categoryInfo.name"
-        ref="tableRef"
-        :data="modelList"
-        row-key="id"
-        :header-cell-style="tableHeaderStyle"
-        :cell-style="tableCellStyle"
-        :row-style="{ height: '68px' }"
-      >
+      <el-table v-if="modelList && modelList.length > 0" :class="categoryInfo.name" ref="tableRef" :data="modelList"
+        row-key="id" :header-cell-style="tableHeaderStyle" :cell-style="tableCellStyle" :row-style="{ height: '68px' }">
         <el-table-column label="流程名" prop="name" min-width="150">
           <template #default="{ row }">
             <div class="flex items-center">
               <el-tooltip content="拖动排序" v-if="isModelSorting">
-                <Icon
-                  icon="ic:round-drag-indicator"
-                  class="drag-icon cursor-move text-#8a909c mr-10px"
-                />
+                <Icon icon="ic:round-drag-indicator" class="drag-icon cursor-move text-#8a909c mr-10px" />
               </el-tooltip>
               <el-image v-if="row.icon" :src="row.icon" class="h-38px w-38px mr-10px rounded" />
               <div v-else class="flow-icon">
@@ -105,22 +77,14 @@
               {{ row.startDepts[0].name }}
             </el-text>
             <el-text v-else-if="row.startDepts?.length > 1">
-              <el-tooltip
-                class="box-item"
-                effect="dark"
-                placement="top"
-                :content="row.startDepts.map((dept: any) => dept.name).join('、')"
-              >
+              <el-tooltip class="box-item" effect="dark" placement="top"
+                :content="row.startDepts.map((dept: any) => dept.name).join('、')">
                 {{ row.startDepts[0].name }}等 {{ row.startDepts.length }} 个部门可见
               </el-tooltip>
             </el-text>
             <el-text v-else>
-              <el-tooltip
-                class="box-item"
-                effect="dark"
-                placement="top"
-                :content="row.startUsers.map((user: any) => user.nickname).join('、')"
-              >
+              <el-tooltip class="box-item" effect="dark" placement="top"
+                :content="row.startUsers.map((user: any) => user.nickname).join('、')">
                 {{ row.startUsers[0].nickname }}等 {{ row.startUsers.length }} 人可见
               </el-tooltip>
             </el-text>
@@ -133,20 +97,12 @@
         </el-table-column>
         <el-table-column label="表单信息" prop="formType" min-width="150">
           <template #default="scope">
-            <el-button
-              v-if="scope.row.formType === BpmModelFormType.NORMAL"
-              type="primary"
-              link
-              @click="handleFormDetail(scope.row)"
-            >
+            <el-button v-if="scope.row.formType === BpmModelFormType.NORMAL" type="primary" link
+              @click="handleFormDetail(scope.row)">
               <span>{{ scope.row.formName }}</span>
             </el-button>
-            <el-button
-              v-else-if="scope.row.formType === BpmModelFormType.CUSTOM"
-              type="primary"
-              link
-              @click="handleFormDetail(scope.row)"
-            >
+            <el-button v-else-if="scope.row.formType === BpmModelFormType.CUSTOM" type="primary" link
+              @click="handleFormDetail(scope.row)">
               <span>{{ scope.row.formCustomCreatePath }}</span>
             </el-button>
             <label v-else>暂无表单</label>
@@ -162,11 +118,7 @@
                 v{{ scope.row.processDefinition.version }}
               </el-tag>
               <el-tag v-else type="warning">未部署</el-tag>
-              <el-tag
-                v-if="scope.row.processDefinition?.suspensionState === 2"
-                type="warning"
-                class="ml-10px"
-              >
+              <el-tag v-if="scope.row.processDefinition?.suspensionState === 2" type="warning" class="ml-10px">
                 已停用
               </el-tag>
             </div>
@@ -174,76 +126,42 @@
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="scope">
-            <el-button
-              link
-              type="primary"
-              @click="openModelForm('update', scope.row.id)"
-              v-if="hasPermiUpdate"
-              :disabled="!isManagerUser(scope.row)"
-            >
+            <el-button link type="primary" @click="openModelForm('update', scope.row.id)" v-if="hasPermiUpdate"
+              :disabled="!isManagerUser(scope.row)">
               修改
             </el-button>
-            <el-button
-              link
-              type="primary"
-              @click="openModelForm('copy', scope.row.id)"
-              v-if="hasPermiUpdate"
-              :disabled="!isManagerUser(scope.row)"
-            >
+            <el-button link type="primary" @click="openModelForm('copy', scope.row.id)" v-if="hasPermiUpdate"
+              :disabled="!isManagerUser(scope.row)">
               复制
             </el-button>
-            <el-button
-              link
-              class="!ml-5px"
-              type="primary"
-              @click="handleDeploy(scope.row)"
-              v-if="hasPermiDeploy"
-              :disabled="!isManagerUser(scope.row)"
-            >
+            <el-button link class="!ml-5px" type="primary" @click="handleDeploy(scope.row)" v-if="hasPermiDeploy"
+              :disabled="!isManagerUser(scope.row)">
               发布
             </el-button>
-            <el-dropdown
-              class="!align-middle ml-5px"
-              @command="(command) => handleModelCommand(command, scope.row)"
-              v-if="hasPermiMore"
-            >
+            <el-dropdown class="!align-middle ml-5px" @command="(command) => handleModelCommand(command, scope.row)"
+              v-if="hasPermiMore">
               <el-button type="primary" link>更多</el-button>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="handleDefinitionList" v-if="hasPermiPdQuery">
                     历史
                   </el-dropdown-item>
-                  <el-dropdown-item
-                    command="handleReport"
-                    v-if="
-                      checkPermi(['bpm:process-instance:manager-query']) &&
-                      scope.row.processDefinition
-                    "
-                    :disabled="!isManagerUser(scope.row)"
-                  >
+                  <el-dropdown-item command="handleReport" v-if="
+                    checkPermi(['bpm:process-instance:manager-query']) &&
+                    scope.row.processDefinition
+                  " :disabled="!isManagerUser(scope.row)">
                     报表
                   </el-dropdown-item>
-                  <el-dropdown-item
-                    command="handleChangeState"
-                    v-if="hasPermiUpdate && scope.row.processDefinition"
-                    :disabled="!isManagerUser(scope.row)"
-                  >
+                  <el-dropdown-item command="handleChangeState" v-if="hasPermiUpdate && scope.row.processDefinition"
+                    :disabled="!isManagerUser(scope.row)">
                     {{ scope.row.processDefinition.suspensionState === 1 ? '停用' : '启用' }}
                   </el-dropdown-item>
-                  <el-dropdown-item
-                    type="danger"
-                    command="handleClean"
-                    v-if="checkPermi(['bpm:model:clean'])"
-                    :disabled="!isManagerUser(scope.row)"
-                  >
+                  <el-dropdown-item type="danger" command="handleClean" v-if="checkPermi(['bpm:model:clean'])"
+                    :disabled="!isManagerUser(scope.row)">
                     清理
                   </el-dropdown-item>
-                  <el-dropdown-item
-                    type="danger"
-                    command="handleDelete"
-                    v-if="hasPermiDelete"
-                    :disabled="!isManagerUser(scope.row)"
-                  >
+                  <el-dropdown-item type="danger" command="handleDelete" v-if="hasPermiDelete"
+                    :disabled="!isManagerUser(scope.row)">
                     删除
                   </el-dropdown-item>
                 </el-dropdown-menu>
@@ -275,9 +193,17 @@
   <Dialog title="表单详情" :fullscreen="true" v-model="formDetailVisible">
     <form-create :rule="formDetailPreview.rule" :option="formDetailPreview.option" />
   </Dialog>
+  <Dialog title="自定义表单详情" :fullscreen="true" v-model="customFormDetailVisible">
+    <component :is="customFormComponent" v-if="customFormComponent" :preview-mode="true" :readonly="true"
+      :model-info="currentFormData" />
+    <div v-else class="flex items-center justify-center h-100px">
+      <el-empty description="组件加载失败" />
+    </div>
+  </Dialog>
 </template>
 
 <script lang="ts" setup>
+import { h } from 'vue'
 import { DICT_TYPE } from '@/utils/dict'
 import { CategoryApi, CategoryVO } from '@/api/bpm/category'
 import Sortable from 'sortablejs'
@@ -292,6 +218,7 @@ import { useAppStore } from '@/store/modules/app'
 import { cloneDeep, isEqual } from 'lodash-es'
 import { useDebounceFn } from '@vueuse/core'
 import { subString } from '@/utils/index'
+import { registerComponent } from '@/utils/routerHelper'
 
 defineOptions({ name: 'BpmModel' })
 
@@ -426,7 +353,7 @@ const handleDelete = async (row: any) => {
     message.success(t('common.delSuccess'))
     // 刷新列表
     emit('success')
-  } catch {}
+  } catch { }
 }
 
 /** 清理按钮操作 */
@@ -439,7 +366,7 @@ const handleClean = async (row: any) => {
     message.success('清理成功')
     // 刷新列表
     emit('success')
-  } catch {}
+  } catch { }
 }
 
 /** 更新状态操作 */
@@ -457,7 +384,7 @@ const handleChangeState = async (row: any) => {
     message.success(statusState + '成功')
     // 刷新列表
     emit('success')
-  } catch {}
+  } catch { }
 }
 
 /** 发布流程 */
@@ -469,7 +396,7 @@ const handleDeploy = async (row: any) => {
     message.success(t('发布成功'))
     // 刷新列表
     emit('success')
-  } catch {}
+  } catch { }
 }
 
 /** 跳转到指定流程定义列表 */
@@ -488,18 +415,58 @@ const formDetailPreview = ref({
   rule: [],
   option: {}
 })
+
+// 1. 新增一个动态组件引用
+const customFormComponent = ref<any>(null)
+const customFormDetailVisible = ref(false)
+// 当前表单数据
+const currentFormData = ref<any>(null)
+
+/**
+ * 处理表单详情查看
+ * @param row 当前行数据
+ */
 const handleFormDetail = async (row: any) => {
-  if (row.formType == BpmModelFormType.NORMAL) {
-    // 设置表单
-    const data = await FormApi.getForm(row.formId)
-    setConfAndFields2(formDetailPreview, data.conf, data.fields)
-    // 弹窗打开
-    formDetailVisible.value = true
-  } else {
-    await push({
-      path: row.formCustomCreatePath
-    })
+  // 常规表单处理
+  if (row.formType === BpmModelFormType.NORMAL) {
+    try {
+      // 设置表单
+      const data = await FormApi.getForm(row.formId)
+      setConfAndFields2(formDetailPreview, data.conf, data.fields)
+      // 弹窗打开
+      formDetailVisible.value = true
+    } catch (error) {
+      console.error('加载常规表单失败:', error)
+      message.error('加载表单失败，请稍后重试')
+    }
+    return
   }
+
+  // 自定义表单处理
+  if (row.formType === BpmModelFormType.CUSTOM) {
+    if (!row.formCustomCreatePath) {
+      message.warning('未设置自定义表单路径')
+      return
+    }
+
+    try {
+      // 保存当前表单数据
+      currentFormData.value = row
+      // 清空之前的组件引用
+      customFormComponent.value = null
+      // 使用 registerComponent 函数加载组件
+      customFormComponent.value = registerComponent(row.formCustomCreatePath)
+      // 打开弹窗
+      customFormDetailVisible.value = true
+    } catch (error) {
+      console.error('加载自定义表单组件失败:', error)
+      message.error(`无法加载组件: ${row.formCustomCreatePath}`)
+    }
+    return
+  }
+
+  // 未知表单类型
+  message.warning('未知的表单类型')
 }
 
 /** 判断是否可以操作 */
@@ -597,7 +564,7 @@ const handleDeleteCategory = async () => {
     message.success(t('common.delSuccess'))
     // 刷新列表
     emit('success')
-  } catch {}
+  } catch { }
 }
 
 /** 添加/修改/复制流程模型弹窗 */

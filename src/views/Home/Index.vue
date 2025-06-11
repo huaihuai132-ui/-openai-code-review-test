@@ -7,14 +7,17 @@
         <el-skeleton :loading="loading" animated>
           <el-row :gutter="16" justify="space-between">
             <!-- 员工信息左侧：占 1/3 宽度 -->
-            <el-col :xl="8" :lg="8" :md="12" :sm="24" :xs="24">
+            <el-col :xl="9" :lg="9" :md="12" :sm="24" :xs="24">
               <div class="flex items-center">
-                <el-avatar :src="avatar" :size="70" class="mr-16px" shape="square">
+                <el-avatar :src="avatar" :size="70" class="mr-20px" shape="square">
                   <img src="@/assets/imgs/avatar.gif" alt="" style="object-fit: cover;" />
                 </el-avatar>
                 <div>
-                  <div class="text-20px">
-                    {{ username }} (10923)
+                  <div class="text-20px font-bold">
+                    {{ userName }}
+                  </div>
+                  <div class="text-16px mt-5px">
+                    工号：{{ workerCode }}
                   </div>
                   <div class="mt-10px text-14px text-gray-500">
                     已加入3年2个月
@@ -23,26 +26,21 @@
               </div>
             </el-col>
             <!-- 员工信息右侧：占 2/3 宽度 -->
-            <el-col :xl="16" :lg="16" :md="12" :sm="24" :xs="24">
+            <el-col :xl="15" :lg="15" :md="12" :sm="24" :xs="24">
               <div class="h-70px flex items-center justify-end lt-sm:mt-10px">
-                <div class="px-8px text-right">
-                  <div class="text-16px">IT code</div>
-                  <div class="mb-16px text-15px text-gray-400">zhangm</div>
+                <div class="px-15px text-center">
+                  <div class="text-16px font-medium">部门</div>
+                  <div class="mt-8px text-15px text-gray-500">信息中心</div>
                 </div>
-                <el-divider direction="vertical" />
-                <div class="px-8px text-right">
-                  <div class="text-16px">所属部门</div>
-                  <div class="mb-16px text-15px text-gray-400">信息中心</div>
+                <el-divider direction="vertical" border-style="dashed" class="h-40px" />
+                <div class="px-15px text-center">
+                  <div class="text-16px font-medium">岗位</div>
+                  <div class="mt-8px text-15px text-gray-500">产品经理</div>
                 </div>
-                <el-divider direction="vertical" border-style="dashed" />
-                <div class="px-8px text-right">
-                  <div class="text-16px">职位</div>
-                  <div class="mb-16px text-15px text-gray-400">产品经理</div>
-                </div>
-                <el-divider direction="vertical" border-style="dashed" />
-                <div class="px-8px text-right">
-                  <div class="text-16px">级别</div>
-                  <div class="mb-16px text-15px text-gray-400">中高级</div>
+                <el-divider direction="vertical" border-style="dashed" class="h-40px" />
+                <div class="px-15px text-center">
+                  <div class="text-16px font-medium">级别</div>
+                  <div class="mt-8px text-15px text-gray-500">{{ rank }}</div>
                 </div>
               </div>
             </el-col>
@@ -56,7 +54,9 @@
           <el-card shadow="never">
             <template #header>
               <div class="h-3 flex justify-between">
-                <span><Icon icon="ion:grid-outline" class="mr-8px" />任务中心 > </span>
+                <span>
+                  <Icon icon="ion:grid-outline" class="mr-8px" />任务中心 >
+                </span>
               </div>
             </template>
             <el-skeleton :loading="loading" animated>
@@ -81,7 +81,9 @@
           <el-card shadow="never">
             <template #header>
               <div class="h-3 flex justify-between">
-                <span><Icon icon="ion:grid-outline" class="mr-8px" />审批中心 ></span>
+                <span>
+                  <Icon icon="ion:grid-outline" class="mr-8px" />审批中心 >
+                </span>
                 <div class="text-12px text-gray-400">*此处仅展示近30天数据</div>
               </div>
             </template>
@@ -109,21 +111,15 @@
       <el-card shadow="never">
         <template #header>
           <div class="h-3 flex justify-between">
-            <span><Icon icon="ion:grid-outline" class="mr-8px" />常用系统入口</span>
+            <span>
+              <Icon icon="ion:grid-outline" class="mr-8px" />常用系统入口
+            </span>
           </div>
         </template>
         <el-skeleton :loading="loading" animated>
           <el-row :gutter="16">
-            <el-col
-              v-for="item in shortcut"
-              :key="`team-${item.name}`"
-              :xl="8"
-              :lg="8"
-              :md="12"
-              :sm="24"
-              :xs="24"
-              class="mb-8px"
-            >
+            <el-col v-for="item in shortcut" :key="`team-${item.name}`" :xl="8" :lg="8" :md="12" :sm="24" :xs="24"
+              class="mb-8px">
               <el-card shadow="hover" class="cursor-pointer">
                 <div class="flex items-center">
                   <Icon :icon="item.icon" class="mr-8px" :style="{ color: item.color }" />
@@ -149,12 +145,19 @@
     <!-- 右侧区域：占 1/3 宽度 -->
     <el-col :xl="8" :lg="8" :md="24" :sm="24" :xs="24">
       <div class="right-container">
-        <!-- 横幅模块 - 15%高度 -->
+        <!-- 横幅模块 - 自动轮播 -->
         <el-card shadow="never" class="banner-module">
           <el-skeleton :loading="loading" animated>
-            <div class="text-center py-20">
-              <img src="@/assets/imgs/banner.png" alt="" style="width: 100%; object-fit: cover;" />
-            </div>
+            <el-carousel height="120px" :interval="5000" arrow="always" indicator-position="outside">
+              <el-carousel-item v-for="(item, index) in bannerList" :key="index">
+                <div class="relative w-full h-full">
+                  <img :src="item.imageUrl" alt="" class="w-full h-full object-cover" />
+                  <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white px-4 py-2">
+                    {{ item.title }}
+                  </div>
+                </div>
+              </el-carousel-item>
+            </el-carousel>
           </el-skeleton>
         </el-card>
 
@@ -162,7 +165,9 @@
         <el-card shadow="never" class="schedule-module">
           <template #header>
             <div class="h-3 flex justify-between">
-              <span><Icon icon="ion:grid-outline" class="mr-8px" />今日日程 ></span>
+              <span>
+                <Icon icon="ion:grid-outline" class="mr-8px" />今日日程 >
+              </span>
               <el-link type="primary" :underline="false">更多</el-link>
             </div>
           </template>
@@ -186,7 +191,9 @@
         <el-card shadow="never" class="message-module">
           <template #header>
             <div class="h-3 flex justify-between">
-              <span><Icon icon="ion:grid-outline" class="mr-8px" />消息 ></span>
+              <span>
+                <Icon icon="ion:grid-outline" class="mr-8px" />消息 >
+              </span>
               <el-link type="primary" :underline="false">{{ t('action.more') }}</el-link>
             </div>
           </template>
@@ -235,8 +242,37 @@ const { t } = useI18n()
 const router = useRouter()
 const userStore = useUserStore()
 const loading = ref(true)
+// 头像
 const avatar = userStore.getUser.avatar
-const username = userStore.getUser.nickname
+// 用户名
+const userName = userStore.getUser.nickname
+// 工号
+const workerCode = userStore.getUser.workerCode
+// 职级
+const rank = userStore.getUser.rank
+
+// 导入图片
+import banner from '@/assets/imgs/banner.png'
+
+// 轮播图数据
+const bannerList = ref([
+  {
+    imageUrl: banner,
+    link: '#',
+    title: '公司新闻'
+  },
+  {
+    imageUrl: banner,
+    link: '#',
+    title: '企业文化'
+  },
+  {
+    imageUrl: banner,
+    link: '#',
+    title: '通知公告'
+  }
+])
+// 后续通过接口获取用户的这些信息
 const pieOptionsData = reactive<EChartsOption>(pieOptions) as EChartsOption
 
 // 获取通知公告
@@ -410,16 +446,41 @@ getAllApi()
   height: calc(100vh - 200px); // 根据实际需要调整总高度
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .banner-module {
-  height: 19%;
+  height: auto;
   min-height: 120px;
+  overflow: hidden;
+
+  :deep(.el-carousel) {
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  :deep(.el-carousel__arrow) {
+    background-color: rgba(0, 0, 0, 0.3);
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  :deep(.el-carousel__item img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
 }
 
 .schedule-module {
-  height: 20%;
+  height: auto;
   min-height: 120px;
 }
 
