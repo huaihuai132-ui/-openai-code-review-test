@@ -2,40 +2,20 @@
   <el-row :gutter="20">
     <el-col :span="16">
       <ContentWrap title="申请信息">
-        <el-form
-          ref="formRef"
-          v-loading="formLoading"
-          :model="formData"
-          :rules="formRules"
-          label-width="80px"
-        >
+        <el-form ref="formRef" v-loading="formLoading" :model="formData" :rules="formRules" label-width="80px">
           <el-form-item label="请假类型" prop="type">
             <el-select v-model="formData.type" clearable placeholder="请选择请假类型">
-              <el-option
-                v-for="dict in getIntDictOptions(DICT_TYPE.BPM_OA_LEAVE_TYPE)"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
+              <el-option v-for="dict in getIntDictOptions(DICT_TYPE.BPM_OA_LEAVE_TYPE)" :key="dict.value"
+                :label="dict.label" :value="dict.value" />
             </el-select>
           </el-form-item>
           <el-form-item label="开始时间" prop="startTime">
-            <el-date-picker
-              v-model="formData.startTime"
-              clearable
-              placeholder="请选择开始时间"
-              type="datetime"
-              value-format="x"
-            />
+            <el-date-picker v-model="formData.startTime" clearable placeholder="请选择开始时间" type="datetime"
+              value-format="x" />
           </el-form-item>
           <el-form-item label="结束时间" prop="endTime">
-            <el-date-picker
-              v-model="formData.endTime"
-              clearable
-              placeholder="请选择结束时间"
-              type="datetime"
-              value-format="x"
-            />
+            <el-date-picker v-model="formData.endTime" clearable placeholder="请选择结束时间" type="datetime"
+              value-format="x" />
           </el-form-item>
           <el-form-item label="原因" prop="reason">
             <el-input v-model="formData.reason" placeholder="请输入请假原因" type="textarea" />
@@ -52,19 +32,15 @@
     <!-- 审批相关：流程信息 -->
     <el-col :span="8">
       <ContentWrap title="审批流程" :bodyStyle="{ padding: '0 20px 0' }">
-        <ProcessInstanceTimeline
-          ref="timelineRef"
-          :activity-nodes="activityNodes"
-          :show-status-icon="false"
-          @select-user-confirm="selectUserConfirm"
-        />
+        <ProcessInstanceTimeline ref="timelineRef" :activity-nodes="activityNodes" :show-status-icon="false"
+          @select-user-confirm="selectUserConfirm" />
       </ContentWrap>
     </el-col>
   </el-row>
 </template>
 <script lang="ts" setup>
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
-import * as LeaveApi from '@/api/bpm/leave'
+import * as LeaveApi from '@/api/bpm/form/leave'
 import { useTagsViewStore } from '@/store/modules/tagsView'
 
 // 审批相关：import
@@ -96,11 +72,11 @@ const formRules = reactive({
 const formRef = ref() // 表单 Ref
 
 // 审批相关：变量
-const processDefineKey = 'oa_leave' // 流程定义 Key
-const startUserSelectTasks = ref([]) // 发起人需要选择审批人的用户任务列表
-const startUserSelectAssignees = ref({}) // 发起人选择审批人的数据
-const tempStartUserSelectAssignees = ref({}) // 历史发起人选择审批人的数据，用于每次表单变更时，临时保存
-const activityNodes = ref<ProcessInstanceApi.ApprovalNodeInfo[]>([]) // 审批节点信息
+const processDefineKey = 'oa_form_leave' // 流程定义 Key
+const startUserSelectTasks = ref<any[]>([]) // 添加类型
+const startUserSelectAssignees = ref<Record<string, number[]>>({}) // 添加类型
+const tempStartUserSelectAssignees = ref<Record<string, number[]>>({}) // 添加类型
+const activityNodes = ref<ProcessInstanceApi.ApprovalNodeInfo[]>([]) // 已有类型
 const processDefinitionId = ref('')
 
 /** 提交表单 */
@@ -133,7 +109,6 @@ const submitForm = async () => {
     message.success('发起成功')
     // 关闭当前 Tab
     delView(unref(currentRoute))
-    await push({ name: 'BpmOALeave' })
   } finally {
     formLoading.value = false
   }

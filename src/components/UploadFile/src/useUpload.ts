@@ -105,3 +105,24 @@ enum UPLOAD_TYPE {
   // 客户端发送到后端上传
   SERVER = 'server'
 }
+
+export interface ChapterVO extends BaseVO {
+  deptId: number
+  deptName: string
+  fund: number
+  reason: string
+  useDate: number
+  chapterFileName: string
+  chapterName: string
+  isTakeOut: string
+  storagePath?: string
+  files?: FileInfo[]
+  startUserSelectAssignees?: Record<string, number[]>
+}
+
+export interface FileInfo {
+  name: string
+  path: string
+  size: number
+  type: string
+}

@@ -4,127 +4,206 @@
       <el-input v-model="searchText" placeholder="输入申请名称查询" prefix-icon="Search" class="w-50" />
     </div>
 
-    <div class="category-container">
-      <div class="category-card">
+    <div v-loading="loading" class="category-container">
+      <!-- 动态生成分类卡片 -->
+      <div v-for="(category, index) in displayCategories" :key="index" class="category-card">
         <div class="category-header">
-          <i class="el-icon-wallet"></i>
-          财务
+          <h3 class="category-title">{{ category.name }}</h3>
+          <div class="category-count">({{ category.modelList?.length || 0 }})</div>
         </div>
 
         <div class="card-grid">
-          <div class="card-item" @click="navigateTo('expenseDaily')">
-            <div class="card-icon" style="background-color: #409EFF;">
-              <i class="el-icon-coin"></i>
+          <div v-for="model in category.modelList" :key="model.id" class="card-item" @click="handleFlowClick(model)">
+            <div class="flow-icon">
+              <span>{{ model.name.substring(0, 2) }}</span>
             </div>
-            <div class="card-text">日常费用报销</div>
-          </div>
-
-          <div class="card-item" @click="navigateTo('expenseTravel')">
-            <div class="card-icon" style="background-color: #409EFF;">
-              <i class="el-icon-trip"></i>
-            </div>
-            <div class="card-text">差旅报销单</div>
-          </div>
-
-          <div class="card-item" @click="navigateTo('loan')">
-            <div class="card-icon" style="background-color: #409EFF;">
-              <i class="el-icon-bank-card"></i>
-            </div>
-            <div class="card-text">借款单</div>
-          </div>
-
-          <div class="card-item" @click="navigateTo('expensePayment')">
-            <div class="card-icon" style="background-color: #409EFF;">
-              <i class="el-icon-s-fold"></i>
-            </div>
-            <div class="card-text">支出单</div>
-          </div>
-
-          <div class="card-item" @click="navigateTo('expenseTrip')">
-            <div class="card-icon" style="background-color: #409EFF;">
-              <i class="el-icon-trip"></i>
-            </div>
-            <div class="card-text">出差申请</div>
-          </div>
-
-          <div class="card-item" @click="navigateTo('invoice')">
-            <div class="card-icon" style="background-color: #409EFF;">
-              <i class="el-icon-coin"></i>
-            </div>
-            <div class="card-text">开票申请</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="category-card">
-        <div class="category-header">
-          <i class="el-icon-user-solid"></i>
-          考勤
-        </div>
-
-        <div class="card-grid">
-          <div class="card-item" @click="navigateTo('leave')">
-            <div class="card-icon" style="background-color: #409EFF;">
-              <i class="el-icon-coin"></i>
-            </div>
-            <div class="card-text">请假</div>
-          </div>
-
-          <div class="card-item" @click="navigateTo('compensate')">
-            <div class="card-icon" style="background-color: #409EFF;">
-              <i class="el-icon-coin"></i>
-            </div>
-            <div class="card-text">补卡</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="category-card">
-        <div class="category-header">
-          <i class="el-icon-user"></i>
-          人力
-        </div>
-
-        <div class="card-grid">
-          <div class="card-item" @click="navigateTo('convert')">
-            <div class="card-icon" style="background-color: #409EFF;">
-              <i class="el-icon-refresh-left"></i>
-            </div>
-            <div class="card-text">转正申请</div>
-          </div>
-
-          <div class="card-item" @click="navigateTo('resign')">
-            <div class="card-icon" style="background-color: #409EFF;">
-              <i class="el-icon-refresh-left"></i>
-            </div>
-            <div class="card-text">离职申请</div>
-          </div>
-
-          <div class="card-item" @click="navigateTo('transfer')">
-            <div class="card-icon" style="background-color: #409EFF;">
-              <i class="el-icon-refresh-left"></i>
-            </div>
-            <div class="card-text">调岗申请</div>
+            <div class="card-text">{{ model.name }}</div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 动态组件弹框 -->
+    <Dialog title="表单详情" :fullscreen="true" v-model="dialogVisible">
+      <component :is="formComponent" v-if="formComponent" :preview-mode="true" :readonly="true"
+        :model-info="currentFlow" @success="handleFormSuccess" />
+      <div v-else class="flex items-center justify-center h-100px">
+        <el-empty description="组件加载失败" />
+      </div>
+    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, shallowRef, onMounted, watch, computed } from 'vue';
+import { registerComponent } from '@/utils/routerHelper';
+import { useMessage } from '@/hooks/web/useMessage';
+import * as ModelApi from '@/api/bpm/model';
+import { CategoryApi } from '@/api/bpm/category';
+import { BpmModelFormType } from '@/utils/constants';
+import { Dialog } from '@/components/Dialog';
 
-const searchText = ref('');
-function navigateTo(type: string) {
-  console.log('点击了申请类型：', type);
+// 定义类型
+interface ModelInfo {
+  id: number;
+  name: string;
+  categoryId?: number;
+  categoryName?: string;
+  formType?: number;
+  formCustomCreatePath?: string;
+  [key: string]: any;
 }
+
+interface CategoryInfo {
+  id: number;
+  name: string;
+  modelList?: ModelInfo[];
+  [key: string]: any;
+}
+
+const message = useMessage();
+const searchText = ref('');
+const dialogVisible = ref(false);
+const currentFlow = ref<any>(null);
+const formComponent = shallowRef<any>(null);
+const isLoading = ref(false);
+const loading = ref(false);
+const categoryGroup = ref<any[]>([]);
+const rawCategoryList = ref<any[]>([]);
+const rawModelList = ref<any[]>([]);
+
+// 计算属性：用于显示的分类
+const displayCategories = computed(() => {
+  // 确保即使categoryGroup为空也返回一个数组
+  return categoryGroup.value || [];
+});
+
+// 获取分类和流程数据
+const getList = async () => {
+  loading.value = true;
+  try {
+    // 查询模型列表
+    const modelListResult = await ModelApi.getModelList("");
+    // 确保我们获取到的是数组
+    const modelList = Array.isArray(modelListResult) ? modelListResult : (modelListResult.list || []);
+    rawModelList.value = modelList;
+
+    // 查询分类列表
+    const categoryList = await CategoryApi.getCategorySimpleList();
+    rawCategoryList.value = categoryList;
+
+    // 修复模型与分类的关联 - 检查模型是否使用了name而不是id来关联
+    const result: CategoryInfo[] = [];
+
+    // 尝试按照分类名称匹配
+    for (const category of categoryList) {
+      const categoryModels = modelList.filter(model =>
+        model.categoryId === category.id ||
+        model.categoryName === category.name
+      );
+
+      if (categoryModels && categoryModels.length > 0) {
+        result.push({
+          ...category,
+          modelList: categoryModels
+        });
+      }
+    }
+
+    // 如果没有找到任何匹配，则将所有模型放入第一个分类
+    if (result.length === 0 && categoryList.length > 0 && modelList.length > 0) {
+      result.push({
+        ...categoryList[0],
+        modelList: modelList
+      });
+    }
+
+    // 直接赋值
+    categoryGroup.value = result;
+  } catch (error) {
+    console.error('获取流程数据失败:', error);
+    message.error('获取流程数据失败');
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 处理流程点击
+function handleFlowClick(model: any) {
+  currentFlow.value = model;
+
+  // 根据模型类型加载不同的组件
+  if (model.formType === BpmModelFormType.CUSTOM) { // 自定义表单
+    loadDynamicComponent(model.formCustomCreatePath);
+    dialogVisible.value = true;
+  } else if (model.formType === BpmModelFormType.NORMAL) {
+    message.warning('普通表单暂不支持在此处发起');
+    return;
+  } else {
+    message.warning('不支持的表单类型');
+    return;
+  }
+}
+
+// 加载动态组件
+function loadDynamicComponent(path: string) {
+  if (!path) {
+    message.error('表单路径未定义');
+    return;
+  }
+
+  isLoading.value = true;
+  formComponent.value = null;
+
+  try {
+    // 使用 registerComponent 函数加载组件
+    formComponent.value = registerComponent(path);
+    isLoading.value = false;
+  } catch (error) {
+    console.error('加载组件失败:', error);
+    isLoading.value = false;
+    message.error(`无法加载组件: ${path}`);
+  }
+}
+
+// 处理表单提交成功
+function handleFormSuccess() {
+  dialogVisible.value = false;
+  message.success('提交成功');
+}
+
+// 监听搜索文本变化
+watch(searchText, (newVal) => {
+  if (newVal) {
+    // 过滤已加载的数据
+    const filtered = categoryGroup.value.map(category => {
+      return {
+        ...category,
+        modelList: category.modelList.filter((model: any) =>
+          model.name.toLowerCase().includes(newVal.toLowerCase())
+        )
+      };
+    }).filter(category => category.modelList.length > 0);
+
+    categoryGroup.value = filtered;
+  } else {
+    // 如果搜索框清空，重新加载数据
+    getList();
+  }
+});
+
+// 初始化数据
+onMounted(() => {
+  getList();
+});
 </script>
 
 <style scoped lang="scss">
 .initiate-application {
   padding: 20px;
   background-color: #f5f7fa;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .search-container {
@@ -138,6 +217,7 @@ function navigateTo(type: string) {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-height: 300px;
 }
 
 .category-card {
@@ -147,15 +227,21 @@ function navigateTo(type: string) {
 }
 
 .category-header {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 20px;
   display: flex;
   align-items: center;
+  margin-bottom: 20px;
 }
 
-.category-header i {
-  margin-right: 10px;
+.category-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+  margin-right: 8px;
+}
+
+.category-count {
+  color: #606266;
+  font-size: 16px;
 }
 
 .card-grid {
@@ -181,18 +267,27 @@ function navigateTo(type: string) {
   transform: translateY(-2px) scale(1.03);
 }
 
-.card-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 5px;
+.flow-icon {
   display: flex;
+  width: 38px;
+  height: 38px;
+  margin-right: 10px;
+  background-color: var(--el-color-primary);
+  border-radius: 4px;
   align-items: center;
   justify-content: center;
-  margin-right: 15px;
-  color: white;
+  color: #fff;
+  font-size: 12px;
 }
 
 .card-text {
   color: #606266;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
 }
 </style>

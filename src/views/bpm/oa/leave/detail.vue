@@ -20,7 +20,7 @@
 import { DICT_TYPE } from '@/utils/dict'
 import { formatDate } from '@/utils/formatTime'
 import { propTypes } from '@/utils/propTypes'
-import * as LeaveApi from '@/api/bpm/leave'
+import * as LeaveApi from '@/api/bpm/form/leave'
 
 defineOptions({ name: 'BpmOALeaveDetail' })
 

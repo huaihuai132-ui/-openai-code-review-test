@@ -203,7 +203,6 @@
 </template>
 
 <script lang="ts" setup>
-import { h } from 'vue'
 import { DICT_TYPE } from '@/utils/dict'
 import { CategoryApi, CategoryVO } from '@/api/bpm/category'
 import Sortable from 'sortablejs'
@@ -219,6 +218,7 @@ import { cloneDeep, isEqual } from 'lodash-es'
 import { useDebounceFn } from '@vueuse/core'
 import { subString } from '@/utils/index'
 import { registerComponent } from '@/utils/routerHelper'
+import { markRaw } from 'vue'
 
 defineOptions({ name: 'BpmModel' })
 
@@ -454,8 +454,8 @@ const handleFormDetail = async (row: any) => {
       currentFormData.value = row
       // 清空之前的组件引用
       customFormComponent.value = null
-      // 使用 registerComponent 函数加载组件
-      customFormComponent.value = registerComponent(row.formCustomCreatePath)
+      // 使用 registerComponent 函数加载组件并用 markRaw 包装，防止组件被设为响应式
+      customFormComponent.value = markRaw(registerComponent(row.formCustomCreatePath))
       // 打开弹窗
       customFormDetailVisible.value = true
     } catch (error) {
