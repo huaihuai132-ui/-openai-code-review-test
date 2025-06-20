@@ -135,7 +135,7 @@ const changeCategory = (category) => {
   loadCategoryData(category);
 
   // 计算新数据数量
-  calculateNewItems();
+  // calculateNewItems();
 };
 
 // 加载分类数据
