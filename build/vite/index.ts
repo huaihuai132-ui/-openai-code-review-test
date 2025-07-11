@@ -15,6 +15,7 @@ import topLevelAwait from 'vite-plugin-top-level-await'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons-ng'
 import UnoCSS from 'unocss/vite'
+import VueDevTools from 'vite-plugin-vue-devtools'
 
 export function createVitePlugins() {
   const root = process.cwd()
@@ -31,6 +32,8 @@ export function createVitePlugins() {
     progress(),
     PurgeIcons(),
     ElementPlus({}),
+    // Vue DevTools - 仅在开发环境启用
+    VueDevTools(),
     AutoImport({
       include: [
         /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
@@ -41,7 +44,7 @@ export function createVitePlugins() {
       imports: [
         'vue',
         'vue-router',
-        // 可额外添加需要 autoImport 的组件
+        // 可以外添加需要autoImport 的组件
         {
           '@/hooks/web/useI18n': ['useI18n'],
           '@/hooks/web/useMessage': ['useMessage'],
@@ -60,7 +63,7 @@ export function createVitePlugins() {
       }
     }),
     Components({
-      // 生成自定义 `auto-components.d.ts` 全局声明
+      // 生成自定义`auto-components.d.ts` 全局声明
       dts: 'src/types/auto-components.d.ts',
       // 自定义组件的解析器
       resolvers: [ElementPlusResolver()],
