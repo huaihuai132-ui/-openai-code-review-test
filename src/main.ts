@@ -41,6 +41,7 @@ import '@/plugins/tongji' // 百度统计
 import Logger from '@/utils/Logger'
 
 import VueDOMPurifyHTML from 'vue-dompurify-html' // 解决v-html 的安全隐患
+import Calendar from '@/components/Calendar'
 
 // 创建实例
 const setupAll = async () => {
@@ -65,6 +66,7 @@ const setupAll = async () => {
   await router.isReady()
 
   app.use(VueDOMPurifyHTML)
+  app.use(Calendar)
 
   app.mount('#app')
 }
