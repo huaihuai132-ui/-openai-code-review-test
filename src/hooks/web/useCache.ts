@@ -19,7 +19,12 @@ export const CACHE_KEY = {
   DICT_CACHE: 'dictCache',
   // 登录表单
   LoginForm: 'loginForm',
-  TenantId: 'tenantId'
+  TenantId: 'tenantId',
+  // 上次查看审批的时间
+  waiting: 'approval_waiting_last_read',
+  done: 'approval_done_last_read',
+  apply: 'approval_apply_last_read',
+  copy: 'approval_copy_last_read',
 }
 
 export const useCache = (type: CacheType = 'localStorage') => {

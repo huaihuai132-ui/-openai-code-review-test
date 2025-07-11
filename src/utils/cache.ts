@@ -1,12 +1,15 @@
+import { useCache } from '@/hooks/web/useCache'
+
+const { wsCache } = useCache()
 /**
  * 获取当前时间戳并保存到缓存中
  * @param key 缓存键名
  * @returns 当前时间戳
  */
 export function setCurrentTimestamp(key: string): number {
-  const timestamp = Date.now();
-  localStorage.setItem(key, timestamp.toString());
-  return timestamp;
+  const timestamp = Date.now()
+  wsCache.set(key, timestamp)
+  return timestamp
 }
 
 /**
@@ -16,21 +19,17 @@ export function setCurrentTimestamp(key: string): number {
  * @returns 缓存的时间戳或默认值
  */
 export function getTimestamp(key: string, defaultValue: number = 0): number {
-  const value = localStorage.getItem(key);
-  return value ? parseInt(value) : defaultValue;
+  const value = wsCache.get(key)
+  return value ? parseInt(value) : defaultValue
 }
 
 /**
- * 获取最后阅读时间，如果不存在则设置当前时间
+ * 获取最后阅读时间
  * @param key 缓存键名
  * @returns 最后阅读时间戳
  */
 export function getLastReadTime(key: string): number {
-  const lastTime = getTimestamp(key);
-  if (!lastTime) {
-    return setCurrentTimestamp(key);
-  }
-  return lastTime;
+  return getTimestamp(key)
 }
 
 /**
@@ -39,5 +38,5 @@ export function getLastReadTime(key: string): number {
  * @returns 更新后的时间戳
  */
 export function updateLastReadTime(key: string): number {
-  return setCurrentTimestamp(key);
-} 
+  return setCurrentTimestamp(key)
+}

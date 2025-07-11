@@ -15,6 +15,7 @@
           <el-icon>
             <Check />
           </el-icon>
+          <span v-if="doneCount > 0" class="badge">{{ doneCount }}</span>
         </div>
         <span class="menu-text">已审批</span>
       </div>
@@ -23,6 +24,7 @@
           <el-icon>
             <Document />
           </el-icon>
+          <span v-if="applyCount > 0" class="badge">{{ applyCount }}</span>
         </div>
         <span class="menu-text">我申请的</span>
       </div>
@@ -96,6 +98,8 @@ const applyList = ref([]);
 const copyList = ref([]);
 const waitingCount = ref(0);
 const copyCount = ref(0);
+const applyCount = ref(0);
+const doneCount = ref(0);
 const showDetail = ref(false);
 const selectedItemId = ref('');
 const selectedCategory = ref('');
@@ -127,15 +131,12 @@ const queryParams = reactive({
 // 切换分类
 const changeCategory = (category) => {
   activeCategory.value = category;
-
-  // 更新最后阅读时间
-  updateLastReadTime(`approval_${category}_last_read`);
-
   // 重新加载数据
   loadCategoryData(category);
-
   // 计算新数据数量
-  // calculateNewItems();
+  calculateNewItems();
+  // 更新最后阅读时间
+  updateLastReadTime(`approval_${category}_last_read`);
 };
 
 // 加载分类数据
@@ -188,6 +189,33 @@ const calculateNewItems = () => {
         return false;
       }
     }).length;
+
+    // 计算我的审批新数据
+    const applyLastRead = getLastReadTime(`approval_apply_last_read`);
+    applyCount.value = applyList.value.filter((item: any) => {
+      if (!item) return false;
+      try {
+        const createTime = new Date(item.processInstance?.createTime || item.createTime || item.startTime).getTime();
+        return createTime > applyLastRead;
+      } catch (e) {
+        console.error('Error calculating waiting item time:', e);
+        return false;
+      }
+    }).length;
+
+    // 计算已审批的新数据
+    const doneLastRead = getLastReadTime(`approval_done_last_read`);
+    doneCount.value = waitingList.value.filter((item: any) => {
+      if (!item) return false;
+      try {
+        const createTime = new Date(item.processInstance?.createTime || item.createTime).getTime();
+        return createTime > doneLastRead;
+      } catch (e) {
+        console.error('Error calculating waiting item time:', e);
+        return false;
+      }
+    }).length;
+
   } catch (error) {
     console.error('Error calculating new items:', error);
   }
