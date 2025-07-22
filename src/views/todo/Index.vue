@@ -30,10 +30,7 @@ const addSampleEvent = () => {
   const event: EventItem = {
     start: today.toISOString().split('T')[0] + ' 14:00',
     end: today.toISOString().split('T')[0] + ' 15:00',
-    bgColor: '#67C23A',
-    extendedProps: {
-      description: '这是一个通过代码添加的示例事件'
-    }
+    description: '这是一个通过代码添加的示例事件',
   }
 
   calendarRef.value?.addEvent(event)
