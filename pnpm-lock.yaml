@@ -137,6 +137,9 @@ importers:
       qrcode:
         specifier: ^1.5.3
         version: 1.5.4
+      qrcode-generator:
+        specifier: ^2.0.2
+        version: 2.0.2
       qs:
         specifier: ^6.12.0
         version: 6.13.1
@@ -164,6 +167,9 @@ importers:
       vue-i18n:
         specifier: 9.10.2
         version: 9.10.2(vue@3.5.12(typescript@5.3.3))
+      vue-print-next:
+        specifier: ^1.1.5
+        version: 1.1.5(vue@3.5.12(typescript@5.3.3))
       vue-router:
         specifier: 4.4.5
         version: 4.4.5(vue@3.5.12(typescript@5.3.3))
@@ -4615,6 +4621,9 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
+  qrcode-generator@2.0.2:
+    resolution: {integrity: sha512-1uRIBGF1qsh+mRXumB4KCPaOxEUbwrs/wuq6/ZcRDg1U6MbKWS42/ykO77Y3bgPjbvJUo0ukK0hTu+KCVstweg==}
+
   qrcode@1.5.4:
     resolution: {integrity: sha512-1ca71Zgiu6ORjHqFBDpnSMTR2ReToX4l1Au1VFLyVeBTFavzQnv5JxMFr3ukHVKpSrSA2MCk0lNJSykjUfz7Zg==}
     engines: {node: '>=10.13.0'}
@@ -5330,6 +5339,11 @@ packages:
     engines: {node: '>= 16'}
     peerDependencies:
       vue: ^3.0.0
+
+  vue-print-next@1.1.5:
+    resolution: {integrity: sha512-HCfEDEt3aqUyIjz+eeH7Y/BNJ7YrIWXvGyGMWYC9/pnJ/2Nz/A7raQtHILNWFUlHcZ1XjKMFMUwyRgcrLmXhKQ==}
+    peerDependencies:
+      vue: ^2.0.0 || >=3.0.0
 
   vue-router@4.4.5:
     resolution: {integrity: sha512-4fKZygS8cH1yCyuabAXGUAsyi1b2/o/OKgu/RUb+znIYOxPRxdkytJEx+0wGcpBE1pX6vUgh5jwWOKRGvuA/7Q==}
@@ -10265,6 +10279,8 @@ snapshots:
 
   punycode@2.3.1: {}
 
+  qrcode-generator@2.0.2: {}
+
   qrcode@1.5.4:
     dependencies:
       dijkstrajs: 1.0.3
@@ -11082,6 +11098,10 @@ snapshots:
       '@intlify/core-base': 9.10.2
       '@intlify/shared': 9.10.2
       '@vue/devtools-api': 6.6.4
+      vue: 3.5.12(typescript@5.3.3)
+
+  vue-print-next@1.1.5(vue@3.5.12(typescript@5.3.3)):
+    dependencies:
       vue: 3.5.12(typescript@5.3.3)
 
   vue-router@4.4.5(vue@3.5.12(typescript@5.3.3)):
