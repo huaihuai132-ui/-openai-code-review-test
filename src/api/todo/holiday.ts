@@ -1,7 +1,7 @@
 import request from '@/config/axios'
 import { HolidayItem } from '@/components/Calendar/src/types'
 
-const baseUrl = '/business/todo/holidays'
+const baseUrl = '/business/holidays'
 
 // 后端返回的假期数据结构
 export interface BackendHolidayItem {

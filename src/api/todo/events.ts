@@ -1,7 +1,7 @@
 import request from '@/config/axios'
 import { EventItem } from '@/components/Calendar/src/types'
 
-const baseUrl = '/business/todo/events'
+const baseUrl = '/business/events'
 // 日历事件相关API接口
 
 /**
