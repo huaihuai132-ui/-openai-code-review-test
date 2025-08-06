@@ -114,8 +114,8 @@ export default {
     small: '小'
   },
   login: {
-    welcome: '欢迎使用本系统',
-    message: '由鹰潭工业控股集团自主研发的在线OA办公系统',
+    welcome: '工控通',
+    message: '工业控股集团智慧运营管理平台',
     tenantname: '租户名称',
     username: '用户名',
     password: '密码',
