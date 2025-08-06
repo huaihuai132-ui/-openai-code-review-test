@@ -16,7 +16,7 @@ export const useUpload = (directory?: string) => {
   // 是否使用前端直连上传
   const isClientUpload = UPLOAD_TYPE.CLIENT === import.meta.env.VITE_UPLOAD_TYPE
   // 重写ElUpload上传方法
-  const httpRequest = async (options: UploadRequestOptions) => {
+  const httpRequest = async (options: UploadRequestOptions & { onProgress?: (progressEvent: any) => void, cancelToken?: any }) => {
     // 模式一：前端上传
     if (isClientUpload) {
       // 1.1 生成文件名称
@@ -28,7 +28,15 @@ export const useUpload = (directory?: string) => {
         .put(presignedInfo.uploadUrl, options.file, {
           headers: {
             'Content-Type': options.file.type
-          }
+          },
+          // 添加上传进度回调
+          onUploadProgress: (progressEvent) => {
+            if (options.onProgress && progressEvent.lengthComputable) {
+              options.onProgress(progressEvent)
+            }
+          },
+          // 添加取消令牌
+          cancelToken: options.cancelToken
         })
         .then(() => {
           // 1.4. 记录文件信息到后端（异步）
@@ -40,17 +48,37 @@ export const useUpload = (directory?: string) => {
       // 模式二：后端上传
       // 重写 el-upload httpRequest 文件上传成功会走成功的钩子，失败走失败的钩子
       return new Promise((resolve, reject) => {
-        FileApi.updateFile({ file: options.file, directory })
-          .then((res) => {
-            if (res.code === 0) {
-              resolve(res)
-            } else {
-              reject(res)
+        // 创建FormData
+        const formData = new FormData()
+        formData.append('file', options.file)
+        if (directory) {
+          formData.append('directory', directory)
+        }
+
+        // 使用axios上传以支持进度回调
+        axios.post(uploadUrl, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          // 添加上传进度回调
+          onUploadProgress: (progressEvent) => {
+            if (options.onProgress && progressEvent.lengthComputable) {
+              options.onProgress(progressEvent)
             }
-          })
-          .catch((res) => {
-            reject(res)
-          })
+          },
+          // 添加取消令牌
+          cancelToken: options.cancelToken
+        })
+        .then((response) => {
+          if (response.data.code === 0) {
+            resolve(response.data)
+          } else {
+            reject(response.data)
+          }
+        })
+        .catch((error) => {
+          reject(error)
+        })
       })
     }
   }
@@ -104,20 +132,6 @@ enum UPLOAD_TYPE {
   CLIENT = 'client',
   // 客户端发送到后端上传
   SERVER = 'server'
-}
-
-export interface ChapterVO extends BaseVO {
-  deptId: number
-  deptName: string
-  fund: number
-  reason: string
-  useDate: number
-  chapterFileName: string
-  chapterName: string
-  isTakeOut: string
-  storagePath?: string
-  files?: FileInfo[]
-  startUserSelectAssignees?: Record<string, number[]>
 }
 
 export interface FileInfo {
