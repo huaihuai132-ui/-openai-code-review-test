@@ -39,3 +39,10 @@ export const createFile = (data: any) => {
 export const updateFile = (data: any) => {
   return request.upload({ url: '/infra/file/upload', data })
 }
+
+// 下载文件
+export const getFileContent = (fileId) => {
+  // 构造完整的URL路径
+  const url = `/infra/file/getFileUrl/${fileId}`;
+  return request.get({ url });
+}
