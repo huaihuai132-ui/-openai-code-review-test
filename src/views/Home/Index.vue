@@ -1,13 +1,23 @@
 <template>
   <el-row :gutter="20" class="mt-8px">
     <!-- 左侧区域：占 2/3 宽度 -->
-    <el-col :xl="16" :lg="16" :md="24" :sm="24" :xs="24">
+    <el-col
+      :xl="16"
+      :lg="16"
+      :md="24"
+      :sm="24"
+      :xs="24">
       <!-- 员工信息模块 -->
       <el-card shadow="never" class="mb-8px">
         <el-skeleton :loading="loading" animated>
           <el-row :gutter="16" justify="space-between">
             <!-- 员工信息左侧：占 1/3 宽度 -->
-            <el-col :xl="9" :lg="9" :md="12" :sm="24" :xs="24">
+            <el-col
+              :xl="9"
+              :lg="9"
+              :md="12"
+              :sm="24"
+              :xs="24">
               <div class="flex items-center">
                 <el-avatar :src="avatar" :size="70" class="mr-20px" shape="square">
                   <img src="@/assets/imgs/avatar.gif" alt="" style="object-fit: cover;" />
@@ -26,7 +36,12 @@
               </div>
             </el-col>
             <!-- 员工信息右侧：占 2/3 宽度 -->
-            <el-col :xl="15" :lg="15" :md="12" :sm="24" :xs="24">
+            <el-col
+              :xl="15"
+              :lg="15"
+              :md="12"
+              :sm="24"
+              :xs="24">
               <div class="h-70px flex items-center justify-end lt-sm:mt-10px">
                 <div class="px-15px text-center">
                   <div class="text-16px font-medium">部门</div>
@@ -50,7 +65,12 @@
 
       <!-- 任务中心和审批中心 -->
       <el-row :gutter="8" class="mb-8px">
-        <el-col :xl="12" :lg="12" :md="24" :sm="24" :xs="24">
+        <el-col
+          :xl="12"
+          :lg="12"
+          :md="24"
+          :sm="24"
+          :xs="24">
           <el-card shadow="never">
             <template #header>
               <div class="h-3 flex justify-between">
@@ -77,7 +97,12 @@
             </el-skeleton>
           </el-card>
         </el-col>
-        <el-col :xl="12" :lg="12" :md="24" :sm="24" :xs="24">
+        <el-col
+          :xl="12"
+          :lg="12"
+          :md="24"
+          :sm="24"
+          :xs="24">
           <el-card shadow="never">
             <template #header>
               <div class="h-3 flex justify-between">
@@ -118,7 +143,14 @@
         </template>
         <el-skeleton :loading="loading" animated>
           <el-row :gutter="16">
-            <el-col v-for="item in shortcut" :key="`team-${item.name}`" :xl="8" :lg="8" :md="12" :sm="24" :xs="24"
+            <el-col
+              v-for="item in shortcut"
+              :key="`team-${item.name}`"
+              :xl="8"
+              :lg="8"
+              :md="12"
+              :sm="24"
+              :xs="24"
               class="mb-8px">
               <el-card shadow="hover" class="cursor-pointer">
                 <div class="flex items-center">
@@ -129,7 +161,13 @@
                 </div>
               </el-card>
             </el-col>
-            <el-col :xl="8" :lg="8" :md="12" :sm="24" :xs="24" class="mb-8px">
+            <el-col
+              :xl="8"
+              :lg="8"
+              :md="12"
+              :sm="24"
+              :xs="24"
+              class="mb-8px">
               <el-card shadow="hover" class="cursor-pointer">
                 <div class="flex items-center">
                   <Icon icon="ion:grid-outline" class="mr-8px" />
@@ -143,7 +181,12 @@
     </el-col>
 
     <!-- 右侧区域：占 1/3 宽度 -->
-    <el-col :xl="8" :lg="8" :md="24" :sm="24" :xs="24">
+    <el-col
+      :xl="8"
+      :lg="8"
+      :md="24"
+      :sm="24"
+      :xs="24">
       <div class="right-container">
         <!-- 横幅模块 - 自动轮播 -->
         <el-card shadow="never" class="banner-module">
