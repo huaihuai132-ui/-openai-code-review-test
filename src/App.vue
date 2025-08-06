@@ -1,9 +1,11 @@
 <script lang="ts" setup>
+import { computed } from 'vue'
 import { isDark } from '@/utils/is'
 import { useAppStore } from '@/store/modules/app'
 import { useDesign } from '@/hooks/web/useDesign'
 import { CACHE_KEY, useCache } from '@/hooks/web/useCache'
 import routerSearch from '@/components/RouterSearch/index.vue'
+import GlobalWatermark from '@/components/GlobalWatermark/index.vue'
 
 defineOptions({ name: 'APP' })
 
@@ -28,6 +30,7 @@ setDefaultTheme()
   <ConfigGlobal :size="currentSize">
     <RouterView :class="greyMode ? `${prefixCls}-grey-mode` : ''" />
     <routerSearch />
+    <GlobalWatermark />
   </ConfigGlobal>
 </template>
 <style lang="scss">
