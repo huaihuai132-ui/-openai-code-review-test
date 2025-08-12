@@ -33,7 +33,9 @@ export function createVitePlugins() {
     PurgeIcons(),
     ElementPlus({}),
     // Vue DevTools - 仅在开发环境启用
-    VueDevTools(),
+    VueDevTools({
+      launchEditor: 'cursor' // 指定使用 Cursor 编辑器
+    }),
     AutoImport({
       include: [
         /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
