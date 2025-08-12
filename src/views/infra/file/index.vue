@@ -35,6 +35,9 @@
         <el-button type="warning" @click="testBatchUpload">
           <Icon icon="ep:upload-filled" class="mr-5px" /> 测试批量上传
         </el-button>
+        <el-button type="info" @click="testStaticUpload">
+          <Icon icon="ep:picture" class="mr-5px" /> 测试静态文件上传
+        </el-button>
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -49,19 +52,19 @@
       <el-table-column label="文件类型" align="center" prop="type" width="180px" />
       <el-table-column label="文件内容" align="center" prop="url" width="110px">
         <template #default="{ row }">
-          <el-image v-if="row.type && row.type.includes('image')" class="h-80px w-80px" lazy :src="row.url"
-            :preview-src-list="[row.url]" preview-teleported fit="cover" />
-          <el-link v-else-if="row.type && row.type.includes('pdf')" type="primary" :href="row.url" :underline="false"
-            target="_blank">
+          <el-image v-if="row.type && row.type.includes('image') && row.configId === 0" class="h-80px w-80px" lazy
+            :src="getStaticImageUrl(row.path)" :preview-src-list="[getStaticImageUrl(row.path)]" preview-teleported
+            fit="cover" />
+          <el-link v-else type="primary" @click="previewFile(row)" :underline="false">
             预览
           </el-link>
-          <el-link v-else type="primary" download :href="row.url" :underline="false" target="_blank">下载</el-link>
         </template>
       </el-table-column>
       <el-table-column label="上传时间" align="center" prop="createTime" width="180" :formatter="safeDateFormatter" />
       <el-table-column label="操作" align="center">
         <template #default="scope">
-          <el-button link type="primary" @click="copyToClipboard(scope.row.url)">
+          <el-button link type="primary" @click="downloadFile(scope.row)">下载</el-button>
+          <el-button link type="success" @click="copyToClipboard(scope.row.url)">
             复制链接
           </el-button>
           <el-button link type="danger" @click="handleDelete(scope.row.id)" v-hasPermi="['infra:file:delete']">
@@ -113,18 +116,53 @@
       <el-button @click="batchUploadVisible = false">关闭</el-button>
     </template>
   </el-dialog>
+
+  <!-- 静态文件上传测试弹窗 -->
+  <el-dialog v-model="staticUploadVisible" title="测试静态文件上传（static桶）" width="800px">
+    <el-row :gutter="20">
+      <el-col :span="24">
+        <h4>静态文件上传</h4>
+        <StaticFileUpload :drag="true" accept=".jpg,.png,.pdf,.doc,.docx,.txt,.zip" tip="支持图片、文档等格式，上传到static桶（匿名访问）"
+          @upload-success="handleStaticUploadSuccess" @upload-error="handleUploadError" />
+
+        <div v-if="staticUploadResult" class="upload-result">
+          <h4>上传结果：</h4>
+          <pre>{{ JSON.stringify(staticUploadResult, null, 2) }}</pre>
+        </div>
+      </el-col>
+    </el-row>
+
+    <el-alert title="说明" type="info" :closable="false" style="margin-top: 20px;">
+      <p>• <strong>上传位置</strong>：文件会上传到 MinIO 的 <code>static</code> 桶</p>
+      <p>• <strong>访问权限</strong>：static 桶支持匿名访问，无需认证</p>
+      <p>• <strong>适用场景</strong>：头像、公共图片、静态资源等</p>
+      <p>• <strong>对比</strong>：普通上传使用 <code>oafile</code> 桶，需要认证访问</p>
+      <p>• <strong>上传方式</strong>：使用预签名URL直接上传到MinIO</p>
+    </el-alert>
+
+    <template #footer>
+      <el-button @click="staticUploadVisible = false">关闭</el-button>
+    </template>
+  </el-dialog>
 </template>
 <script lang="ts" setup>
 import { fileSizeFormatter, base64Encode } from '@/utils'
 import { dateFormatter } from '@/utils/formatTime'
 import * as FileApi from '@/api/infra/file'
+import * as StaticFileApi from '@/api/infra/file/staticFile'
 import FileForm from './FileForm.vue'
-import { SingleFileUpload, BatchFileUpload } from '@/components/FileUpload'
+import { SingleFileUpload, BatchFileUpload, StaticFileUpload } from '@/components/FileUpload'
+import { useUserStore } from '@/store/modules/user'
 
 defineOptions({ name: 'InfraFile' })
 
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
+const userStore = useUserStore()
+
+// 固定域名配置
+const FIXED_DOMAIN = 'http://182.109.52.126:49090'
+// const currentDomain = `${window.location.protocol}//${window.location.host}`
 
 const loading = ref(true) // 列表的加载中
 const total = ref(0) // 列表的总页数
@@ -145,6 +183,10 @@ const batchUploadVisible = ref(false)
 const singleUploadResult = ref(null)
 const batchUploadResult = ref(null)
 const uploadSummary = ref(null)
+
+// 静态文件上传相关
+const staticUploadVisible = ref(false)
+const staticUploadResult = ref(null)
 
 /** 查询列表 */
 const getList = async () => {
@@ -169,7 +211,7 @@ const handleQuery = () => {
 }
 
 const testDown = () => {
-  FileApi.getFileContent(2).then((res) => {
+  FileApi.getDownloadUrl(2).then((res) => {
     console.log(res)
   })
 }
@@ -193,14 +235,111 @@ const copyToClipboard = (text: string) => {
   })
 }
 
+// 获取静态图片URL
+const getStaticImageUrl = (path: string) => {
+  if (!path) return ''
+  // 拼接minio静态桶地址
+  return `${FIXED_DOMAIN}/minio/static/${path}`
+}
+
+// 预览文件
+const previewFile = async (file) => {
+  try {
+    console.log('预览文件:', file)
+
+    // 判断是否为静态文件
+    if (file.configId === 0) {
+      // 静态文件预览
+      if (file.type && file.type.includes('image')) {
+        // 静态图片文件：使用现有的getStaticImageUrl方法（在模板中已处理）
+        // 这里不需要额外处理，因为图片预览在模板中已经通过getStaticImageUrl处理了
+        return
+      } else {
+        // 静态非图片文件：拼接预览地址
+        const staticFileUrl = `${FIXED_DOMAIN}/minio/static/${file.path}`
+        const encodedUrl = encodeURIComponent(base64Encode(staticFileUrl))
+        const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
+        window.open(previewUrl, '_blank')
+      }
+    } else {
+      // 普通文件预览
+      const signedUrl = await FileApi.getDownloadUrl(file.id)
+
+      // 解析原始URL并替换域名
+      const urlObj = new URL(signedUrl)
+      const pathAndQuery = urlObj.pathname + urlObj.search
+
+      // 构建文件访问URL
+      let fileUrl = `${FIXED_DOMAIN}/minio${pathAndQuery}`
+
+      // 添加用户昵称参数
+      const nickname = userStore.getUser?.nickname || ''
+      if (nickname) {
+        const separator = fileUrl.includes('?') ? '&' : '?'
+        fileUrl += `${separator}nickName=${encodeURIComponent(nickname)}`
+      }
+
+      // 构建预览URL
+      const encodedUrl = encodeURIComponent(base64Encode(fileUrl))
+      const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
+      window.open(previewUrl, '_blank')
+    }
+  } catch (error) {
+    console.error('预览文件失败:', error)
+    message.error('预览文件失败')
+  }
+}
+
+// 下载文件
+const downloadFile = async (file) => {
+  try {
+    console.log('下载文件:', file)
+
+    // 判断是否为静态文件
+    if (file.configId === 0) {
+      // 静态文件下载：直接拼接静态文件下载地址
+      const staticDownloadUrl = `${FIXED_DOMAIN}/minio/static/${file.path}`
+      window.open(staticDownloadUrl, '_blank')
+    } else {
+      // 普通文件下载：获取签名地址并替换域名
+      const signedUrl = await FileApi.getDownloadUrl(file.id)
+
+      // 解析原始URL并替换域名
+      const urlObj = new URL(signedUrl)
+      const pathAndQuery = urlObj.pathname + urlObj.search
+
+      // 构建新的下载URL：当前域名 + /minio/ + 原路径和查询参数
+      const downloadUrl = `${FIXED_DOMAIN}/minio${pathAndQuery}`
+      window.open(downloadUrl, '_blank')
+    }
+  } catch (error) {
+    console.error('获取下载地址失败:', error)
+    message.error('获取下载地址失败')
+  }
+}
+
 /** 删除按钮操作 */
 const handleDelete = async (id: number) => {
   try {
     // 删除的二次确认
     await message.delConfirm()
-    // 发起删除
-    await FileApi.deleteFile(id)
-    message.success(t('common.delSuccess'))
+
+    // 查找要删除的文件信息
+    const fileToDelete = list.value.find(file => file.id === id)
+
+    // 判断是否为静态文件（通过configId是否为0来判断）
+    const isStaticFile = fileToDelete.configId === 0
+
+    if (isStaticFile) {
+      // 删除静态文件
+      await StaticFileApi.deleteStaticFile(id)
+      message.success('静态文件删除成功')
+    } else {
+      // 删除普通文件
+      await FileApi.deleteFile(id)
+      message.success(t('common.delSuccess'))
+    }
+
     // 刷新列表
     await getList()
   } catch { }
@@ -217,6 +356,19 @@ const testBatchUpload = () => {
   batchUploadResult.value = null
   uploadSummary.value = null
   batchUploadVisible.value = true
+}
+
+// 测试静态文件上传
+const testStaticUpload = () => {
+  staticUploadResult.value = null
+  staticUploadVisible.value = true
+}
+
+// 静态文件上传成功处理
+const handleStaticUploadSuccess = (result, file) => {
+  console.log('静态文件上传成功:', result, file)
+  staticUploadResult.value = result
+  message.success('静态文件上传成功！')
 }
 
 // 单个文件上传成功处理
