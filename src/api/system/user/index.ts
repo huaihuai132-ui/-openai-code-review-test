@@ -4,12 +4,16 @@ export interface UserVO {
   id: number
   username: string
   nickname: string
+  workerCode?: number
+  rank?: string
   deptId: number
   postIds: string[]
   email: string
   mobile: string
   sex: number
   avatar: string
+  officePhone?: string
+  officeNumber?: string
   loginIp: string
   status: number
   remark: string

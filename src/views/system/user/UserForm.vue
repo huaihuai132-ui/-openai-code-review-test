@@ -40,6 +40,30 @@
       </el-row>
       <el-row>
         <el-col :span="12">
+          <el-form-item label="办公电话" prop="officePhone">
+            <el-input v-model="formData.officePhone" maxlength="20" placeholder="请输入办公电话" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="办公室号" prop="officeNumber">
+            <el-input v-model="formData.officeNumber" maxlength="20" placeholder="请输入办公室房号" />
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="工号" prop="workerCode">
+            <el-input v-model="formData.workerCode" placeholder="请输入工号" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="职级" prop="rank">
+            <el-input v-model="formData.rank" placeholder="请输入职级" />
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
           <el-form-item v-if="formData.id === undefined" label="用户名称" prop="username">
             <el-input v-model="formData.username" placeholder="请输入用户名称" />
           </el-form-item>
@@ -118,6 +142,10 @@ const formData = ref({
   deptId: '',
   mobile: '',
   email: '',
+  officePhone: '',
+  officeNumber: '',
+  workerCode: undefined,
+  rank: '',
   id: undefined,
   username: '',
   password: '',
@@ -205,6 +233,10 @@ const resetForm = () => {
     deptId: '',
     mobile: '',
     email: '',
+    officePhone: '',
+    officeNumber: '',
+    workerCode: undefined,
+    rank: '',
     id: undefined,
     username: '',
     password: '',

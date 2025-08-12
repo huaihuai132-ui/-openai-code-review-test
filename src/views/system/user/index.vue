@@ -38,6 +38,33 @@
               class="!w-240px"
             />
           </el-form-item>
+          <el-form-item label="办公电话" prop="officePhone">
+            <el-input
+              v-model="queryParams.officePhone"
+              placeholder="请输入办公电话"
+              clearable
+              @keyup.enter="handleQuery"
+              class="!w-240px"
+            />
+          </el-form-item>
+          <el-form-item label="办公室号" prop="officeNumber">
+            <el-input
+              v-model="queryParams.officeNumber"
+              placeholder="请输入办公室房号"
+              clearable
+              @keyup.enter="handleQuery"
+              class="!w-240px"
+            />
+          </el-form-item>
+          <el-form-item label="工号" prop="workerCode">
+            <el-input
+              v-model="queryParams.workerCode"
+              placeholder="请输入工号"
+              clearable
+              @keyup.enter="handleQuery"
+              class="!w-240px"
+            />
+          </el-form-item>
           <el-form-item label="状态" prop="status">
             <el-select
               v-model="queryParams.status"
@@ -117,6 +144,10 @@
             :show-overflow-tooltip="true"
           />
           <el-table-column label="手机号码" align="center" prop="mobile" width="120" />
+          <el-table-column label="办公电话" align="center" prop="officePhone" width="120" />
+          <el-table-column label="办公室房号" align="center" prop="officeNumber" width="120" />
+          <el-table-column label="工号" align="center" prop="workerCode" width="100" />
+          <el-table-column label="职级" align="center" prop="rank" width="100" />
           <el-table-column label="状态" key="status">
             <template #default="scope">
               <el-switch
@@ -224,6 +255,10 @@ const queryParams = reactive({
   pageSize: 10,
   username: undefined,
   mobile: undefined,
+  officePhone: undefined,
+  officeNumber: undefined,
+  workerCode: undefined,
+  rank: undefined,
   status: undefined,
   deptId: undefined,
   createTime: []
