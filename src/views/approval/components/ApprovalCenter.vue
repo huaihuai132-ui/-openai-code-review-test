@@ -54,7 +54,7 @@
       </div>
       <div v-show="activeCategory === 'copy'" class="category-container">
         <common-list :data="copyList" category="copy" @select-card="handleSelectCard" @search="handleSearch"
-          :show-category-tags="false" />
+          :show-category-tags="true" />
       </div>
     </div>
     <div class="content" v-else>

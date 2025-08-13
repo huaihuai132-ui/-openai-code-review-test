@@ -61,8 +61,8 @@
                             <span class="value">{{ getProcessInstanceName(item) }}</span>
                         </div>
 
-                        <!-- 流程分类 - 不在抄送我的中显示 -->
-                        <div class="detail-item" v-if="item.categoryName && category !== 'copy'">
+                        <!-- 流程分类 -->
+                        <div class="detail-item" v-if="item.categoryName">
                             <span class="label">流程分类：</span>
                             <span class="value">{{ item.categoryName }}</span>
                         </div>
@@ -250,9 +250,19 @@ const filteredData = computed(() => {
     // 按分类筛选
     if (queryParams.categoryFilter.length > 0) {
         result = result.filter(item => {
-            const categoryCode = item.category ||
-                (item.processDefinition ? item.processDefinition.category : null) ||
-                (item.processInstance ? item.processInstance.category : null);
+            let categoryCode;
+
+            // 根据不同的分类获取categoryCode
+            if (props.category === 'copy') {
+                // 抄送分类：直接从item.category获取
+                categoryCode = item.category;
+            } else {
+                // 其他分类：从多个可能的位置获取
+                categoryCode = item.category ||
+                    (item.processDefinition ? item.processDefinition.category : null) ||
+                    (item.processInstance ? item.processInstance.category : null);
+            }
+
             return queryParams.categoryFilter.includes(categoryCode);
         });
     }
@@ -463,6 +473,7 @@ const handleQuery = () => {
 // 重置
 const resetQuery = () => {
     queryFormRef.value?.resetFields();
+    queryParams.createTime = [];
     queryParams.categoryFilter = [];
     handleQuery();
 };
