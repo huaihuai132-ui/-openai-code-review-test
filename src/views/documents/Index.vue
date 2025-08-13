@@ -122,6 +122,7 @@ const userStore = useUserStore()
 
 // 固定域名配置
 const FIXED_DOMAIN = 'http://182.109.52.126:49090'
+// 获取当前域名
 // const currentDomain = `${window.location.protocol}//${window.location.host}`
 
 // Base64编码函数
@@ -240,7 +241,8 @@ const handleUploadError = (error, file) => {
 const previewFile = async (file) => {
   try {
     console.log('预览文件:', file)
-
+    // 添加用户昵称参数
+    const nickname = userStore.getUser?.nickname || ''
     // 判断是否为静态文件
     if (file.configId === 0) {
       // 静态文件预览
@@ -250,32 +252,31 @@ const previewFile = async (file) => {
         return
       } else {
         // 静态非图片文件：拼接预览地址
-        const staticFileUrl = `${FIXED_DOMAIN}/minio/static/${file.path}`
+        const staticFileUrl = `${FIXED_DOMAIN}/minio/static/${file.path}` + `?nickname=${nickname}`
         const encodedUrl = encodeURIComponent(base64Encode(staticFileUrl))
         const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
         window.open(previewUrl, '_blank')
       }
     } else {
-      // 普通文件预览
+      // 普通文件预览 - 不能修改签名URL的查询参数，否则会破坏签名
       const signedUrl = await FileApi.getDownloadUrl(file.id)
 
-      // 解析原始URL并替换域名
+      // 解析原始URL并替换域名，但保持查询参数不变
       const urlObj = new URL(signedUrl)
       const pathAndQuery = urlObj.pathname + urlObj.search
 
-      // 构建文件访问URL
-      let fileUrl = `${FIXED_DOMAIN}/minio${pathAndQuery}`
+      // 构建文件访问URL，保持签名完整性
+      const fileUrl = `${FIXED_DOMAIN}/minio${pathAndQuery}` + `&nickname=${nickname}`
 
-      // 添加用户昵称参数
-      const nickname = userStore.getUser?.nickname || ''
+      // 构建预览URL，将nickName作为预览服务的参数而不是文件URL的参数
+      const encodedUrl = encodeURIComponent(base64Encode(fileUrl))
+      let previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
+
+      // 将用户昵称作为预览服务的参数传递，而不是文件URL的参数
       if (nickname) {
-        const separator = fileUrl.includes('?') ? '&' : '?'
-        fileUrl += `${separator}nickName=${encodeURIComponent(nickname)}`
+        previewUrl += `&nickname=${encodeURIComponent(nickname)}`
       }
 
-      // 构建预览URL
-      const encodedUrl = encodeURIComponent(base64Encode(fileUrl))
-      const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
       window.open(previewUrl, '_blank')
     }
   } catch (error) {
@@ -295,14 +296,14 @@ const downloadFile = async (file) => {
       const staticDownloadUrl = `${FIXED_DOMAIN}/minio/static/${file.path}`
       window.open(staticDownloadUrl, '_blank')
     } else {
-      // 普通文件下载：获取签名地址并替换域名
+      // 普通文件下载：获取签名地址并替换域名，保持签名完整性
       const signedUrl = await FileApi.getDownloadUrl(file.id)
 
-      // 解析原始URL并替换域名
+      // 解析原始URL并替换域名，但保持查询参数不变以维护签名
       const urlObj = new URL(signedUrl)
       const pathAndQuery = urlObj.pathname + urlObj.search
 
-      // 构建新的下载URL：当前域名 + /minio/ + 原路径和查询参数
+      // 构建新的下载URL：固定域名 + /minio/ + 原路径和查询参数（包含签名）
       const downloadUrl = `${FIXED_DOMAIN}/minio${pathAndQuery}`
       window.open(downloadUrl, '_blank')
     }
