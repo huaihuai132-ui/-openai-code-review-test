@@ -8,32 +8,35 @@
       :inline="true"
       label-width="68px"
     >
-      <el-form-item label="会议室名称" prop="roomName">
+      <el-form-item label="会议室名称" label-width="90px" prop="roomName">
         <el-input
           v-model="queryParams.roomName"
           placeholder="请输入会议室名称"
           clearable
           @keyup.enter="handleQuery"
-          class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="会议室位置" prop="location">
+      <el-form-item label="会议室位置" label-width="90px" prop="location">
         <el-input
           v-model="queryParams.location"
           placeholder="请输入会议室位置"
           clearable
           @keyup.enter="handleQuery"
-          class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="状态(1-可用,0-不可用)" prop="status">
+      <el-form-item label="状态" prop="meetingRoomStatus">
         <el-select
-          v-model="queryParams.status"
-          placeholder="请选择状态(1-可用,0-不可用)"
+          v-model="queryParams.meetingRoomStatus"
+          placeholder="请选择状态"
           clearable
-          class="!w-240px"
+          style="width: 200px;"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option
+            v-for="dict in getIntDictOptions(DICT_TYPE.SYS_ENABLE_TYPE)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
@@ -44,10 +47,9 @@
           start-placeholder="开始日期"
           end-placeholder="结束日期"
           :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
         />
       </el-form-item>
-      <el-form-item>
+      <el-form-item style="margin-left: auto; flex-shrink: 0;">
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
         <el-button
@@ -74,10 +76,14 @@
   <!-- 列表 -->
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
-      <el-table-column label="会议室ID" align="center" prop="id" />
+<!--      <el-table-column label="会议室ID" align="center" prop="id" />-->
       <el-table-column label="会议室名称" align="center" prop="roomName" />
       <el-table-column label="会议室位置" align="center" prop="location" />
-      <el-table-column label="状态(1-可用,0-不可用)" align="center" prop="status" />
+      <el-table-column label="状态" align="center" prop="meetingRoomStatus">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.SYS_ENABLE_TYPE" :value="scope.row.meetingRoomStatus" />
+        </template>
+      </el-table-column>
       <el-table-column
         label="创建时间"
         align="center"
@@ -120,6 +126,7 @@
 </template>
 
 <script setup lang="ts">
+import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { OaMeetingRoomApi, OaMeetingRoomVO } from '@/api/bpm/oameetingroom'
@@ -139,7 +146,7 @@ const queryParams = reactive({
   pageSize: 10,
   roomName: undefined,
   location: undefined,
-  status: undefined,
+  meetingRoomStatus: undefined,
   createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单

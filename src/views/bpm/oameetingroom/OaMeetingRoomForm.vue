@@ -10,12 +10,18 @@
       <el-form-item label="会议室名称" prop="roomName">
         <el-input v-model="formData.roomName" placeholder="请输入会议室名称" />
       </el-form-item>
-      <el-form-item label="会议室位置" prop="location">
+      <el-form-item label="会议室位置" prop="location" >
         <el-input v-model="formData.location" placeholder="请输入会议室位置" />
       </el-form-item>
-      <el-form-item label="状态(1-可用,0-不可用)" prop="status">
-        <el-radio-group v-model="formData.status">
-          <el-radio value="1">请选择字典生成</el-radio>
+      <el-form-item label="状态" prop="meetingRoomStatus">
+        <el-radio-group v-model="formData.meetingRoomStatus">
+          <el-radio
+            v-for="dict in getIntDictOptions(DICT_TYPE.SYS_ENABLE_TYPE)"
+            :key="dict.value"
+            :label="dict.value"
+          >
+            {{ dict.label }}
+          </el-radio>
         </el-radio-group>
       </el-form-item>
     </el-form>
@@ -26,6 +32,7 @@
   </Dialog>
 </template>
 <script setup lang="ts">
+import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { OaMeetingRoomApi, OaMeetingRoomVO } from '@/api/bpm/oameetingroom'
 
 /** 会议室信息 表单 */
@@ -42,10 +49,11 @@ const formData = ref({
   id: undefined,
   roomName: undefined,
   location: undefined,
-  status: undefined,
+  meetingRoomStatus: 1,
 })
 const formRules = reactive({
   roomName: [{ required: true, message: '会议室名称不能为空', trigger: 'blur' }],
+  meetingRoomStatus: [{ required: true, message: '状态不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
 
@@ -97,7 +105,7 @@ const resetForm = () => {
     id: undefined,
     roomName: undefined,
     location: undefined,
-    status: undefined,
+    meetingRoomStatus: 1,
   }
   formRef.value?.resetFields()
 }

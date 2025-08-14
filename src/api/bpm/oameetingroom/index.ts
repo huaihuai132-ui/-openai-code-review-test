@@ -5,7 +5,7 @@ export interface OaMeetingRoomVO {
   id: number // 会议室ID
   roomName: string // 会议室名称
   location: string // 会议室位置
-  status: number // 状态(1-可用,0-不可用)
+  meetingRoomStatus: number // 状态
 }
 
 // 会议室信息 API
