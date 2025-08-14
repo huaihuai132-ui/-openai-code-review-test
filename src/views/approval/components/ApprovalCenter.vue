@@ -41,19 +41,23 @@
 
     <div class="content" v-if="activeCategory">
       <div v-show="activeCategory === 'waiting'" class="category-container">
-        <common-list :data="waitingList" category="waiting" @select-card="handleSelectCard" @search="handleSearch"
+        <common-list
+:data="waitingList" category="waiting" @select-card="handleSelectCard" @search="handleSearch"
           :show-category-tags="true" />
       </div>
       <div v-show="activeCategory === 'done'" class="category-container">
-        <common-list :data="doneList" category="done" @select-card="handleSelectCard" @search="handleSearch"
+        <common-list
+:data="doneList" category="done" @select-card="handleSelectCard" @search="handleSearch"
           :show-category-tags="true" />
       </div>
       <div v-show="activeCategory === 'apply'" class="category-container">
-        <common-list :data="applyList" category="apply" @select-card="handleSelectCard" @search="handleSearch"
+        <common-list
+:data="applyList" category="apply" @select-card="handleSelectCard" @search="handleSearch"
           :show-category-tags="true" />
       </div>
       <div v-show="activeCategory === 'copy'" class="category-container">
-        <common-list :data="copyList" category="copy" @select-card="handleSelectCard" @search="handleSearch"
+        <common-list
+:data="copyList" category="copy" @select-card="handleSelectCard" @search="handleSearch"
           :show-category-tags="true" />
       </div>
     </div>
@@ -90,6 +94,7 @@ import { getTaskTodoPage, getTaskDonePage } from '@/api/bpm/task';
 import { getProcessInstanceMyPage, getProcessInstanceCopyPage } from '@/api/bpm/processInstance';
 import { updateLastReadTime, getLastReadTime } from '@/utils/cache';
 import { Clock, Check, Document, CopyDocument, Close } from '@element-plus/icons-vue';
+import { useRoute } from 'vue-router'
 
 const activeCategory = ref('');
 const waitingList = ref([]);
@@ -311,8 +316,19 @@ watch(activeCategory, () => {
   selectedItemId.value = '';
 });
 
+// 获取路由参数
+const route = useRoute();
+
 // 初始化
 onMounted(async () => {
+  // 检查路由参数，如果有category参数则设置对应的分类
+  if (route.query.category) {
+    const category = route.query.category as string;
+    if (['waiting', 'done', 'apply', 'copy'].includes(category)) {
+      activeCategory.value = category;
+    }
+  }
+
   // 加载所有分类数据
   await Promise.all([
     loadWaitingList(),

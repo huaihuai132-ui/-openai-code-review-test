@@ -37,101 +37,36 @@
             </el-col>
             <!-- 员工信息右侧：占 2/3 宽度 -->
             <el-col
-              :xl="15"
-              :lg="15"
-              :md="12"
-              :sm="24"
-              :xs="24">
-              <div class="h-70px flex items-center justify-end lt-sm:mt-10px">
-                <div class="px-15px text-center">
-                  <div class="text-16px font-medium">部门</div>
-                  <div class="mt-8px text-15px text-gray-500">信息中心</div>
-                </div>
-                <el-divider direction="vertical" border-style="dashed" class="h-40px" />
-                <div class="px-15px text-center">
-                  <div class="text-16px font-medium">岗位</div>
-                  <div class="mt-8px text-15px text-gray-500">产品经理</div>
-                </div>
-                <el-divider direction="vertical" border-style="dashed" class="h-40px" />
-                <div class="px-15px text-center">
-                  <div class="text-16px font-medium">级别</div>
-                  <div class="mt-8px text-15px text-gray-500">{{ rank }}</div>
-                </div>
-              </div>
-            </el-col>
-          </el-row>
-        </el-skeleton>
-      </el-card>
-
-      <!-- 任务中心和审批中心 -->
-      <el-row :gutter="8" class="mb-8px">
-        <el-col
-          :xl="12"
-          :lg="12"
+          :xl="15"
+          :lg="15"
           :md="24"
           :sm="24"
           :xs="24">
-          <el-card shadow="never">
-            <template #header>
-              <div class="h-3 flex justify-between">
-                <span>
-                  <Icon icon="ion:grid-outline" class="mr-8px" />任务中心 >
-                </span>
-              </div>
-            </template>
-            <el-skeleton :loading="loading" animated>
-              <el-row>
-                <el-col :span="8" class="text-center">
-                  <div class="text-20px">2</div>
-                  <div class="text-14px text-gray-500">今日任务</div>
-                </el-col>
-                <el-col :span="8" class="text-center">
-                  <div class="text-20px">6</div>
-                  <div class="text-14px text-gray-500">未来7天</div>
-                </el-col>
-                <el-col :span="8" class="text-center">
-                  <div class="text-20px">2</div>
-                  <div class="text-14px text-gray-500">已超期</div>
-                </el-col>
-              </el-row>
-            </el-skeleton>
-          </el-card>
-        </el-col>
-        <el-col
-          :xl="12"
-          :lg="12"
-          :md="24"
-          :sm="24"
-          :xs="24">
-          <el-card shadow="never">
-            <template #header>
-              <div class="h-3 flex justify-between">
-                <span>
-                  <Icon icon="ion:grid-outline" class="mr-8px" />审批中心 >
-                </span>
-                <div class="text-12px text-gray-400">*此处仅展示近30天数据</div>
-              </div>
-            </template>
-            <el-skeleton :loading="loading" animated>
-              <el-row>
-                <el-col :span="8" class="text-center">
+          <div class="h-70px flex items-center justify-end">
+                  <el-col :span="6" class="text-center cursor-pointer" @click="goApproval('waiting')">
                   <div class="text-20px">2</div>
                   <div class="text-14px text-gray-500">待我审批</div>
                 </el-col>
-                <el-col :span="8" class="text-center">
+                <el-divider direction="vertical" border-style="dashed" class="h-40px" />
+                <el-col :span="6" class="text-center cursor-pointer" @click="goApproval('done')">
                   <div class="text-20px">6</div>
                   <div class="text-14px text-gray-500">我申请的</div>
                 </el-col>
-                <el-col :span="8" class="text-center">
+                <el-divider direction="vertical" border-style="dashed" class="h-40px" />
+              <el-col :span="6" class="text-center cursor-pointer" @click="goApproval('apply')">
                   <div class="text-20px">2</div>
                   <div class="text-14px text-gray-500">驳回我的</div>
                 </el-col>
-              </el-row>
-            </el-skeleton>
-          </el-card>
+                  <el-divider direction="vertical" border-style="dashed" class="h-40px" />
+              <el-col :span="6" class="text-center cursor-pointer" @click="goApproval('copy')">
+                  <div class="text-20px">2</div>
+                  <div class="text-14px text-gray-500">抄送我的</div>
+                </el-col>
+              </div>
         </el-col>
-      </el-row>
-
+          </el-row>
+        </el-skeleton>
+      </el-card>
       <!-- 常用系统入口 -->
       <el-card shadow="never">
         <template #header>
@@ -474,6 +409,22 @@ const getAllApi = async () => {
 const handleShortcutClick = (url: string) => {
   router.push(url)
 }
+
+  const goApproval = (category: 'waiting' | 'done' | 'apply' | 'copy') => {
+    // 根据首页的分类名称映射到审批页面的分类
+    const categoryMap = {
+      'waiting': 'waiting',    // 待我审批 -> 待审批
+      'done': 'done',          // 我申请的 -> 已审批  
+      'apply': 'apply',        // 驳回我的 -> 我申请的
+      'copy': 'copy'           // 抄送我的 -> 抄送我的
+    }
+    
+    const targetCategory = categoryMap[category]
+    router.push({ 
+      path: '/approval', 
+      query: { category: targetCategory }
+    })
+  }
 
 getAllApi()
 </script>
