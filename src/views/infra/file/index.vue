@@ -48,6 +48,7 @@
       <el-table-column label="文件名" align="center" prop="name" :show-overflow-tooltip="true" />
       <el-table-column label="文件路径" align="center" prop="path" :show-overflow-tooltip="true" />
       <el-table-column label="URL" align="center" prop="url" :show-overflow-tooltip="true" />
+      <el-table-column label="虚拟目录" align="center" prop="dir" width="120" :show-overflow-tooltip="true" />
       <el-table-column label="文件大小" align="center" prop="size" width="120" :formatter="safeFileSizeFormatter" />
       <el-table-column label="文件类型" align="center" prop="type" width="180px" />
       <el-table-column label="文件内容" align="center" prop="url" width="110px">

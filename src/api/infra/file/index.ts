@@ -8,6 +8,7 @@ export interface FileVO {
   type: string
   size: number
   businessCode?: string
+  dir?: string
   createTime: string
   updateTime: string
 }
@@ -42,6 +43,7 @@ export interface FileCreateReqVO {
   type?: string
   size: number
   businessCode?: string
+  dir?: string
 }
 
 // 获取文件分页
@@ -50,7 +52,7 @@ export const getFilePage = (params: any) => {
 }
 
 // 上传文件
-export const uploadFile = (file: File, directory?: string, businessCode?: string) => {
+export const uploadFile = (file: File, directory?: string, businessCode?: string, dir?: string) => {
   const formData = new FormData()
   formData.append('file', file)
   if (directory) {
@@ -58,6 +60,9 @@ export const uploadFile = (file: File, directory?: string, businessCode?: string
   }
   if (businessCode) {
     formData.append('businessCode', businessCode)
+  }
+  if (dir) {
+    formData.append('dir', dir)
   }
   return request.upload<string>({
     url: '/infra/file/upload',

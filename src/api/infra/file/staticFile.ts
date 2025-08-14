@@ -22,6 +22,7 @@ export interface StaticFileCreateReqVO {
   url: string
   type?: string
   size: number
+  dir?: string
 }
 
 // 获取静态文件预签名地址
@@ -37,6 +38,22 @@ export const createStaticFile = (data: StaticFileCreateReqVO) => {
   return request.post<number>({
     url: '/infra/static-file/create',
     data
+  })
+}
+
+// 上传静态文件
+export const uploadStaticFile = (file: File, directory?: string, dir?: string) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  if (directory) {
+    formData.append('directory', directory)
+  }
+  if (dir) {
+    formData.append('dir', dir)
+  }
+  return request.upload<string>({
+    url: '/infra/static-file/upload',
+    data: formData
   })
 }
 

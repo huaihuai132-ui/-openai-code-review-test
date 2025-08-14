@@ -15,6 +15,7 @@
 
           <el-table v-loading="personalLoading" :data="personalFiles" class="file-table" empty-text="暂无数据">
             <el-table-column label="文件名" prop="name" :show-overflow-tooltip="true" min-width="200" />
+            <el-table-column label="虚拟目录" prop="dir" width="120" :show-overflow-tooltip="true" />
             <el-table-column label="文件大小" prop="size" width="120" :formatter="fileSizeFormatter" />
             <el-table-column label="文件类型" prop="type" width="140" />
             <el-table-column label="文件内容" width="110">
@@ -50,6 +51,7 @@
 
           <el-table v-loading="publicLoading" :data="publicFiles" class="file-table" empty-text="暂无数据">
             <el-table-column label="文件名" prop="name" :show-overflow-tooltip="true" min-width="200" />
+            <el-table-column label="虚拟目录" prop="dir" width="120" :show-overflow-tooltip="true" />
             <el-table-column label="文件大小" prop="size" width="120" :formatter="fileSizeFormatter" />
             <el-table-column label="文件类型" prop="type" width="140" />
             <el-table-column label="文件内容" width="110">
