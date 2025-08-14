@@ -53,11 +53,11 @@
             />
           </el-form-item>
         </el-col>
-        <el-col :span="8">
+      </el-row>
+      <el-row :gutter="20">
           <el-form-item label="附件" prop="fileUrl">
-            <UploadFile :is-show-tip="false" v-model="formData.fileUrl" :limit="1" />
+            <UploadFile :is-show-tip="false"  v-model="formData.fileUrl" />
           </el-form-item>
-        </el-col>
       </el-row>
       <!-- 子表的表单 -->
       <ContentWrap>
