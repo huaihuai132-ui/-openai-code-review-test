@@ -52,6 +52,8 @@ export default {
     status: '状态',
     createTime: '创建时间',
     updateTime: '更新时间',
+    sendApproveSuccess: '送审成功',
+    sendApproveMessage: '是否提交审核？',
     copy: '复制',
     copySuccess: '复制成功',
     copyError: '复制失败'
