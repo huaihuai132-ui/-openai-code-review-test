@@ -6,7 +6,7 @@
       :model="queryParams"
       ref="queryFormRef"
       :inline="true"
-      label-width="68px"
+      label-width="110px"
     >
       <el-form-item label="用户ID" prop="userId">
         <el-input
@@ -14,7 +14,14 @@
           placeholder="请输入用户ID"
           clearable
           @keyup.enter="handleQuery"
-          class="!w-240px"
+        />
+      </el-form-item>
+            <el-form-item label="已使用年假天数" prop="usedDays">
+        <el-input
+          v-model="queryParams.usedDays"
+          placeholder="请输入已使用年假天数"
+          clearable
+          @keyup.enter="handleQuery"
         />
       </el-form-item>
       <el-form-item label="年假总天数" prop="totalDays">
@@ -23,16 +30,6 @@
           placeholder="请输入年假总天数"
           clearable
           @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="已使用年假天数" prop="usedDays">
-        <el-input
-          v-model="queryParams.usedDays"
-          placeholder="请输入已使用年假天数"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
         />
       </el-form-item>
       <!-- <el-form-item label="创建时间" prop="createTime">
@@ -52,7 +49,6 @@
           placeholder="请输入部门编号"
           clearable
           @keyup.enter="handleQuery"
-          class="!w-240px"
         />
       </el-form-item>
       <el-form-item>
