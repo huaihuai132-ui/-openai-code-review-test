@@ -57,4 +57,14 @@ export const FinanceLeaseApi = {
   sendApprove: async (id: number) => {
     return await request.post({ url: `/business/finance-lease/sendApprove?id=` + id })
   },
+
+  // 导出融资租赁申请表 doc
+  exportFinanceLeaseDoc: async (id: number) => {
+    return await request.download({ url: `/business/finance-lease/export-doc?id=` + id })
+  },
+
+  // 导出融资租赁设备清单 doc
+  exportFinanceLeaseDeviceDoc: async (id: number) => {
+    return await request.download({ url: `/business/finance-lease/export-devicedoc?id=` + id })
+  },
 }

@@ -99,7 +99,7 @@
         <el-button
           type="success"
           plain
-          @click="handleExport"
+          @click="handleDocExport"
           :loading="exportLoading"
           v-hasPermi="['business:finance-lease:export']"
         >
@@ -108,7 +108,7 @@
         <el-button
           type="success"
           plain
-          @click="handleExport"
+          @click="handleDeviceExport"
           :loading="exportLoading"
           v-hasPermi="['business:finance-device:export']"
         >
@@ -120,7 +120,8 @@
 
   <!-- 列表 -->
   <ContentWrap>
-    <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
+    <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true" @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="55" />
       <el-table-column label="编号" align="center" prop="id" />
       <el-table-column label="融资租赁立项编号" align="center" prop="applicationId" />
       <el-table-column label="企业id" align="center" prop="companyId" />
@@ -234,6 +235,14 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+const selectedIds = ref<number[]>([]) // 表格的选中 ID 数组
+const selectedRows = ref<FinanceLeaseVO[]>([]) // 表格的选中 数据 数组
+
+/** 表格选中事件 */
+const handleSelectionChange = (rows: FinanceLeaseVO[]) => {
+  selectedIds.value = rows.map((row) => row.id)
+  selectedRows.value = rows.map((row) => row)
+}
 
 /** 查询列表 */
 const getList = async () => {
@@ -303,6 +312,54 @@ const handleExport = async () => {
     exportLoading.value = true
     const data = await FinanceLeaseApi.exportFinanceLease(queryParams)
     download.excel(data, '融资租赁.xls')
+  } catch {
+  } finally {
+    exportLoading.value = false
+  }
+}
+
+/** 导出项目申请表操作 */
+const handleDocExport = async () => {
+  try {
+    if (selectedIds.value.length === 0) {
+      message.warning('请选择需要导出的数据')
+      return
+    }
+    if (selectedIds.value.length > 1) {
+      message.warning('仅能选择一条数据进行导出')
+      return
+    }
+    let vo = selectedRows.value[0];
+    // 导出的二次确认
+    await message.exportConfirm()
+    // 发起导出
+    exportLoading.value = true
+    const data = await FinanceLeaseApi.exportFinanceLeaseDoc(vo.id)
+    download.excel(data, '融资租赁项目申请表' + vo.id + '.docx')
+  } catch {
+  } finally {
+    exportLoading.value = false
+  }
+}
+
+/** 导出项目设备列表文档操作 */
+const handleDeviceExport = async () => {
+  try {
+    if (selectedIds.value.length === 0) {
+      message.warning('请选择需要导出的数据')
+      return
+    }
+    if (selectedIds.value.length > 1) {
+      message.warning('仅能选择一条数据进行导出')
+      return
+    }
+    let vo = selectedRows.value[0];
+    // 导出的二次确认
+    await message.exportConfirm()
+    // 发起导出
+    exportLoading.value = true
+    const data = await FinanceLeaseApi.exportFinanceLeaseDeviceDoc(vo.id)
+    download.excel(data, '融资租赁项目设备清单' + vo.id + '.docx')
   } catch {
   } finally {
     exportLoading.value = false
