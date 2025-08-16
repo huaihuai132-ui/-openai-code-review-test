@@ -1,0 +1,298 @@
+<template>
+  <ContentWrap>
+    <!-- 搜索工作栏 -->
+    <el-form
+      class="-mb-15px"
+      :model="queryParams"
+      ref="queryFormRef"
+      :inline="true"
+      label-width="68px"
+    >
+<!--      <el-form-item label="议题发起人ID" prop="userId">-->
+<!--        <el-input-->
+<!--          v-model="queryParams.userId"-->
+<!--          placeholder="请输入议题发起人ID"-->
+<!--          clearable-->
+<!--          @keyup.enter="handleQuery"-->
+<!--          class="!w-240px"-->
+<!--        />-->
+<!--      </el-form-item>-->
+      <el-form-item label="议题编号" prop="issueNo">
+        <el-input
+          v-model="queryParams.issueNo"
+          placeholder="请输入议题编号"
+          clearable
+          @keyup.enter="handleQuery"
+          class="!w-240px"
+        />
+      </el-form-item>
+      <el-form-item label="议题标题" prop="issueTitle">
+        <el-input
+          v-model="queryParams.issueTitle"
+          placeholder="请输入议题标题"
+          clearable
+          @keyup.enter="handleQuery"
+          class="!w-240px"
+        />
+      </el-form-item>
+      <el-form-item label="议题类型" prop="issueType">
+        <el-select
+          v-model="queryParams.issueType"
+          placeholder="请选择议题类型"
+          clearable
+          class="!w-240px"
+        >
+          <el-option
+            v-for="dict in getIntDictOptions(DICT_TYPE.MEET_ISSUE_TYPE)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="上会类型" prop="meetingType">
+        <el-select
+          v-model="queryParams.meetingType"
+          placeholder="请选择上会类型"
+          clearable
+          class="!w-240px"
+        >
+          <el-option
+            v-for="dict in getIntDictOptions(DICT_TYPE.MEET_TYPE)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="议题状态" prop="issueStatus">
+        <el-select
+          v-model="queryParams.issueStatus"
+          placeholder="请选择议题状态"
+          clearable
+          class="!w-240px"
+        >
+          <el-option
+            v-for="dict in getIntDictOptions(DICT_TYPE.ISSUE_STATUS)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="审核状态" prop="status">
+        <el-select
+          v-model="queryParams.status"
+          placeholder="请选择审核状态"
+          clearable
+          class="!w-240px"
+        >
+          <el-option
+            v-for="dict in getIntDictOptions(DICT_TYPE.ISSUE_AUDIT_STATUS)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="创建时间" prop="createTime">
+        <el-date-picker
+          v-model="queryParams.createTime"
+          value-format="YYYY-MM-DD HH:mm:ss"
+          type="daterange"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
+          class="!w-220px"
+        />
+      </el-form-item>
+      <el-form-item>
+        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
+        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
+        <el-button
+          type="primary"
+          plain
+          @click="openForm('create')"
+          v-hasPermi="['bpm:oa-meeting-issue:create']"
+        >
+          <Icon icon="ep:plus" class="mr-5px" /> 新增
+        </el-button>
+        <el-button
+          type="success"
+          plain
+          @click="handleExport"
+          :loading="exportLoading"
+          v-hasPermi="['bpm:oa-meeting-issue:export']"
+        >
+          <Icon icon="ep:download" class="mr-5px" /> 导出
+        </el-button>
+      </el-form-item>
+    </el-form>
+  </ContentWrap>
+
+  <!-- 列表 -->
+  <ContentWrap>
+    <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
+      <el-table-column label="议题ID" align="center" prop="id" />
+<!--      <el-table-column label="议题发起人ID" align="center" prop="userId" />-->
+      <el-table-column label="议题编号" align="center" prop="issueNo" />
+      <el-table-column label="议题标题" align="center" prop="issueTitle" />
+      <el-table-column label="议题类型" align="center" prop="issueType">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.MEET_ISSUE_TYPE" :value="scope.row.issueType" />
+        </template>
+      </el-table-column>
+      <el-table-column label="上会类型" align="center" prop="meetingType">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.MEET_TYPE" :value="scope.row.meetingType" />
+        </template>
+      </el-table-column>
+<!--      <el-table-column label="议题详细内容" align="center" prop="issueContent" />-->
+      <el-table-column label="议题概述" align="center" prop="description" />
+      <el-table-column label="议题状态" align="center" prop="issueStatus">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.ISSUE_STATUS" :value="scope.row.issueStatus" />
+        </template>
+      </el-table-column>
+      <el-table-column label="审核状态" align="center" prop="status">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.ISSUE_AUDIT_STATUS" :value="scope.row.status" />
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="创建时间"
+        align="center"
+        prop="createTime"
+        :formatter="dateFormatter"
+        width="180px"
+      />
+      <el-table-column label="操作" align="center" min-width="120px">
+        <template #default="scope">
+          <el-button
+            link
+            type="primary"
+            @click="openForm('update', scope.row.id)"
+            v-hasPermi="['bpm:oa-meeting-issue:update']"
+          >
+            编辑
+          </el-button>
+          <el-button
+            link
+            type="danger"
+            @click="handleDelete(scope.row.id)"
+            v-hasPermi="['bpm:oa-meeting-issue:delete']"
+          >
+            删除
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <!-- 分页 -->
+    <Pagination
+      :total="total"
+      v-model:page="queryParams.pageNo"
+      v-model:limit="queryParams.pageSize"
+      @pagination="getList"
+    />
+  </ContentWrap>
+
+  <!-- 表单弹窗：添加/修改 -->
+  <OaMeetingIssueForm ref="formRef" @success="getList" />
+</template>
+
+<script setup lang="ts">
+import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
+import { dateFormatter } from '@/utils/formatTime'
+import download from '@/utils/download'
+import { OaMeetingIssueApi, OaMeetingIssueVO } from '@/api/bpm/oameetingissue'
+import OaMeetingIssueForm from './OaMeetingIssueForm.vue'
+
+/** 会议议题 列表 */
+defineOptions({ name: 'OaMeetingIssue' })
+
+const message = useMessage() // 消息弹窗
+const { t } = useI18n() // 国际化
+
+const loading = ref(true) // 列表的加载中
+const list = ref<OaMeetingIssueVO[]>([]) // 列表的数据
+const total = ref(0) // 列表的总页数
+const queryParams = reactive({
+  pageNo: 1,
+  pageSize: 10,
+  userId: undefined,
+  issueNo: undefined,
+  issueTitle: undefined,
+  issueType: undefined,
+  meetingType: undefined,
+  issueContent: undefined,
+  description: undefined,
+  issueStatus: undefined,
+  status: undefined,
+  createTime: [],
+})
+const queryFormRef = ref() // 搜索的表单
+const exportLoading = ref(false) // 导出的加载中
+
+/** 查询列表 */
+const getList = async () => {
+  loading.value = true
+  try {
+    const data = await OaMeetingIssueApi.getOaMeetingIssuePage(queryParams)
+    list.value = data.list
+    total.value = data.total
+  } finally {
+    loading.value = false
+  }
+}
+
+/** 搜索按钮操作 */
+const handleQuery = () => {
+  queryParams.pageNo = 1
+  getList()
+}
+
+/** 重置按钮操作 */
+const resetQuery = () => {
+  queryFormRef.value.resetFields()
+  handleQuery()
+}
+
+/** 添加/修改操作 */
+const formRef = ref()
+const openForm = (type: string, id?: number) => {
+  formRef.value.open(type, id)
+}
+
+/** 删除按钮操作 */
+const handleDelete = async (id: number) => {
+  try {
+    // 删除的二次确认
+    await message.delConfirm()
+    // 发起删除
+    await OaMeetingIssueApi.deleteOaMeetingIssue(id)
+    message.success(t('common.delSuccess'))
+    // 刷新列表
+    await getList()
+  } catch {}
+}
+
+/** 导出按钮操作 */
+const handleExport = async () => {
+  try {
+    // 导出的二次确认
+    await message.exportConfirm()
+    // 发起导出
+    exportLoading.value = true
+    const data = await OaMeetingIssueApi.exportOaMeetingIssue(queryParams)
+    download.excel(data, '会议议题.xls')
+  } catch {
+  } finally {
+    exportLoading.value = false
+  }
+}
+
+/** 初始化 **/
+onMounted(() => {
+  getList()
+})
+</script>

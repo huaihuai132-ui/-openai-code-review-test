@@ -129,6 +129,7 @@ export enum DICT_TYPE {
   SYSTEM_MAIL_SEND_STATUS = 'system_mail_send_status',
   SYSTEM_NOTIFY_TEMPLATE_TYPE = 'system_notify_template_type',
   SYSTEM_SOCIAL_TYPE = 'system_social_type',
+  SYS_ENABLE_TYPE = 'sys_enable_type',
 
   // ========== INFRA 模块 ==========
   INFRA_BOOLEAN_STRING = 'infra_boolean_string',
@@ -247,4 +248,11 @@ export enum DICT_TYPE {
   IOT_DATA_BRIDGE_TYPE_ENUM = 'iot_data_bridge_type_enum', // 桥梁类型
   LEASE_MODE = 'lease_mode', // 租赁模式
   LIEN_MODE = 'lien_mode' // 担保方式
+  IOT_DATA_BRIDGE_TYPE_ENUM = 'iot_data_bridge_type_enum', // 桥梁类型
+
+  // ========== Meet - 会议模块  ==========
+  MEET_ISSUE_TYPE = 'meet_issue_type',
+  MEET_TYPE = 'meet_type',
+  ISSUE_STATUS = 'issue_status',
+  ISSUE_AUDIT_STATUS = 'issue_audit_status',
 }
