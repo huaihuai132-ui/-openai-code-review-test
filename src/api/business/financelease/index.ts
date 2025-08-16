@@ -3,16 +3,20 @@ import request from '@/config/axios'
 // 融资租赁 VO
 export interface FinanceLeaseVO {
   id: number // 融资租赁表单主键
+  applicationId: number // 融资租赁立项编号
   userId: number // 申请人的用户编号
   companyId: number // 企业id
-  leaseMode: string // 租赁模式
+  leasedProperty: string // 融资标的物名称
+  leasedPropertyNum: number // 融资标的物数量
+  leasedPropertyValue: number // 拟融资标的物净值
+  leaseMode: number // 租赁模式
+  lienMode: number // 担保方式
+  leaseAmount: number // 申请额度
   leaseDate: Date // 承租时间
-  rent: number // 租金
+  leaseTerm: number // 承租租期
   interestRate: number // 利率
-  leasedProperty: string // 租赁物
-  lienMode: string // 担保方式
-  status: number // 单据状态
   filePath: string // 文件路径
+  status: number // 单据状态
   processInstanceId: string // 流程实例的编号
   deptId: number // 部门id
 }
@@ -49,7 +53,7 @@ export const FinanceLeaseApi = {
     return await request.download({ url: `/business/finance-lease/export-excel`, params })
   },
 
-  // 删除融资租赁
+  // 融资租赁送审
   sendApprove: async (id: number) => {
     return await request.post({ url: `/business/finance-lease/sendApprove?id=` + id })
   },

@@ -6,12 +6,31 @@
       :model="queryParams"
       ref="queryFormRef"
       :inline="true"
-      label-width="68px"
+      label-width="128px"
     >
-      <el-form-item label="企业" prop="companyId">
+      <el-form-item label="融资租赁立项编号" prop="applicationId">
         <el-input
+          v-model="queryParams.applicationId"
+          placeholder="请输入融资租赁立项编号"
+          clearable
+          @keyup.enter="handleQuery"
+          class="!w-240px"
+        />
+      </el-form-item>
+      <el-form-item label="企业id" prop="companyId">
+        <el-select
           v-model="queryParams.companyId"
-          placeholder="请输入企业"
+          placeholder="请选择企业id"
+          clearable
+          class="!w-240px"
+        >
+          <el-option label="请选择字典生成" value="" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="融资标的物名称" prop="leasedProperty">
+        <el-input
+          v-model="queryParams.leasedProperty"
+          placeholder="请输入融资标的物名称"
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
@@ -25,23 +44,12 @@
           class="!w-240px"
         >
           <el-option
-            v-for="dict in getStrDictOptions(DICT_TYPE.LEASE_MODE)"
+            v-for="dict in getIntDictOptions(DICT_TYPE.LEASE_MODE)"
             :key="dict.value"
             :label="dict.label"
             :value="dict.value"
           />
         </el-select>
-      </el-form-item>
-      <el-form-item label="承租时间" prop="leaseDate">
-        <el-date-picker
-          v-model="queryParams.leaseDate"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
-        />
       </el-form-item>
       <el-form-item label="担保方式" prop="lienMode">
         <el-select
@@ -51,7 +59,7 @@
           class="!w-240px"
         >
           <el-option
-            v-for="dict in getStrDictOptions(DICT_TYPE.LIEN_MODE)"
+            v-for="dict in getIntDictOptions(DICT_TYPE.LIEN_MODE)"
             :key="dict.value"
             :label="dict.label"
             :value="dict.value"
@@ -86,7 +94,25 @@
           :loading="exportLoading"
           v-hasPermi="['business:finance-lease:export']"
         >
-          <Icon icon="ep:download" class="mr-5px" /> 导出
+          <Icon icon="ep:download" class="mr-5px" /> 导出Excel
+        </el-button>
+        <el-button
+          type="success"
+          plain
+          @click="handleExport"
+          :loading="exportLoading"
+          v-hasPermi="['business:finance-lease:export']"
+        >
+          <Icon icon="ep:download" class="mr-5px" /> 导出项目申请表
+        </el-button>
+        <el-button
+          type="success"
+          plain
+          @click="handleExport"
+          :loading="exportLoading"
+          v-hasPermi="['business:finance-device:export']"
+        >
+          <Icon icon="ep:download" class="mr-5px" /> 导出项目设备清单
         </el-button>
       </el-form-item>
     </el-form>
@@ -96,12 +122,22 @@
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
       <el-table-column label="编号" align="center" prop="id" />
-      <el-table-column label="企业" align="center" prop="companyId" />
+      <el-table-column label="融资租赁立项编号" align="center" prop="applicationId" />
+      <el-table-column label="企业id" align="center" prop="companyId" />
+      <el-table-column label="标的名称" align="center" prop="leasedProperty" />
+      <el-table-column label="标的数量" align="center" prop="leasedPropertyNum" />
+      <el-table-column label="标的净值" align="center" prop="leasedPropertyValue" />
       <el-table-column label="租赁模式" align="center" prop="leaseMode">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.LEASE_MODE" :value="scope.row.leaseMode" />
         </template>
       </el-table-column>
+      <el-table-column label="担保方式" align="center" prop="lienMode">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.LIEN_MODE" :value="scope.row.lienMode" />
+        </template>
+      </el-table-column>
+      <el-table-column label="申请额度" align="center" prop="leaseAmount" />
       <el-table-column
         label="承租时间"
         align="center"
@@ -109,14 +145,8 @@
         :formatter="dateFormatter"
         width="180px"
       />
-      <el-table-column label="租金" align="center" prop="rent" />
+      <el-table-column label="承租租期" align="center" prop="leaseTerm" />
       <el-table-column label="利率" align="center" prop="interestRate" />
-      <el-table-column label="租赁物" align="center" prop="leasedProperty" />
-      <el-table-column label="担保方式" align="center" prop="lienMode">
-        <template #default="scope">
-          <dict-tag :type="DICT_TYPE.LIEN_MODE" :value="scope.row.lienMode" />
-        </template>
-      </el-table-column>
       <el-table-column label="单据状态" align="center" prop="status" />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
@@ -144,6 +174,14 @@
           >
             删除
           </el-button>
+          <el-button
+            link
+            type="primary"
+            @click="handleDelete(scope.row.id)"
+            v-hasPermi="['business:finance-device:query']"
+          >
+            查看设备清单
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -161,7 +199,7 @@
 </template>
 
 <script setup lang="ts">
-import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
+import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { FinanceLeaseApi, FinanceLeaseVO } from '@/api/business/financelease'
@@ -179,17 +217,18 @@ const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
-  userId: undefined,
+  applicationId: undefined,
   companyId: undefined,
-  leaseMode: undefined,
-  leaseDate: [],
-  rent: undefined,
-  interestRate: undefined,
   leasedProperty: undefined,
+  leasedPropertyNum: undefined,
+  leasedPropertyValue: undefined,
+  leaseMode: undefined,
   lienMode: undefined,
+  leaseAmount: undefined,
+  leaseDate: [],
+  leaseTerm: undefined,
+  interestRate: undefined,
   status: undefined,
-  filePath: undefined,
-  processInstanceId: undefined,
   createTime: [],
   deptId: undefined,
 })
