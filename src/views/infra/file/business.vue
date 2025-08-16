@@ -71,8 +71,10 @@
                 </el-form-item>
             </el-form>
 
-            <SingleFileUpload :drag="true" accept=".jpg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar,.ppt,.pptx"
-                tip="支持常见办公文件格式，最大100MB" @upload-success="handleUploadSuccess" @upload-error="handleUploadError" />
+            <UploadFile v-model="uploadFileUrl" :drag="true"
+                :file-type="['jpg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'zip', 'rar', 'ppt', 'pptx']"
+                :file-size="100" :show-custom-file-name="true" :directory="uploadForm.directory"
+                @upload-success="handleUploadSuccess" @upload-error="handleUploadError" />
 
             <template #footer>
                 <el-button @click="uploadVisible = false">关闭</el-button>
@@ -123,7 +125,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { SingleFileUpload } from '@/components/FileUpload'
+import { UploadFile } from '@/components/UploadFile'
 import { fileSizeFormatter } from '@/utils'
 import { dateFormatter } from '@/utils/formatTime'
 import * as FileApi from '@/api/infra/file/index'
@@ -145,6 +147,7 @@ const searchText = ref('')
 
 // 文件上传
 const uploadVisible = ref(false)
+const uploadFileUrl = ref('')
 const uploadForm = ref({
     businessCode: '',
     directory: ''

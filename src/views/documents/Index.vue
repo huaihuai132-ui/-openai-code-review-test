@@ -77,8 +77,10 @@
 
     <!-- 文件上传弹窗 -->
     <el-dialog v-model="uploadVisible" title="上传文件" width="600px">
-      <SingleFileUpload :drag="true" accept=".jpg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar" tip="支持常见文件格式，最大50MB"
-        @upload-success="handleUploadSuccess" @upload-error="handleUploadError" />
+      <UploadFile v-model="uploadFileUrl" :drag="true"
+        :file-type="['jpg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'zip', 'rar']" :file-size="50"
+        :show-custom-file-name="true" directory="documents" @upload-success="handleUploadSuccess"
+        @upload-error="handleUploadError" />
       <template #footer>
         <el-button @click="uploadVisible = false">关闭</el-button>
       </template>
@@ -111,7 +113,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { SingleFileUpload } from '@/components/FileUpload'
+import { UploadFile } from '@/components/UploadFile'
 import { fileSizeFormatter } from '@/utils'
 import { dateFormatter } from '@/utils/formatTime'
 import * as FileApi from '@/api/infra/file/index'
@@ -147,6 +149,7 @@ const publicFiles = ref<any[]>([])
 
 // 文件上传
 const uploadVisible = ref(false)
+const uploadFileUrl = ref('')
 
 // 文件分享
 const shareVisible = ref(false)

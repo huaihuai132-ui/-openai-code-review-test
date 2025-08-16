@@ -36,7 +36,10 @@
           <Icon icon="ep:upload-filled" class="mr-5px" /> 测试批量上传
         </el-button>
         <el-button type="info" @click="testStaticUpload">
-          <Icon icon="ep:picture" class="mr-5px" /> 测试静态文件上传
+          <Icon icon="ep:document" class="mr-5px" /> 测试静态文件上传
+        </el-button>
+        <el-button type="success" @click="testStaticImgUpload">
+          <Icon icon="ep:picture-filled" class="mr-5px" /> 测试静态图片上传
         </el-button>
       </el-form-item>
     </el-form>
@@ -84,12 +87,39 @@
 
   <!-- 单个文件上传测试弹窗 -->
   <el-dialog v-model="singleUploadVisible" title="测试单个文件上传" width="600px">
-    <SingleFileUpload :drag="true" accept=".jpg,.png,.pdf,.doc,.docx" tip="支持 jpg、png、pdf、doc、docx 格式"
+    <UploadFile v-model="singleUploadFileUrl" :drag="true" :show-custom-file-name="true" directory="test"
       @upload-success="handleSingleUploadSuccess" @upload-error="handleUploadError" />
 
     <div v-if="singleUploadResult" class="upload-result">
       <h4>上传结果：</h4>
-      <pre>{{ JSON.stringify(singleUploadResult, null, 2) }}</pre>
+      <div class="result-details">
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="文件ID">{{ singleUploadResult?.id }}</el-descriptions-item>
+          <el-descriptions-item label="配置ID">{{ singleUploadResult?.configId }}</el-descriptions-item>
+          <el-descriptions-item label="文件名">{{ singleUploadResult?.name }}</el-descriptions-item>
+          <el-descriptions-item label="文件类型">{{ singleUploadResult?.type }}</el-descriptions-item>
+          <el-descriptions-item label="文件大小">{{ formatFileSize(singleUploadResult?.size) }}</el-descriptions-item>
+          <el-descriptions-item label="上传时间">{{ formatTime(singleUploadResult?.createTime) }}</el-descriptions-item>
+          <el-descriptions-item label="文件路径" :span="2">{{ singleUploadResult?.path }}</el-descriptions-item>
+          <el-descriptions-item label="访问URL" :span="2">
+            <el-link type="primary" :href="singleUploadResult?.url" target="_blank">{{ singleUploadResult?.url
+            }}</el-link>
+          </el-descriptions-item>
+        </el-descriptions>
+        <div class="file-actions" style="margin-top: 12px;">
+          <el-button type="primary" size="small" @click="previewUploadedFile(singleUploadResult)">
+            <Icon icon="ep:view" class="mr-5px" /> 预览
+          </el-button>
+          <el-button type="danger" size="small" @click="deleteUploadedFile(singleUploadResult?.id)">
+            <Icon icon="ep:delete" class="mr-5px" /> 删除
+          </el-button>
+        </div>
+      </div>
+      <el-collapse style="margin-top: 12px;">
+        <el-collapse-item title="查看完整响应数据" name="1">
+          <pre>{{ JSON.stringify(singleUploadResult, null, 2) }}</pre>
+        </el-collapse-item>
+      </el-collapse>
     </div>
 
     <template #footer>
@@ -99,13 +129,35 @@
 
   <!-- 批量文件上传测试弹窗 -->
   <el-dialog v-model="batchUploadVisible" title="测试批量文件上传" width="800px">
-    <BatchFileUpload :max-files="5" :concurrent="2" :drag="true" accept=".jpg,.png,.pdf" tip="最多可选择5个文件，支持jpg、png、pdf格式"
+    <BatchFileUpload :max-files="5" :concurrent="2" :drag="true" directory="test-batch"
       @upload-success="handleBatchUploadSuccess" @upload-complete="handleUploadComplete"
       @upload-error="handleUploadError" />
 
     <div v-if="batchUploadResult" class="upload-result">
       <h4>批量上传结果：</h4>
-      <pre>{{ JSON.stringify(batchUploadResult, null, 2) }}</pre>
+      <div class="batch-result-details">
+        <el-table :data="Object.values(batchUploadResult)" border style="width: 100%">
+          <el-table-column prop="data.name" label="文件名" width="200" show-overflow-tooltip />
+          <el-table-column prop="data.type" label="类型" width="120" />
+          <el-table-column label="大小" width="100">
+            <template #default="{ row }">{{ formatFileSize(row.data?.size) }}</template>
+          </el-table-column>
+          <el-table-column label="上传时间" width="160">
+            <template #default="{ row }">{{ formatTime(row.data?.createTime) }}</template>
+          </el-table-column>
+          <el-table-column label="操作" width="150">
+            <template #default="{ row }">
+              <el-button type="primary" size="small" @click="previewUploadedFile(row.data)">预览</el-button>
+              <el-button type="danger" size="small" @click="deleteUploadedFile(row.data?.id)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <el-collapse style="margin-top: 12px;">
+        <el-collapse-item title="查看完整响应数据" name="1">
+          <pre>{{ JSON.stringify(batchUploadResult, null, 2) }}</pre>
+        </el-collapse-item>
+      </el-collapse>
     </div>
 
     <div v-if="uploadSummary" class="upload-summary">
@@ -123,15 +175,45 @@
     <el-row :gutter="20">
       <el-col :span="24">
         <h4>静态文件上传</h4>
-        <StaticFileUpload :drag="true" accept=".jpg,.png,.pdf,.doc,.docx,.txt,.zip" tip="支持图片、文档等格式，上传到static桶（匿名访问）"
-          @upload-success="handleStaticUploadSuccess" @upload-error="handleUploadError" />
+        <StaticFileUpload :drag="true" :show-custom-file-name="true" @upload-success="handleStaticUploadSuccess"
+          @upload-error="handleUploadError" />
 
         <div v-if="staticUploadResult" class="upload-result">
-          <h4>上传结果：</h4>
-          <pre>{{ JSON.stringify(staticUploadResult, null, 2) }}</pre>
+          <h4>静态文件上传结果：</h4>
+          <div class="result-details">
+            <el-descriptions :column="2" border>
+              <el-descriptions-item label="文件ID">{{ staticUploadResult?.id }}</el-descriptions-item>
+              <el-descriptions-item label="配置ID">{{ staticUploadResult?.configId }}</el-descriptions-item>
+              <el-descriptions-item label="文件名">{{ staticUploadResult?.name }}</el-descriptions-item>
+              <el-descriptions-item label="文件类型">{{ staticUploadResult?.type }}</el-descriptions-item>
+              <el-descriptions-item label="文件大小">{{ formatFileSize(staticUploadResult?.size) }}</el-descriptions-item>
+              <el-descriptions-item label="上传时间">{{ formatTime(staticUploadResult?.createTime) }}</el-descriptions-item>
+              <el-descriptions-item label="文件路径" :span="2">{{ staticUploadResult?.path }}</el-descriptions-item>
+              <el-descriptions-item label="访问URL" :span="2">
+                <el-link type="primary" :href="staticUploadResult?.url" target="_blank">{{ staticUploadResult?.url
+                }}</el-link>
+              </el-descriptions-item>
+            </el-descriptions>
+            <div class="file-actions" style="margin-top: 12px;">
+              <el-button type="primary" size="small" @click="previewUploadedFile(staticUploadResult)">
+                <Icon icon="ep:view" class="mr-5px" /> 预览
+              </el-button>
+              <el-button type="danger" size="small" @click="deleteUploadedFile(staticUploadResult?.id)">
+                <Icon icon="ep:delete" class="mr-5px" /> 删除
+              </el-button>
+            </div>
+          </div>
+          <el-collapse style="margin-top: 12px;">
+            <el-collapse-item title="查看完整响应数据" name="1">
+              <pre>{{ JSON.stringify(staticUploadResult, null, 2) }}</pre>
+            </el-collapse-item>
+          </el-collapse>
         </div>
       </el-col>
     </el-row>
+
+
+
 
     <el-alert title="说明" type="info" :closable="false" style="margin-top: 20px;">
       <p>• <strong>上传位置</strong>：文件会上传到 MinIO 的 <code>static</code> 桶</p>
@@ -145,6 +227,60 @@
       <el-button @click="staticUploadVisible = false">关闭</el-button>
     </template>
   </el-dialog>
+
+  <!-- 静态图片上传测试弹窗 -->
+  <el-dialog v-model="staticImgUploadVisible" title="测试静态图片上传（static桶）" width="600px">
+    <StaticImgUpload :drag="true" :file-size="5" :show-custom-file-name="true"
+      @upload-success="handleStaticImgUploadSuccess" @upload-error="handleUploadError" />
+
+    <div v-if="staticImgUploadResult" class="upload-result">
+      <h4>静态图片上传结果：</h4>
+      <div class="result-details">
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="文件ID">{{ staticImgUploadResult?.id }}</el-descriptions-item>
+          <el-descriptions-item label="配置ID">{{ staticImgUploadResult?.configId }}</el-descriptions-item>
+          <el-descriptions-item label="文件名">{{ staticImgUploadResult?.name }}</el-descriptions-item>
+          <el-descriptions-item label="文件类型">{{ staticImgUploadResult?.type }}</el-descriptions-item>
+          <el-descriptions-item label="文件大小">{{ formatFileSize(staticImgUploadResult?.size) }}</el-descriptions-item>
+          <el-descriptions-item label="上传时间">{{ formatTime(staticImgUploadResult?.createTime) }}</el-descriptions-item>
+          <el-descriptions-item label="文件路径" :span="2">{{ staticImgUploadResult?.path }}</el-descriptions-item>
+          <el-descriptions-item label="访问URL" :span="2">
+            <el-link type="primary" :href="staticImgUploadResult?.url" target="_blank">{{ staticImgUploadResult?.url
+              }}</el-link>
+          </el-descriptions-item>
+        </el-descriptions>
+        <div class="file-actions" style="margin-top: 12px;">
+          <el-button type="primary" size="small" @click="previewUploadedFile(staticImgUploadResult)">
+            <Icon icon="ep:view" class="mr-5px" /> 预览
+          </el-button>
+          <el-button type="danger" size="small" @click="deleteUploadedFile(staticImgUploadResult?.id)">
+            <Icon icon="ep:delete" class="mr-5px" /> 删除
+          </el-button>
+        </div>
+        <div v-if="staticImgUploadResult?.url" class="image-preview" style="margin-top: 12px;">
+          <h5>图片预览：</h5>
+          <img :src="staticImgUploadResult?.url" alt="上传的图片"
+            style="max-width: 300px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;" />
+        </div>
+      </div>
+      <el-collapse style="margin-top: 12px;">
+        <el-collapse-item title="查看完整响应数据" name="1">
+          <pre>{{ JSON.stringify(staticImgUploadResult, null, 2) }}</pre>
+        </el-collapse-item>
+      </el-collapse>
+    </div>
+
+    <el-alert title="说明" type="info" :closable="false" style="margin-top: 20px;">
+      <p>• <strong>仅限图片</strong>：只能上传 jpg、png、gif、webp 等图片格式</p>
+      <p>• <strong>上传位置</strong>：文件会上传到 MinIO 的 <code>static</code> 桶</p>
+      <p>• <strong>访问权限</strong>：static 桶支持匿名访问，无需认证</p>
+      <p>• <strong>适用场景</strong>：头像、公共图片等静态图片资源</p>
+    </el-alert>
+
+    <template #footer>
+      <el-button @click="staticImgUploadVisible = false">关闭</el-button>
+    </template>
+  </el-dialog>
 </template>
 <script lang="ts" setup>
 import { fileSizeFormatter, base64Encode } from '@/utils'
@@ -152,7 +288,7 @@ import { dateFormatter } from '@/utils/formatTime'
 import * as FileApi from '@/api/infra/file'
 import * as StaticFileApi from '@/api/infra/file/staticFile'
 import FileForm from './FileForm.vue'
-import { SingleFileUpload, BatchFileUpload, StaticFileUpload } from '@/components/FileUpload'
+import { UploadFile, BatchFileUpload, StaticFileUpload, StaticImgUpload } from '@/components/UploadFile'
 import { useUserStore } from '@/store/modules/user'
 
 defineOptions({ name: 'InfraFile' })
@@ -184,10 +320,13 @@ const batchUploadVisible = ref(false)
 const singleUploadResult = ref(null)
 const batchUploadResult = ref(null)
 const uploadSummary = ref(null)
+const singleUploadFileUrl = ref('')
 
 // 静态文件上传相关
 const staticUploadVisible = ref(false)
 const staticUploadResult = ref(null)
+const staticImgUploadVisible = ref(false)
+const staticImgUploadResult = ref(null)
 
 /** 查询列表 */
 const getList = async () => {
@@ -365,17 +504,48 @@ const testStaticUpload = () => {
   staticUploadVisible.value = true
 }
 
+// 测试静态图片上传
+const testStaticImgUpload = () => {
+  staticImgUploadResult.value = null
+  staticImgUploadVisible.value = true
+}
+
 // 静态文件上传成功处理
 const handleStaticUploadSuccess = (result, file) => {
   console.log('静态文件上传成功:', result, file)
-  staticUploadResult.value = result
+
+  // result的格式是 { [fileName]: responseData }，需要提取实际的数据
+  const fileName = Object.keys(result)[0]
+  const fileData = result[fileName]
+
+  // 检查fileData的结构，如果有data属性则使用data，否则直接使用fileData
+  staticUploadResult.value = fileData.data || fileData
   message.success('静态文件上传成功！')
+}
+
+// 静态图片上传成功处理
+const handleStaticImgUploadSuccess = (result, file) => {
+  console.log('静态图片上传成功:', result, file)
+
+  // result的格式是 { [fileName]: responseData }，需要提取实际的数据
+  const fileName = Object.keys(result)[0]
+  const fileData = result[fileName]
+
+  // 检查fileData的结构，如果有data属性则使用data，否则直接使用fileData
+  staticImgUploadResult.value = fileData.data || fileData
+  message.success('静态图片上传成功！')
 }
 
 // 单个文件上传成功处理
 const handleSingleUploadSuccess = (result, file) => {
   console.log('单个文件上传成功:', result, file)
-  singleUploadResult.value = result
+
+  // result的格式是 { [fileName]: responseData }，需要提取实际的数据
+  const fileName = Object.keys(result)[0]
+  const fileData = result[fileName]
+
+  // 检查fileData的结构，如果有data属性则使用data，否则直接使用fileData
+  singleUploadResult.value = fileData.data || fileData
   message.success('文件上传成功！')
 }
 
@@ -437,6 +607,91 @@ onMounted(() => {
   // window.open('http://182.109.52.126:49090/preview/onlinePreview?url='+encodeURIComponent(base64Encode('http://172.25.169.236:9000/oafile/20250731/1%E6%88%91%E7%94%A8%E5%8F%8C%E6%89%8B%E6%88%90%E5%B0%B1%E4%BD%A0%E7%9A%84%E6%A2%A6%E6%83%B3_1753930379819.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20250731T025448Z&X-Amz-SignedHeaders=host&X-Amz-Credential=minioadmin%2F20250731%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Expires=7200&X-Amz-Signature=4f8faa5222a523345ee1cc81de4c185a8db8f132e645412f3870738fa5498825')))
   // window.open('http://127.0.0.1:8012//onlinePreview?url='+encodeURIComponent(base64Encode('http://172.25.169.236:9000/oafile/20250731/1%E6%88%91%E7%94%A8%E5%8F%8C%E6%89%8B%E6%88%90%E5%B0%B1%E4%BD%A0%E7%9A%84%E6%A2%A6%E6%83%B3_1753930379819.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20250731T025448Z&X-Amz-SignedHeaders=host&X-Amz-Credential=minioadmin%2F20250731%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Expires=7200&X-Amz-Signature=4f8faa5222a523345ee1cc81de4c185a8db8f132e645412f3870738fa5498825&nickname=anan')))
 })
+
+// ========== 工具函数 ==========
+
+// 格式化文件大小
+const formatFileSize = (bytes: number): string => {
+  if (!bytes || bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// 格式化时间
+const formatTime = (timestamp: number): string => {
+  if (!timestamp) return '-'
+  return dateFormatter({}, {}, timestamp)
+}
+
+// 预览已上传的文件
+const previewUploadedFile = async (fileData: any) => {
+  if (!fileData) return
+
+  try {
+    // 判断是否为静态文件（configId为0）
+    const isStaticFile = fileData.configId === 0
+
+    if (isStaticFile) {
+      // 静态文件直接使用URL预览
+      const staticUrl = getStaticImageUrl(fileData.path)
+      window.open(staticUrl, '_blank')
+    } else {
+      // 普通文件需要获取预览URL
+      const response = await FileApi.getDownloadUrl(fileData.id)
+      const previewUrl = response.data || response
+
+      // 构建预览链接
+      const encodedUrl = base64Encode(previewUrl + '&nickname=' + userStore.getUser.nickname)
+      const previewLink = `http://127.0.0.1:8012/onlinePreview?url=${encodeURIComponent(encodedUrl)}`
+      window.open(previewLink, '_blank')
+    }
+  } catch (error) {
+    console.error('预览文件失败:', error)
+    message.error('预览文件失败')
+  }
+}
+
+// 删除已上传的文件
+const deleteUploadedFile = async (fileId: number) => {
+  if (!fileId) return
+
+  try {
+    await message.delConfirm('确定要删除这个文件吗？')
+
+    // 调用删除接口
+    await FileApi.deleteFile(fileId)
+
+    message.success('文件删除成功')
+
+    // 清空对应的上传结果
+    if (singleUploadResult.value?.id === fileId) {
+      singleUploadResult.value = null
+    }
+    if (staticUploadResult.value?.id === fileId) {
+      staticUploadResult.value = null
+    }
+    if (staticImgUploadResult.value?.id === fileId) {
+      staticImgUploadResult.value = null
+    }
+
+    // 清空批量上传结果中的对应文件
+    if (batchUploadResult.value) {
+      Object.keys(batchUploadResult.value).forEach(key => {
+        if (batchUploadResult.value[key]?.data?.id === fileId) {
+          delete batchUploadResult.value[key]
+        }
+      })
+    }
+
+    // 刷新文件列表
+    getList()
+  } catch (error) {
+    console.error('删除文件失败:', error)
+    message.error('删除文件失败')
+  }
+}
 </script>
 
 <style scoped lang="scss">
