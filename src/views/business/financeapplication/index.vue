@@ -60,7 +60,7 @@
         <el-button
           type="success"
           plain
-          @click="handleExport"
+          @click="handleDocExport"
           :loading="exportLoading"
           v-hasPermi="['business:finance-application:export']"
         >
@@ -72,7 +72,8 @@
 
   <!-- 列表 -->
   <ContentWrap>
-    <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
+    <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true" @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="55" />
       <el-table-column label="编号" align="center" prop="id" />
       <el-table-column label="企业id" align="center" prop="companyId" />
       <el-table-column label="标的名称" align="center" prop="leasedProperty" />
@@ -130,6 +131,7 @@ import download from '@/utils/download'
 import { FinanceApplicationApi, FinanceApplicationVO } from '@/api/business/financeapplication'
 import FinanceApplicationForm from './FinanceApplicationForm.vue'
 import {FinanceLeaseApi} from "@/api/business/financelease";
+import {FinanceManageVO} from "@/api/business/financemanage";
 
 /** 融资租赁立项 列表 */
 defineOptions({ name: 'FinanceApplication' })
@@ -162,7 +164,14 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+const selectedIds = ref<number[]>([]) // 表格的选中 ID 数组
+const selectedRows = ref<FinanceApplicationVO[]>([]) // 表格的选中 数据 数组
 
+/** 表格选中事件 */
+const handleSelectionChange = (rows: FinanceApplicationVO[]) => {
+  selectedIds.value = rows.map((row) => row.id)
+  selectedRows.value = rows.map((row) => row)
+}
 /** 查询列表 */
 const getList = async () => {
   loading.value = true
@@ -234,6 +243,30 @@ const sendApprove = async (id: number) => {
   } catch {
   } finally {
 
+  }
+}
+
+/** 导出融资租赁立项申请表操作 */
+const handleDocExport = async () => {
+  try {
+    if (selectedIds.value.length === 0) {
+      message.warning('请选择需要导出的数据')
+      return
+    }
+    if (selectedIds.value.length > 1) {
+      message.warning('仅能选择一条数据进行导出')
+      return
+    }
+    let vo = selectedRows.value[0];
+    // 导出的二次确认
+    await message.exportConfirm()
+    // 发起导出
+    exportLoading.value = true
+    const data = await FinanceApplicationApi.exportFinanceApplicationDoc(vo.id)
+    download.excel(data, '融资租赁项目立项审批表' + vo.id + '.docx')
+  } catch {
+  } finally {
+    exportLoading.value = false
   }
 }
 

@@ -59,5 +59,10 @@ export const FinanceApplicationApi = {
   // 融资租赁立项送审
   sendApprove: async (id: number) => {
     return await request.post({ url: `/business/finance-application/sendApprove?id=` + id })
-  }
+  },
+
+  // 导出融资租赁立项申请表
+  exportFinanceApplicationDoc: async (id: number) => {
+    return await request.download({ url: `/business/finance-application/export-doc?id=` + id })
+  },
 }
