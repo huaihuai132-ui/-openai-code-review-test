@@ -71,7 +71,7 @@
         <el-button
           type="success"
           plain
-          @click="handleExport"
+          @click="handleDocExport"
           :loading="exportLoading"
           v-hasPermi="['business:finance-manage:export']"
         >
@@ -83,7 +83,8 @@
 
   <!-- 列表 -->
   <ContentWrap>
-    <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
+    <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true" @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="55" />
       <el-table-column label="编号" align="center" prop="id" />
       <el-table-column label="企业id" align="center" prop="companyId" />
       <el-table-column label="租赁总额" align="center" prop="leaseAmount" />
@@ -145,7 +146,7 @@ import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { FinanceManageApi, FinanceManageVO } from '@/api/business/financemanage'
 import FinanceManageForm from './FinanceManageForm.vue'
-import {FinanceLeaseApi} from "@/api/business/financelease";
+import {FinanceLeaseApi, FinanceLeaseVO} from "@/api/business/financelease";
 import {FinanceApplicationApi} from "@/api/business/financeapplication";
 
 /** 融资租赁租后管理 列表 */
@@ -240,6 +241,15 @@ const queryParams = reactive({
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 
+const selectedIds = ref<number[]>([]) // 表格的选中 ID 数组
+const selectedRows = ref<FinanceManageVO[]>([]) // 表格的选中 数据 数组
+
+/** 表格选中事件 */
+const handleSelectionChange = (rows: FinanceManageVO[]) => {
+  selectedIds.value = rows.map((row) => row.id)
+  selectedRows.value = rows.map((row) => row)
+}
+
 /** 查询列表 */
 const getList = async () => {
   loading.value = true
@@ -304,13 +314,37 @@ const sendApprove = async (id: number) => {
     // 送审的二次确认
     await message.sendApproveConfirm()
     // 发起删除
-    await FinanceApplicationApi.sendApprove(id)
+    await FinanceManageApi.sendApprove(id)
     message.success(t('common.sendApproveSuccess'))
     // 刷新列表
     await getList()
   } catch {
   } finally {
 
+  }
+}
+
+/** 导出融资租赁业务租后检查登记表操作 */
+const handleDocExport = async () => {
+  try {
+    if (selectedIds.value.length === 0) {
+      message.warning('请选择需要导出的数据')
+      return
+    }
+    if (selectedIds.value.length > 1) {
+      message.warning('仅能选择一条数据进行导出')
+      return
+    }
+    let vo = selectedRows.value[0];
+    // 导出的二次确认
+    await message.exportConfirm()
+    // 发起导出
+    exportLoading.value = true
+    const data = await FinanceManageApi.exportFinanceManageDoc(vo.id)
+    download.excel(data, '融资租赁业务租后检查登记表' + vo.id + '.docx')
+  } catch {
+  } finally {
+    exportLoading.value = false
   }
 }
 
