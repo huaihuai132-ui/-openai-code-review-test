@@ -17,13 +17,21 @@
       </el-col>
       <el-col :span="24" style="padding-right: 10px; padding-left: 10px">
         <el-form-item v-if="loginData.tenantEnable === 'true'" prop="tenantName">
-          <el-input
+          <el-select
             v-model="loginData.loginForm.tenantName"
             :placeholder="t('login.tenantNamePlaceholder')"
+            class="w-[100%]"
             :prefix-icon="iconHouse"
-            link
-            type="primary"
-          />
+            filterable
+            @change="handleTenantChange"
+          >
+            <el-option
+              v-for="tenant in tenantList"
+              :key="tenant.id"
+              :label="tenant.name"
+              :value="tenant.name"
+            />
+          </el-select>
         </el-form-item>
       </el-col>
       <el-col :span="24" style="padding-right: 10px; padding-left: 10px">
@@ -161,6 +169,7 @@ import * as authUtil from '@/utils/auth'
 import { usePermissionStore } from '@/store/modules/permission'
 import * as LoginApi from '@/api/login'
 import { LoginStateEnum, useFormValid, useLoginState } from './useLogin'
+import type { TenantSimpleVO } from '@/api/login/types'
 
 defineOptions({ name: 'LoginForm' })
 
@@ -178,6 +187,7 @@ const redirect = ref<string>('')
 const loginLoading = ref(false)
 const verify = ref()
 const captchaType = ref('blockPuzzle') // blockPuzzle 滑块 clickWord 点击文字
+const tenantList = ref<TenantSimpleVO[]>([])
 
 const getShow = computed(() => unref(getLoginState) === LoginStateEnum.LOGIN)
 
@@ -237,6 +247,41 @@ const getLoginFormCache = () => {
     }
   }
 }
+// 获取租户登录列表
+const getTenantLoginList = async () => {
+  try {
+    const res = await LoginApi.getTenantLoginList()
+    tenantList.value = res || []
+  } catch (error) {
+    console.error('获取租户列表失败:', error)
+  }
+}
+
+// 处理租户选择变更
+const handleTenantChange = (tenantName: string) => {
+  // 租户变更时的处理逻辑
+}
+
+// 通过URL参数获取租户信息
+const getTenantByUrlParam = async () => {
+  const urlParams = new URLSearchParams(location.search)
+  const tenantCode = urlParams.get('tenant')
+  
+  if (tenantCode) {
+    try {
+      const res = await LoginApi.getTenantByCode(tenantCode)
+      if (res) {
+        loginData.loginForm.tenantName = res.name
+        authUtil.setTenantId(res.id)
+        return true
+      }
+    } catch (error) {
+      console.error('通过租户代码获取租户信息失败:', error)
+    }
+  }
+  return false
+}
+
 // 根据域名，获得租户信息
 const getTenantByWebsite = async () => {
   const website = location.host
@@ -325,16 +370,41 @@ const doSocialLogin = async (type: number) => {
 }
 watch(
   () => currentRoute.value,
-  (route: RouteLocationNormalizedLoaded) => {
+  async (route: RouteLocationNormalizedLoaded) => {
     redirect.value = route?.query?.redirect as string
+    
+    // 当路由变化时，重新检查tenant参数
+    const tenantCode = route?.query?.tenant as string
+    if (tenantCode && tenantCode !== '') {
+      try {
+        const res = await LoginApi.getTenantByCode(tenantCode)
+        if (res) {
+          loginData.loginForm.tenantName = res.name
+          authUtil.setTenantId(res.id)
+        }
+      } catch (error) {
+        console.error('通过路由参数获取租户失败:', error)
+      }
+    }
   },
   {
     immediate: true
   }
 )
-onMounted(() => {
+onMounted(async () => {
+  // 获取租户列表
+  await getTenantLoginList()
+  
+  // 先获取登录表单缓存
   getLoginFormCache()
-  getTenantByWebsite()
+  
+  // 尝试从URL参数获取租户信息（URL参数优先级最高）
+  const fromUrl = await getTenantByUrlParam()
+  
+  // 如果URL参数没有提供租户信息，则尝试从域名获取
+  if (!fromUrl) {
+    await getTenantByWebsite()
+  }
 })
 </script>
 

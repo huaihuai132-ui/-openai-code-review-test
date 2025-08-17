@@ -36,3 +36,9 @@ export type RegisterVO = {
   password: string
   captchaVerification: string
 }
+
+export type TenantSimpleVO = {
+  id: number
+  name: string
+  tenantCode: string
+}
