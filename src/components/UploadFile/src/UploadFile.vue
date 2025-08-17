@@ -152,7 +152,7 @@
         <!-- 隐藏的文件输入 -->
         <input 
           v-if="mode === 'create' || mode === 'edit'"
-          :id="`fileInput${index}`"
+          :id="`${instanceId}-fileInput${index}`"
           type="file" 
           style="display: none" 
           :accept="accept"
@@ -176,6 +176,9 @@
 
 <script lang="ts" setup>
 import { ref, watch, defineProps, defineEmits, onMounted, onBeforeUnmount, nextTick } from 'vue'
+
+// 生成唯一实例ID
+const instanceId = Math.random().toString(36).substring(2, 15)
 import { propTypes } from '@/utils/propTypes'
 // import { useUpload } from '@/components/UploadFile/src/useUpload'
 import * as FileApi from '@/api/infra/file'
@@ -365,7 +368,7 @@ const handleBoxClick = (index: number) => {
   const box = fileBoxes.value[index]
   if (!box.file && !box.uploading) {
     // 空状态，触发文件选择
-    const fileInput = document.getElementById(`fileInput${index}`) as HTMLInputElement
+    const fileInput = document.getElementById(`${instanceId}-fileInput${index}`) as HTMLInputElement
     fileInput?.click()
   }
 }
@@ -1316,13 +1319,17 @@ defineExpose({
 
 .file-name {
       font-size: 14px;
-  color: #333;
+      color: #333;
       text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-      max-width: 100%;
       padding: 0 8px;
+      max-width: 100%;
+      word-break: break-all;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 }

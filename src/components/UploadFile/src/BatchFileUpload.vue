@@ -43,7 +43,7 @@
           <div class="upload-text">
             {{ getEmptyStateText(index) }}
           </div>
-        </div>
+          </div>
 
         <!-- 已选择文件状态 -->
         <div v-else-if="fileBox.file && !fileBox.uploading && !fileBox.uploaded" class="selected-state">
@@ -56,7 +56,7 @@
               <Folder v-else-if="getFileIcon(fileBox.file) === 'Folder'" />
               <Document v-else />
             </el-icon>
-          </div>
+        </div>
           
           <!-- 文件名和编辑 -->
           <div class="file-name-section">
@@ -65,7 +65,7 @@
               <el-icon class="edit-icon" @click.stop="startEditName(index)">
                 <Edit />
               </el-icon>
-            </div>
+      </div>
             <div v-else class="file-name-edit">
               <el-input 
                 v-model="fileBox.tempName" 
@@ -76,17 +76,17 @@
               />
               <el-icon class="confirm-icon" @click.stop="finishEditName(index)">
                 <Check />
-              </el-icon>
+          </el-icon>
             </div>
-          </div>
+      </div>
 
           <!-- 上传按钮 -->
           <div class="upload-button-section">
             <el-button type="primary" size="small" @click.stop="uploadFile(index)">
               上传文件
-            </el-button>
+        </el-button>
           </div>
-        </div>
+      </div>
 
         <!-- 上传中状态 -->
         <div v-else-if="fileBox.uploading" class="uploading-state">
@@ -111,14 +111,14 @@
                 <Close />
               </el-icon>
             </div>
-            
+
             <!-- 进度信息 (非悬停显示) -->
             <div v-else class="progress-info">
               <div class="upload-speed">{{ formatSpeed(fileBox.speed) }}</div>
               <div class="remaining-time">剩余 {{ formatRemainingTime(fileBox.remainingTime) }}</div>
             </div>
+            </div>
           </div>
-        </div>
 
         <!-- 上传完成状态 -->
         <div v-else-if="fileBox.uploaded" class="uploaded-state">
@@ -139,22 +139,22 @@
                 <View />
               </el-icon>
               <div class="preview-text">预览</div>
-            </div>
           </div>
+        </div>
           
           <div class="file-name">{{ fileBox.displayName }}</div>
-        </div>
+      </div>
 
         <!-- 隐藏的文件输入框 -->
         <input 
           type="file" 
-          :id="`fileInput${index}`"
+          :id="`${instanceId}-fileInput${index}`"
           :accept="accept"
           :multiple="false"
           style="display: none"
           @change="handleFileSelect($event, index)"
         />
-      </div>
+    </div>
 
       <!-- 添加更多文件按钮 (批量模式) -->
       <div 
@@ -167,7 +167,7 @@
             <Plus />
           </el-icon>
           <div class="upload-text">添加更多文件</div>
-        </div>
+      </div>
       </div>
     </div>
 
@@ -189,6 +189,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+
+// 生成唯一实例ID
+const instanceId = Math.random().toString(36).substring(2, 15)
 import { ElMessage } from 'element-plus'
 import { useMessage } from '@/hooks/web/useMessage'
 import { useUserStore } from '@/store/modules/user'
@@ -345,7 +348,7 @@ const createEmptyFileBox = () => ({
   uploaded: false,
   error: false,
   progress: 0,
-  speed: 0,
+    speed: 0,
   remainingTime: 0,
   isHover: false,
   fileInfo: null,
@@ -381,7 +384,7 @@ const handleBoxClick = (index: number) => {
   const box = fileBoxes.value[index]
   if (props.mode === 'view' || box.uploaded) return
   
-  const input = document.getElementById(`fileInput${index}`)
+  const input = document.getElementById(`${instanceId}-fileInput${index}`)
   input?.click()
 }
 
@@ -623,7 +626,7 @@ const uploadAllFiles = async () => {
     message.warning('没有需要上传的文件')
     return
   }
-  
+
   // 并发上传，限制并发数为3
   const concurrency = 3
   const chunks = []
@@ -848,7 +851,7 @@ const clearUnsavedFiles = async () => {
       
       if (isStaticFile) {
         await StaticFileApi.deleteStaticFile(fileId)
-      } else {
+    } else {
         await FileApi.deleteFile(fileId)
       }
       
@@ -1079,9 +1082,9 @@ defineExpose({
     height: 200px;
     border: 2px dashed #d9d9d9;
     border-radius: 8px;
-    display: flex;
+      display: flex;
     flex-direction: column;
-    align-items: center;
+      align-items: center;
     justify-content: center;
     position: relative;
     cursor: pointer;
@@ -1118,8 +1121,8 @@ defineExpose({
       border-style: dashed;
       border-color: #c0c4cc;
       background: #f9f9f9;
-      
-      &:hover {
+
+    &:hover {
         border-color: #409eff;
         background: #f0f8ff;
       }
@@ -1150,9 +1153,9 @@ defineExpose({
 
   // 空状态
   .empty-state {
-    display: flex;
+      display: flex;
     flex-direction: column;
-    align-items: center;
+      align-items: center;
     justify-content: center;
     height: 100%;
     padding: 16px;
@@ -1178,20 +1181,20 @@ defineExpose({
 
   // 已选择状态
   .selected-state {
-    display: flex;
+        display: flex;
     flex-direction: column;
-    align-items: center;
+        align-items: center;
     justify-content: center;
     height: 100%;
     padding: 16px;
-    
-    .file-icon {
-      color: #409eff;
+
+        .file-icon {
+          color: #409eff;
       margin-bottom: 12px;
-    }
-    
+        }
+
     .file-name-section {
-      flex: 1;
+          flex: 1;
       width: 100%;
       margin-bottom: 12px;
       
@@ -1202,7 +1205,7 @@ defineExpose({
         gap: 8px;
         
         .file-name-text {
-          font-size: 14px;
+            font-size: 14px;
           color: #333;
           text-align: center;
           word-break: break-all;
@@ -1212,10 +1215,10 @@ defineExpose({
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
         .edit-icon {
           font-size: 16px;
           color: #409eff;
@@ -1235,14 +1238,14 @@ defineExpose({
         width: 100%;
         
         .el-input {
-          flex: 1;
-        }
-        
+        flex: 1;
+      }
+
         .confirm-icon {
           font-size: 16px;
           color: #67c23a;
           cursor: pointer;
-          flex-shrink: 0;
+        flex-shrink: 0;
           
           &:hover {
             color: #85ce61;
@@ -1264,7 +1267,7 @@ defineExpose({
     justify-content: center;
     height: 100%;
     padding: 16px;
-    
+
     .progress-circle-container {
       position: relative;
       display: flex;
@@ -1277,8 +1280,8 @@ defineExpose({
         height: 24px;
         background: rgba(245, 108, 108, 0.9);
         border-radius: 50%;
-        display: flex;
-        align-items: center;
+      display: flex;
+      align-items: center;
         justify-content: center;
         cursor: pointer;
         color: white;
@@ -1311,10 +1314,10 @@ defineExpose({
 
   // 上传完成状态
   .uploaded-state {
-    display: flex;
+  display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  align-items: center;
+  justify-content: center;
     height: 100%;
     padding: 16px;
     
@@ -1323,9 +1326,9 @@ defineExpose({
       margin-bottom: 16px;
       
       .file-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
         width: 64px;
         height: 64px;
         color: #67c23a;
@@ -1348,10 +1351,10 @@ defineExpose({
         bottom: 0;
         background: rgba(0, 0, 0, 0.7);
         border-radius: 12px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
         color: white;
         transition: all 0.3s ease;
         cursor: pointer;
@@ -1367,11 +1370,15 @@ defineExpose({
       font-size: 14px;
       color: #333;
       text-align: center;
-      white-space: nowrap;
+      padding: 0 8px;
+      max-width: 100%;
+      word-break: break-all;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 100%;
-      padding: 0 8px;
     }
   }
 
@@ -1391,8 +1398,8 @@ defineExpose({
     text-align: center;
     
     .tip-item {
-      font-size: 12px;
-      color: #909399;
+    font-size: 12px;
+    color: #909399;
       margin-bottom: 4px;
       
       b {

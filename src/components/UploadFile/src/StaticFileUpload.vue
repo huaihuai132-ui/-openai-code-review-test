@@ -55,8 +55,8 @@
               <Microphone v-else-if="getFileIcon(fileBox.file) === 'Audio'" />
               <Folder v-else-if="getFileIcon(fileBox.file) === 'Folder'" />
               <Document v-else />
-            </el-icon>
-          </div>
+          </el-icon>
+        </div>
           
           <!-- 文件名和编辑 -->
           <div class="file-name-section">
@@ -65,7 +65,7 @@
               <el-icon class="edit-icon" @click.stop="startEditName(index)">
                 <Edit />
               </el-icon>
-            </div>
+      </div>
             <div v-else class="file-name-edit">
               <el-input 
                 v-model="fileBox.tempName" 
@@ -76,9 +76,9 @@
               />
               <el-icon class="confirm-icon" @click.stop="finishEditName(index)">
                 <Check />
-              </el-icon>
-            </div>
-          </div>
+        </el-icon>
+        </div>
+      </div>
 
           <!-- 上传按钮 -->
           <div class="upload-button-section">
@@ -109,15 +109,15 @@
             >
               <el-icon :size="16">
                 <Close />
-              </el-icon>
-            </div>
+            </el-icon>
+          </div>
             
             <!-- 进度信息 (非悬停显示) -->
             <div v-else class="progress-info">
               <div class="upload-speed">{{ formatSpeed(fileBox.speed) }}</div>
               <div class="remaining-time">剩余 {{ formatRemainingTime(fileBox.remainingTime) }}</div>
-            </div>
           </div>
+        </div>
         </div>
 
         <!-- 上传完成状态 -->
@@ -131,30 +131,30 @@
                 <Folder v-else-if="getFileIcon(fileBox.file) === 'Folder'" />
                 <Document v-else />
               </el-icon>
-            </div>
-            
+    </div>
+
             <!-- 预览遮罩 -->
             <div v-if="fileBox.isHover" class="preview-overlay" @click="handlePreview(index)">
               <el-icon :size="24">
                 <View />
               </el-icon>
               <div class="preview-text">预览</div>
-            </div>
-          </div>
-          
+      </div>
+      </div>
+
           <div class="file-name">{{ fileBox.displayName }}</div>
-        </div>
+      </div>
 
         <!-- 隐藏的文件输入框 -->
         <input 
           type="file" 
-          :id="`fileInput${index}`"
+          :id="`${instanceId}-fileInput${index}`"
           :accept="accept"
           :multiple="false"
           style="display: none"
           @change="handleFileSelect($event, index)"
         />
-      </div>
+    </div>
 
       <!-- 添加更多文件按钮 (批量模式) -->
       <div 
@@ -165,11 +165,11 @@
         <div class="empty-state">
           <el-icon class="plus-icon">
             <Plus />
-          </el-icon>
+        </el-icon>
           <div class="upload-text">添加更多文件</div>
-        </div>
-      </div>
     </div>
+        </div>
+          </div>
 
     <!-- 批量操作按钮 -->
     <div v-if="hasSelectedFiles" class="batch-actions">
@@ -178,7 +178,7 @@
         {{ isUploading ? '上传中...' : `上传全部 (${selectedFilesCount})` }}
       </el-button>
       <el-button @click="clearAllFiles">清空全部</el-button>
-    </div>
+        </div>
 
     <!-- 提示信息 -->
     <div v-if="isShowTip && tip" class="upload-tip">
@@ -189,6 +189,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+
+// 生成唯一实例ID
+const instanceId = Math.random().toString(36).substring(2, 15)
 import { ElMessage } from 'element-plus'
 import { useMessage } from '@/hooks/web/useMessage'
 import { useUserStore } from '@/store/modules/user'
@@ -380,7 +383,7 @@ const handleBoxClick = (index: number) => {
   const box = fileBoxes.value[index]
   if (props.mode === 'view' || box.uploaded) return
   
-  const input = document.getElementById(`fileInput${index}`)
+  const input = document.getElementById(`${instanceId}-fileInput${index}`)
   input?.click()
 }
 
@@ -649,7 +652,7 @@ const deleteFile = async (index: number) => {
         console.error('删除文件失败:', error)
         message.error('删除文件失败')
       }
-      return
+    return
     }
   }
   
@@ -1012,9 +1015,9 @@ defineExpose({
       border-style: dashed;
       border-color: #c0c4cc;
       background: #f9f9f9;
-      
-      &:hover {
-        border-color: #409eff;
+
+  &:hover {
+    border-color: #409eff;
         background: #f0f8ff;
       }
     }
@@ -1027,9 +1030,9 @@ defineExpose({
       height: 20px;
       background: rgba(0, 0, 0, 0.5);
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
       cursor: pointer;
       color: white;
       z-index: 10;
@@ -1044,27 +1047,27 @@ defineExpose({
 
   // 空状态
   .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
     padding: 16px;
     
     .plus-icon {
       font-size: 48px;
       color: #c0c4cc;
-      margin-bottom: 12px;
-      transition: color 0.3s ease;
-      
+    margin-bottom: 12px;
+    transition: color 0.3s ease;
+
       &.hover-blue {
-        color: #409eff;
-      }
+      color: #409eff;
     }
-    
-    .upload-text {
+  }
+
+  .upload-text {
       font-size: 14px;
-      color: #606266;
+    color: #606266;
       text-align: center;
       line-height: 1.4;
     }
@@ -1096,11 +1099,11 @@ defineExpose({
         gap: 8px;
         
         .file-name-text {
-          font-size: 14px;
+    font-size: 14px;
           color: #333;
-          text-align: center;
+    text-align: center;
           word-break: break-all;
-          line-height: 1.4;
+    line-height: 1.4;
           max-width: 160px;
           min-height: 20px;
           display: -webkit-box;
@@ -1112,7 +1115,7 @@ defineExpose({
         
         .edit-icon {
           font-size: 16px;
-          color: #409eff;
+      color: #409eff;
           cursor: pointer;
           flex-shrink: 0;
           
@@ -1134,7 +1137,7 @@ defineExpose({
         
         .confirm-icon {
           font-size: 16px;
-          color: #67c23a;
+    color: #67c23a;
           cursor: pointer;
           flex-shrink: 0;
           
@@ -1154,9 +1157,9 @@ defineExpose({
   .uploading-state {
     display: flex;
     flex-direction: column;
-    align-items: center;
+  align-items: center;
     justify-content: center;
-    height: 100%;
+  height: 100%;
     padding: 16px;
     
     .progress-circle-container {
@@ -1179,7 +1182,7 @@ defineExpose({
         transition: all 0.2s ease;
         z-index: 10;
 
-        &:hover {
+  &:hover {
           background: rgba(245, 108, 108, 1);
           transform: scale(1.1);
         }
@@ -1215,11 +1218,11 @@ defineExpose({
     .file-icon-container {
       position: relative;
       margin-bottom: 16px;
-      
-      .file-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+
+.file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
         width: 64px;
         height: 64px;
         color: #67c23a;
@@ -1251,7 +1254,7 @@ defineExpose({
         cursor: pointer;
         
         .preview-text {
-          font-size: 12px;
+  font-size: 12px;
           margin-top: 4px;
         }
       }
@@ -1261,19 +1264,23 @@ defineExpose({
       font-size: 14px;
       color: #333;
       text-align: center;
-      white-space: nowrap;
+      padding: 0 8px;
+      max-width: 100%;
+      word-break: break-all;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 100%;
-      padding: 0 8px;
     }
   }
 
   // 批量操作按钮
   .batch-actions {
-    display: flex;
+  display: flex;
     gap: 12px;
-    justify-content: center;
+  justify-content: center;
     padding: 16px 0;
     border-top: 1px solid #ebeef5;
     margin-top: 16px;
@@ -1285,7 +1292,7 @@ defineExpose({
     text-align: center;
     
     .tip-item {
-      font-size: 12px;
+    font-size: 12px;
       color: #909399;
       margin-bottom: 4px;
       

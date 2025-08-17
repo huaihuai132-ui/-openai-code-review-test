@@ -20,7 +20,7 @@
       >
         <!-- 隐藏的文件输入框 -->
         <input
-          :id="`fileInput${index}`"
+          :id="`${instanceId}-fileInput${index}`"
           type="file"
           :accept="fileType.join(',')"
           @change="handleFileSelect(index, $event)"
@@ -55,7 +55,7 @@
               <div v-if="!box.editing" class="file-name" @click="startEditName(index)">
                 <span class="name-text">{{ box.displayName }}</span>
                 <Icon icon="ep:edit" class="edit-icon" />
-              </div>
+          </div>
               <div v-else class="file-name-edit">
                 <el-input
                   v-model="box.editingName"
@@ -66,14 +66,14 @@
                   ref="nameInput"
                 />
                 <Icon icon="ep:check" class="confirm-icon" @click="finishEditName(index)" />
-              </div>
-            </div>
+          </div>
+        </div>
 
             <!-- 上传按钮 -->
             <el-button type="primary" size="small" @click.stop="uploadFile(index)" :loading="false">
               上传图片
-            </el-button>
-          </div>
+          </el-button>
+        </div>
 
           <!-- 删除按钮 -->
           <div class="delete-btn" @click.stop="deleteFile(index)">
@@ -120,22 +120,22 @@
           <div class="file-info-uploaded">
             <div class="file-name">{{ box.fileInfo.name }}</div>
             <div class="file-size">{{ formatFileSize(box.fileInfo.size) }}</div>
-          </div>
+        </div>
 
           <!-- 删除按钮 -->
           <div class="delete-btn" @click.stop="deleteFile(index)">
             <Icon icon="ep:close" />
           </div>
-        </div>
+    </div>
 
         <!-- 错误状态 -->
         <div v-else-if="box.status === 'error'" class="error-state">
           <Icon icon="ep:warning" class="error-icon" />
           <div class="error-text">上传失败</div>
           <el-button size="small" @click.stop="retryUpload(index)">重试</el-button>
+          </div>
+          </div>
         </div>
-      </div>
-    </div>
 
     <!-- 单图片模式不显示批量操作按钮 -->
 
@@ -148,6 +148,9 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, nextTick, onBeforeUnmount, watch, type PropType } from 'vue'
+
+// 生成唯一实例ID
+const instanceId = Math.random().toString(36).substring(2, 15)
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import { generateUUID } from '@/utils'
@@ -325,7 +328,7 @@ const handleBoxClick = (index: number) => {
   const box = fileBoxes.value[index]
   if (box.status === 'empty') {
     // 触发文件选择
-    const fileInput = document.getElementById(`fileInput${index}`) as HTMLInputElement
+    const fileInput = document.getElementById(`${instanceId}-fileInput${index}`) as HTMLInputElement
     if (fileInput) {
       fileInput.click()
     }
@@ -860,8 +863,8 @@ watch(() => props.fileList, () => {
 
           .name-text {
             flex: 1;
-            font-size: 12px;
-            color: #606266;
+      font-size: 12px;
+      color: #606266;
             word-break: break-all;
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -909,17 +912,17 @@ watch(() => props.fileList, () => {
       background-color: rgba(0, 0, 0, 0.6);
       color: white;
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
       font-size: 12px;
       transition: background-color 0.3s ease;
 
-      &:hover {
+  &:hover {
         background-color: #f56c6c;
-      }
-    }
+  }
+  }
   }
 
   // 上传中状态
@@ -959,7 +962,7 @@ watch(() => props.fileList, () => {
 
     .upload-info {
       text-align: center;
-      font-size: 12px;
+    font-size: 12px;
       color: #666;
 
       .upload-speed,
@@ -978,9 +981,9 @@ watch(() => props.fileList, () => {
     .uploaded-image {
       flex: 1;
       position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
       padding: 8px;
       
       img {
@@ -1000,10 +1003,10 @@ watch(() => props.fileList, () => {
         background-color: rgba(0, 0, 0, 0.6);
         color: white;
         border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
         font-size: 18px;
         transition: all 0.3s ease;
 
@@ -1093,10 +1096,10 @@ watch(() => props.fileList, () => {
 
   // 提示信息
   .upload-tip {
-    margin-top: 8px;
+  margin-top: 8px;
     font-size: 12px;
     color: #666;
-    text-align: center;
+  text-align: center;
   }
 }
 </style>
