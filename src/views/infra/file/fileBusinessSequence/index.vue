@@ -68,7 +68,7 @@
           <el-table-column label="操作" align="center" min-width="160px">
             <template #default="scope">
               <el-button link type="primary" @click="openForm('update', scope.row.id)" v-hasPermi="['infra:file-business-sequence:update']">编辑</el-button>
-              <el-button link type="danger" @click="handleDeleteInGroup(scope.row, group)" v-hasPermi="['infra:file-business-sequence:delete']">删除</el-button>
+              <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['infra:file-business-sequence:delete']">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -152,21 +152,11 @@ const handleBatchDelete = async (items: FileBusinessSequenceVO[]) => {
 }
 
 /** 删除（组内单条，若组内还有其它数据，则提示是否删除整组） */
-const handleDeleteInGroup = async (
+const handleDelete = async (
   row: FileBusinessSequenceVO,
-  group: { sequenceCode: string; items: FileBusinessSequenceVO[] }
 ) => {
   try {
-    if (group.items.length > 1) {
-      await message.confirm(`该分组（${group.sequenceCode}）内还存在 ${group.items.length} 条记录。是否删除该分组全部记录？`)
-      // 确认后，删除整组
-      const ids = group.items.map((i) => i.id)
-      await FileBusinessSequenceApi.deleteFileBusinessSequenceList(ids)
-    } else {
-      // 仅剩一条，删除单条
-      await message.delConfirm()
-      await FileBusinessSequenceApi.deleteFileBusinessSequence(row.id)
-    }
+    await FileBusinessSequenceApi.deleteFileBusinessSequence(row.id)
     message.success(t('common.delSuccess'))
     await getList()
   } catch {}

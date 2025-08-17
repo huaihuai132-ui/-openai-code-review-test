@@ -125,3 +125,8 @@ export const unshareFile = (fileId: number, userId: string) => {
 export const getFileContent = (id: number) => {
   return request.get({ url: '/infra/file/get-content', params: { id } })
 }
+
+// 根据 ID 列表批量查询文件详情
+export const getFilesByIds = (ids: number[]) => {
+  return request.post<FileVO[]>({ url: '/infra/file/getFilesByIds', data: ids })
+}
