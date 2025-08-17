@@ -45,15 +45,16 @@ export const useUpload = (directory?: string, isStatic: boolean = false) => {
           // 添加取消令牌
           cancelToken: options.cancelToken
         })
-        .then(() => {
-          // 1.4. 记录文件信息到后端（异步）
+        .then(async () => {
+          // 1.4. 记录文件信息到后端（等待完成）
+          let fileInfo
           if (isStatic) {
-            createStaticFile(presignedInfo, options.file)
+            fileInfo = await createStaticFile(presignedInfo, options.file)
           } else {
-            createFile(presignedInfo, options.file)
+            fileInfo = await createFile(presignedInfo, options.file)
           }
-          // 通知成功，数据格式保持与后端上传的返回结果一致
-          return { data: presignedInfo.url }
+          // 通知成功，返回完整的文件信息
+          return { data: fileInfo }
         })
     } else {
       // 模式二：后端上传
@@ -106,7 +107,7 @@ export const useUpload = (directory?: string, isStatic: boolean = false) => {
  * @param name 文件名称
  * @param file 文件
  */
-function createFile(vo: FileApi.FilePresignedUrlRespVO, file: UploadRawFile) {
+async function createFile(vo: FileApi.FilePresignedUrlRespVO, file: UploadRawFile) {
   const fileVo = {
     configId: vo.configId,
     url: vo.url,
@@ -115,8 +116,9 @@ function createFile(vo: FileApi.FilePresignedUrlRespVO, file: UploadRawFile) {
     type: file.type,
     size: file.size
   }
-  FileApi.createFile(fileVo)
-  return fileVo
+  // 等待后端API调用完成，返回完整的文件信息
+  const response = await FileApi.createFile(fileVo)
+  return response.data || response
 }
 
 /**
@@ -124,7 +126,7 @@ function createFile(vo: FileApi.FilePresignedUrlRespVO, file: UploadRawFile) {
  * @param vo 静态文件预签名信息
  * @param file 文件
  */
-function createStaticFile(vo: StaticFileApi.StaticFilePresignedUrlRespVO, file: UploadRawFile) {
+async function createStaticFile(vo: StaticFileApi.StaticFilePresignedUrlRespVO, file: UploadRawFile) {
   const fileVo = {
     configId: vo.configId,
     url: vo.url,
@@ -133,8 +135,9 @@ function createStaticFile(vo: StaticFileApi.StaticFilePresignedUrlRespVO, file: 
     type: file.type,
     size: file.size
   }
-  StaticFileApi.createStaticFile(fileVo)
-  return fileVo
+  // 等待后端API调用完成，返回完整的文件信息
+  const response = await StaticFileApi.createStaticFile(fileVo)
+  return response.data || response
 }
 
 /**

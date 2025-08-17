@@ -90,38 +90,6 @@
     <UploadFile v-model="singleUploadFileUrl" :drag="true" :show-custom-file-name="true" directory="test"
       @upload-success="handleSingleUploadSuccess" @upload-error="handleUploadError" />
 
-    <div v-if="singleUploadResult" class="upload-result">
-      <h4>上传结果：</h4>
-      <div class="result-details">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="文件ID">{{ singleUploadResult?.id }}</el-descriptions-item>
-          <el-descriptions-item label="配置ID">{{ singleUploadResult?.configId }}</el-descriptions-item>
-          <el-descriptions-item label="文件名">{{ singleUploadResult?.name }}</el-descriptions-item>
-          <el-descriptions-item label="文件类型">{{ singleUploadResult?.type }}</el-descriptions-item>
-          <el-descriptions-item label="文件大小">{{ formatFileSize(singleUploadResult?.size) }}</el-descriptions-item>
-          <el-descriptions-item label="上传时间">{{ formatTime(singleUploadResult?.createTime) }}</el-descriptions-item>
-          <el-descriptions-item label="文件路径" :span="2">{{ singleUploadResult?.path }}</el-descriptions-item>
-          <el-descriptions-item label="访问URL" :span="2">
-            <el-link type="primary" :href="singleUploadResult?.url" target="_blank">{{ singleUploadResult?.url
-            }}</el-link>
-          </el-descriptions-item>
-        </el-descriptions>
-        <div class="file-actions" style="margin-top: 12px;">
-          <el-button type="primary" size="small" @click="previewUploadedFile(singleUploadResult)">
-            <Icon icon="ep:view" class="mr-5px" /> 预览
-          </el-button>
-          <el-button type="danger" size="small" @click="deleteUploadedFile(singleUploadResult?.id)">
-            <Icon icon="ep:delete" class="mr-5px" /> 删除
-          </el-button>
-        </div>
-      </div>
-      <el-collapse style="margin-top: 12px;">
-        <el-collapse-item title="查看完整响应数据" name="1">
-          <pre>{{ JSON.stringify(singleUploadResult, null, 2) }}</pre>
-        </el-collapse-item>
-      </el-collapse>
-    </div>
-
     <template #footer>
       <el-button @click="singleUploadVisible = false">关闭</el-button>
     </template>

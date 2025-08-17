@@ -2,11 +2,27 @@
   <div v-if="!disabled" class="upload-file">
     <!-- 上传区域 -->
     <div class="upload-area">
-      <el-upload ref="uploadRef" v-model:file-list="fileList" :action="uploadUrl" :auto-upload="false"
-        :before-upload="beforeUpload" :disabled="disabled || uploading" :drag="drag" :http-request="httpRequest"
-        :limit="1" :multiple="false" :on-error="handleUploadError" :on-exceed="handleExceed" :on-remove="handleRemove"
-        :on-success="handleUploadSuccess" :on-change="handleFileChange" :show-file-list="false" :accept="accept"
-        :class="['upload-file-uploader', { 'is-uploading': uploading }]" list-type="picture-card" name="file">
+      <el-upload 
+        ref="uploadRef" 
+        v-model:file-list="fileList" 
+        :action="uploadUrl" 
+        :auto-upload="autoUpload"
+        :before-upload="beforeUpload" 
+        :disabled="disabled || uploading" 
+        :drag="drag" 
+        :http-request="httpRequest"
+        :limit="1" 
+        :multiple="false" 
+        :on-error="handleUploadError" 
+        :on-exceed="handleExceed" 
+        :on-remove="handleRemove"
+        :on-success="handleUploadSuccess" 
+        :on-change="handleFileChange" 
+        :show-file-list="false" 
+        :accept="accept"
+        :class="['upload-file-uploader', { 'is-uploading': uploading }]" 
+        list-type="picture-card" 
+        name="file">
         <!-- 拖拽上传区域 -->
         <div v-if="drag" class="upload-dragger">
           <div v-if="!uploading">
@@ -17,11 +33,20 @@
               将文件拖到此处，或<em>点击选择文件</em>
             </div>
           </div>
+          <div v-else class="uploading-content">
+            <el-icon class="upload-icon uploading">
+              <Loading />
+            </el-icon>
+            <div class="upload-text">正在上传...</div>
+          </div>
         </div>
         <!-- 按钮上传区域 -->
         <div v-else class="upload-button">
-          <el-icon>
+          <el-icon v-if="!uploading">
             <Plus />
+          </el-icon>
+          <el-icon v-else class="uploading">
+            <Loading />
           </el-icon>
           <div v-if="showUploadText" class="upload-text">
             {{ uploading ? '上传中...' : '选择文件' }}
@@ -31,145 +56,79 @@
         <!-- 提示信息 -->
         <template v-if="isShowTip" #tip>
           <div class="upload-tip">
-            <!-- 注释掉文件大小和类型限制提示 -->
-            <!-- <div v-if="fileSize" style="font-size: 12px">
+            <div v-if="fileSize" style="font-size: 12px">
               大小不超过 <b style="color: #f56c6c">{{ fileSize }}MB</b>
             </div>
             <div v-if="fileType.length" style="font-size: 12px">
               格式为 <b style="color: #f56c6c">{{ fileType.join('/') }}</b> 的文件
-            </div> -->
+            </div>
             <div v-if="tip" style="font-size: 12px">{{ tip }}</div>
           </div>
         </template>
       </el-upload>
     </div>
 
-    <!-- 已选择的文件显示 -->
-    <div v-if="selectedFiles.length > 0" class="selected-files">
-      <div class="files-header">
-        <span>已选择文件 ({{ selectedFiles.length }})</span>
-        <el-button v-if="!uploading" size="small" type="danger" text @click="clearFiles">
-          清空
-        </el-button>
+    <!-- 文件卡片显示 -->
+    <div v-if="currentFile" class="file-card">
+      <!-- 上传完成的删除按钮 -->
+      <div v-if="currentFile.uploaded && currentFile.fileInfo" class="file-close-btn" @click="deleteUploadedFile">
+        <el-icon :size="14">
+          <Close />
+        </el-icon>
       </div>
 
-      <div class="file-grid">
-        <div v-for="(file, index) in selectedFiles" :key="file.uid || index" class="file-item"
-          :class="{ 'is-uploading': file.uploading, 'is-success': file.uploaded, 'is-error': file.error }">
-
-          <!-- 右上角删除按钮 -->
-          <div v-if="file.uploaded && file.fileInfo" class="file-close-btn" @click="deleteUploadedFile(file, index)">
-            <el-icon :size="16">
+      <!-- 文件图标区域 -->
+      <div class="file-icon-area" @mouseenter="showPreviewIcon = currentFile.uploaded" @mouseleave="showPreviewIcon = false" @click="handlePreview">
+        <!-- 上传进度（圆形） -->
+        <div v-if="currentFile.uploading && uploadProgress.show" class="file-progress-circle">
+          <el-progress 
+            type="circle" 
+            :percentage="uploadProgress.percentage" 
+            :width="60" 
+            :stroke-width="4"
+            :show-text="false" 
+            color="#409eff" />
+          <!-- 取消上传按钮 -->
+          <div class="progress-cancel-btn" @click.stop="cancelUpload">
+            <el-icon :size="12">
               <Close />
             </el-icon>
           </div>
-
-          <!-- 文件图标区域 -->
-          <div class="file-icon-area">
-            <!-- 上传进度（圆形） -->
-            <div v-if="file.uploading && file.progress" class="file-progress-circle">
-              <el-progress type="circle" :percentage="file.progress.percentage" :width="60" :stroke-width="4"
-                :show-text="false" />
-              <div class="progress-text">{{ file.progress.percentage }}%</div>
-            </div>
-
-            <!-- 文件图标 -->
-            <div v-else class="file-icon">
-              <el-icon :size="48">
-                <Picture v-if="getFileIcon(file) === 'Picture'" />
-                <Folder v-else-if="getFileIcon(file) === 'Folder'" />
-                <Document v-else />
-              </el-icon>
-            </div>
-          </div>
-
-          <!-- 文件信息 -->
-          <div class="file-info-area">
-            <div class="file-name" :title="file.name">{{ file.name }}</div>
-            <div class="file-size">{{ formatFileSize(file.size || 0) }}</div>
-            <div v-if="file.fileInfo?.type" class="file-type">{{ file.fileInfo.type }}</div>
-            <div v-if="file.uploaded && file.fileInfo" class="file-id">ID: {{ file.fileInfo.id }}</div>
-          </div>
-
-          <!-- 操作按钮 -->
-          <div class="file-actions">
-            <!-- 未上传时的操作 -->
-            <template v-if="!file.uploaded && !file.uploading">
-              <el-button size="small" type="danger" text @click="removeFile(index)">
-                <el-icon>
-                  <Delete />
-                </el-icon>
-                移除
-              </el-button>
-            </template>
-
-            <!-- 已上传时的操作 -->
-            <template v-if="file.uploaded && file.fileInfo">
-              <el-button size="small" type="primary" text @click="previewUploadedFile(file)">
-                <el-icon>
-                  <View />
-                </el-icon>
-                预览
-              </el-button>
-              <el-button size="small" type="danger" text @click="deleteUploadedFile(file, index)">
-                <el-icon>
-                  <Delete />
-                </el-icon>
-                删除
-              </el-button>
-            </template>
-          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- 上传按钮 -->
-    <div v-if="selectedFiles.length > 0 && !allFilesUploaded" class="upload-actions">
-      <el-button type="primary" @click="startUpload" :disabled="uploading" :loading="uploading">
-        {{ uploading ? '上传中...' : '开始上传' }}
-      </el-button>
-    </div>
-
-    <!-- 上传结果详情 -->
-    <div v-if="selectedFiles.length > 0 && allFilesUploaded" class="upload-result-details">
-      <div class="result-header">
-        <h4>上传结果详情</h4>
-      </div>
-
-      <div v-for="(file, index) in selectedFiles.filter(f => f.uploaded)" :key="file.uid || index" class="result-item">
-        <el-descriptions :column="2" border size="small">
-          <el-descriptions-item label="文件ID">{{ file.fileInfo?.id }}</el-descriptions-item>
-          <el-descriptions-item label="配置ID">{{ file.fileInfo?.configId }}</el-descriptions-item>
-          <el-descriptions-item label="文件名">{{ file.fileInfo?.name }}</el-descriptions-item>
-          <el-descriptions-item label="文件类型">{{ file.fileInfo?.type }}</el-descriptions-item>
-          <el-descriptions-item label="文件大小">{{ formatFileSize(file.fileInfo?.size || 0) }}</el-descriptions-item>
-          <el-descriptions-item label="上传时间">{{ formatTime(file.fileInfo?.createTime) }}</el-descriptions-item>
-          <el-descriptions-item label="文件路径" :span="2">{{ file.fileInfo?.path }}</el-descriptions-item>
-          <el-descriptions-item label="访问URL" :span="2">
-            <el-link type="primary" :href="file.fileInfo?.url" target="_blank">{{ file.fileInfo?.url }}</el-link>
-          </el-descriptions-item>
-        </el-descriptions>
-
-        <div class="result-actions" style="margin-top: 12px;">
-          <el-button type="primary" size="small" @click="previewUploadedFile(file)">
-            <el-icon>
+        <!-- 文件图标 -->
+        <div v-else class="file-icon">
+          <el-icon :size="48">
+            <Picture v-if="getFileIcon(currentFile) === 'Picture'" />
+            <VideoPlay v-else-if="getFileIcon(currentFile) === 'Video'" />
+            <Microphone v-else-if="getFileIcon(currentFile) === 'Audio'" />
+            <Folder v-else-if="getFileIcon(currentFile) === 'Folder'" />
+            <Document v-else />
+          </el-icon>
+          
+          <!-- 预览悬浮图标 -->
+          <div v-if="showPreviewIcon" class="preview-overlay">
+            <el-icon :size="20">
               <View />
             </el-icon>
-            预览
-          </el-button>
-          <el-button type="danger" size="small" @click="deleteUploadedFile(file, index)">
-            <el-icon>
-              <Delete />
-            </el-icon>
-            删除
-          </el-button>
+            <span class="preview-text">预览</span>
+          </div>
         </div>
+      </div>
 
-        <el-collapse style="margin-top: 12px;">
-          <el-collapse-item title="查看完整响应数据" name="1">
-            <pre>{{ JSON.stringify(file.fileInfo, null, 2) }}</pre>
-          </el-collapse-item>
-        </el-collapse>
+      <!-- 文件信息 -->
+      <div class="file-info-area">
+        <div class="file-name" :title="currentFile.name">{{ currentFile.name }}</div>
+        <div class="file-size">{{ formatFileSize(currentFile.size || 0) }}</div>
+        <div v-if="currentFile.fileInfo?.type" class="file-type">{{ currentFile.fileInfo.type }}</div>
+        
+        <!-- 上传状态信息 -->
+        <div v-if="currentFile.uploading && uploadProgress.show" class="upload-info">
+          <div class="upload-speed" v-if="uploadProgress.speed">{{ formatSpeed(uploadProgress.speed) }}/s</div>
+          <div class="upload-time" v-if="uploadProgress.estimatedTime && uploadProgress.estimatedTime > 1">
+            剩余: {{ formatRemainingTime(uploadProgress.estimatedTime) }}
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -177,7 +136,7 @@
   <!-- 上传操作禁用时 -->
   <div v-if="disabled" class="upload-file disabled-view">
     <div class="file-grid">
-      <div v-for="(file, index) in uploadedFiles" :key="index" class="file-item disabled">
+      <div v-for="(file, index) in fileList" :key="index" class="file-item disabled">
         <div class="file-icon">
           <el-icon :size="32">
             <Picture v-if="getFileIcon(file) === 'Picture'" />
@@ -210,7 +169,10 @@
       <span class="progress-text">{{ getProgressText() }}</span>
       <span class="progress-percentage">{{ uploadProgress.percentage }}%</span>
     </div>
-    <el-progress :percentage="uploadProgress.percentage" :status="uploadProgress.status" :stroke-width="8"
+    <el-progress 
+      :percentage="uploadProgress.percentage" 
+      :status="uploadProgress.status as any" 
+      :stroke-width="8"
       :show-text="false" />
     <div class="progress-details" v-if="uploadProgress.loaded && uploadProgress.total">
       <span>{{ formatFileSize(uploadProgress.loaded) }} / {{ formatFileSize(uploadProgress.total) }}</span>
@@ -230,7 +192,7 @@
 
   <!-- 上传按钮 -->
   <div v-if="showUploadButton && fileList.length > 0 && !uploading && !autoUpload" class="upload-actions">
-    <el-button type="primary" @click="startUpload" :disabled="uploading">
+    <el-button type="primary" @click="uploadRef?.submit()" :disabled="uploading">
       开始上传
     </el-button>
     <el-button @click="clearFiles">清空</el-button>
@@ -258,7 +220,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, watch, computed, onBeforeUnmount, defineProps, defineEmits } from 'vue'
+import { ref, watch, defineProps, defineEmits } from 'vue'
 import { propTypes } from '@/utils/propTypes'
 import type { UploadInstance, UploadProps, UploadRawFile, UploadUserFile } from 'element-plus'
 import { isString } from '@/utils/is'
@@ -272,17 +234,20 @@ import {
   Picture,
   Folder,
   View,
-  Delete,
-  Close
+  Loading,
+  Close,
+  VideoPlay,
+  Microphone
 } from '@element-plus/icons-vue'
 
-defineOptions({ name: 'SingleFileUpload' })
+defineOptions({ name: 'UploadFile' })
 
 const message = useMessage() // 消息弹窗
 const userStore = useUserStore() // 用户信息
 
 // 固定域名配置
 const FIXED_DOMAIN = 'http://182.109.52.126:49090'
+// const FIXED_DOMAIN = `${window.location.protocol}//${window.location.host}`
 
 // 组件事件
 const emit = defineEmits([
@@ -297,7 +262,7 @@ const emit = defineEmits([
 const props = defineProps({
   modelValue: propTypes.oneOfType<string | string[]>([String, Array<String>]).def(''),
   fileType: propTypes.array.def([]), // 文件类型限制，空数组表示不限制
-  fileSize: propTypes.number.def(5), // 大小限制(MB)
+  fileSize: propTypes.number.def(1024), // 大小限制(MB)
   autoUpload: propTypes.bool.def(true), // 自动上传
   drag: propTypes.bool.def(false), // 拖拽上传
   isShowTip: propTypes.bool.def(true), // 是否显示提示
@@ -316,9 +281,8 @@ const props = defineProps({
 // ========== 响应式数据 ==========
 const uploadRef = ref<UploadInstance>()
 const fileList = ref<UploadUserFile[]>([])
-const selectedFiles = ref<any[]>([])
-const uploadedFiles = ref<any[]>([])
-const uploadedFileIds = ref<number[]>([]) // 存储已上传文件的ID，用于清理
+const currentFile = ref<any>(null) // 当前文件信息（包含上传状态）
+const showPreviewIcon = ref(false) // 是否显示预览图标
 const customFileName = ref('')
 const uploading = ref(false)
 let cancelTokenSource: any = null
@@ -337,16 +301,18 @@ const uploadProgress = ref({
 
 const { uploadUrl, httpRequest: originalHttpRequest } = useUpload(props.directory)
 
-// 计算属性
-const allFilesUploaded = computed(() => {
-  return selectedFiles.value.length > 0 && selectedFiles.value.every(file => file.uploaded)
-})
-
 // 增强的httpRequest
 const httpRequest = async (options) => {
   const axios = (await import('axios')).default
 
   cancelTokenSource = axios.CancelToken.source()
+  
+  // 设置当前文件上传状态
+  if (currentFile.value) {
+    currentFile.value.uploading = true
+    currentFile.value.error = false
+  }
+  uploading.value = true
 
   uploadProgress.value = {
     show: true,
@@ -401,9 +367,16 @@ const httpRequest = async (options) => {
   } catch (error) {
     if (axios.isCancel(error)) {
       uploadProgress.value.status = 'warning'
-      ElMessage.warning('上传已取消')
+      if (currentFile.value) {
+        currentFile.value.uploading = false
+      }
+      message.warning('上传已取消')
     } else {
       uploadProgress.value.status = 'exception'
+      if (currentFile.value) {
+        currentFile.value.uploading = false
+        currentFile.value.error = true
+      }
       throw error
     }
   }
@@ -449,7 +422,8 @@ const beforeUpload: UploadProps['beforeUpload'] = (file: UploadRawFile) => {
 // 文件改变处理
 const handleFileChange = (file, fileListParam) => {
   if (file && file.raw) {
-    const newFile = {
+    // 创建文件对象
+    currentFile.value = {
       uid: file.uid,
       name: file.name,
       size: file.size,
@@ -458,10 +432,8 @@ const handleFileChange = (file, fileListParam) => {
       uploading: false,
       uploaded: false,
       error: false,
-      progress: null,
       fileInfo: null
     }
-    selectedFiles.value = [newFile] // 单个文件，替换
 
     // 如果没有自定义文件名，使用原文件名（去掉扩展名）
     if (!customFileName.value && file.name) {
@@ -473,108 +445,47 @@ const handleFileChange = (file, fileListParam) => {
   emit('file-change', file, fileListParam)
 }
 
-// 开始上传
-const startUpload = async () => {
-  if (selectedFiles.value.length === 0) {
-    message.warning('请先选择文件')
-    return
-  }
-
-  uploading.value = true
-
-  for (const file of selectedFiles.value) {
-    if (!file.uploaded) {
-      await uploadSingleFile(file)
-    }
-  }
-
-  uploading.value = false
-
-  // 检查是否所有文件都上传成功
-  const successFiles = selectedFiles.value.filter(f => f.uploaded)
-  if (successFiles.length > 0) {
-    // 构造返回数据
-    const results = successFiles.map(f => f.fileInfo)
-    emit('upload-success', results)
-    emit('update:modelValue', results.map(r => r.url).join(','))
-    message.success('文件上传成功')
-  }
-}
-
-// 上传单个文件
-const uploadSingleFile = async (file: any) => {
-  file.uploading = true
-  file.progress = { percentage: 0, status: 'info' }
-
-  try {
-    const options = {
-      file: file.raw,
-      onProgress: (progressEvent: any) => {
-        if (progressEvent.lengthComputable) {
-          const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          file.progress = {
-            percentage,
-            status: percentage === 100 ? 'success' : 'info'
-          }
-        }
-      }
-    }
-
-    const result = await originalHttpRequest(options)
-    file.uploading = false
-    file.uploaded = true
-    file.fileInfo = result.data
-
-    // 记录文件ID用于后续清理
-    if (result.data && result.data.id) {
-      uploadedFileIds.value.push(result.data.id)
-    }
-
-  } catch (error) {
-    file.uploading = false
-    file.error = true
-    file.progress = { percentage: 0, status: 'exception' }
-    message.error(`文件 ${file.name} 上传失败`)
-  }
-}
-
-// 移除未上传的文件
-const removeFile = (index: number) => {
-  selectedFiles.value.splice(index, 1)
-}
-
 // 删除已上传的文件
-const deleteUploadedFile = async (file: any, index: number) => {
-  if (file.fileInfo && file.fileInfo.id) {
+const deleteUploadedFile = async () => {
+  console.log('删除按钮被点击，当前文件信息:', currentFile.value)
+  
+  if (currentFile.value?.fileInfo?.id) {
     try {
-      await FileApi.deleteFile(file.fileInfo.id)
-      selectedFiles.value.splice(index, 1)
-
-      // 从已上传文件ID列表中移除
-      const idIndex = uploadedFileIds.value.indexOf(file.fileInfo.id)
-      if (idIndex > -1) {
-        uploadedFileIds.value.splice(idIndex, 1)
-      }
-
+      console.log('开始删除文件，ID:', currentFile.value.fileInfo.id)
+      await message.delConfirm('确定要删除这个文件吗？')
+      await FileApi.deleteFile(currentFile.value.fileInfo.id)
+      currentFile.value = null
+      fileList.value = []
+      customFileName.value = ''
+      uploadRef.value?.clearFiles()
       message.success('文件删除成功')
-
-      // 更新modelValue
-      const remainingFiles = selectedFiles.value.filter(f => f.uploaded)
-      emit('update:modelValue', remainingFiles.map(f => f.fileInfo.url).join(','))
+      emit('update:modelValue', '')
     } catch (error) {
-      message.error('文件删除失败')
+      console.error('删除文件失败:', error)
+      if (error !== 'cancel') {
+        message.error('文件删除失败')
+      }
     }
+  } else {
+    console.log('无法删除文件，缺少文件ID或文件信息')
+    message.warning('文件信息不完整，无法删除')
+  }
+}
+
+// 处理预览点击
+const handlePreview = () => {
+  if (currentFile.value?.uploaded && currentFile.value?.fileInfo) {
+    previewUploadedFile(currentFile.value.fileInfo)
+  } else {
+    console.log('当前文件状态:', currentFile.value)
   }
 }
 
 // 预览已上传的文件
-const previewUploadedFile = async (file: any) => {
-  // 获取文件信息，支持直接传入文件信息或包含fileInfo的对象
-  const fileData = file.fileInfo || file
-
-  if (!fileData || !fileData.id) {
+const previewUploadedFile = async (fileData: any) => {
+  if (!fileData) {
     message.error('文件信息不完整，无法预览')
-    console.error('文件信息:', file)
+    console.error('文件信息:', fileData)
     return
   }
 
@@ -584,42 +495,22 @@ const previewUploadedFile = async (file: any) => {
     // 添加用户昵称参数
     const nickname = userStore.getUser?.nickname || ''
 
-    // 判断是否为静态文件
-    if (fileData.configId === 0) {
-      // 静态文件预览
-      if (fileData.type && fileData.type.includes('image')) {
-        // 静态图片文件：直接使用URL预览
-        const staticImageUrl = `${FIXED_DOMAIN}/minio/static/${fileData.path}`
-        window.open(staticImageUrl, '_blank')
-        return
-      } else {
-        // 静态非图片文件：拼接预览地址
-        const staticFileUrl = `${FIXED_DOMAIN}/minio/static/${fileData.path}` + `?nickname=${nickname}`
-        const encodedUrl = encodeURIComponent(base64Encode(staticFileUrl))
-        const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
-        window.open(previewUrl, '_blank')
-      }
+    if (fileData.id) {
+      // 有id的情况：普通文件预览 - 获取签名URL
+      const response = await FileApi.getDownloadUrl(fileData.id)
+      const signedUrl = response.data || response
+
+      // 构建预览链接
+      const encodedUrl = base64Encode(signedUrl + '&nickname=' + nickname)
+      const previewLink = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodeURIComponent(encodedUrl)}`
+      window.open(previewLink, '_blank')
+    } else if (fileData.url) {
+      // 没有id但有url的情况：直接使用URL预览
+      const encodedUrl = base64Encode(fileData.url + '?nickname=' + nickname)
+      const previewLink = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodeURIComponent(encodedUrl)}`
+      window.open(previewLink, '_blank')
     } else {
-      // 普通文件预览 - 不能修改签名URL的查询参数，否则会破坏签名
-      const signedUrl = await FileApi.getDownloadUrl(fileData.id)
-
-      // 解析原始URL并替换域名，但保持查询参数不变
-      const urlObj = new URL(signedUrl)
-      const pathAndQuery = urlObj.pathname + urlObj.search
-
-      // 构建文件访问URL，保持签名完整性
-      const fileUrl = `${FIXED_DOMAIN}/minio${pathAndQuery}` + `&nickname=${nickname}`
-
-      // 构建预览URL，将nickName作为预览服务的参数而不是文件URL的参数
-      const encodedUrl = encodeURIComponent(base64Encode(fileUrl))
-      let previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
-
-      // 将用户昵称作为预览服务的参数传递，而不是文件URL的参数
-      if (nickname) {
-        previewUrl += `&nickname=${encodeURIComponent(nickname)}`
-      }
-
-      window.open(previewUrl, '_blank')
+      message.error('无法获取文件访问地址')
     }
   } catch (error) {
     console.error('预览文件失败:', error)
@@ -629,20 +520,18 @@ const previewUploadedFile = async (file: any) => {
 
 // 清空所有文件
 const clearFiles = async () => {
-  // 删除所有已上传的文件
-  for (const file of selectedFiles.value) {
-    if (file.uploaded && file.fileInfo && file.fileInfo.id) {
-      try {
-        await FileApi.deleteFile(file.fileInfo.id)
-      } catch (error) {
-        console.error('删除文件失败:', error)
-      }
+  // 如果有已上传的文件，删除它
+  if (currentFile.value?.fileInfo?.id) {
+    try {
+      await FileApi.deleteFile(currentFile.value.fileInfo.id)
+    } catch (error) {
+      console.error('删除文件失败:', error)
     }
   }
 
-  selectedFiles.value = []
-  uploadedFileIds.value = []
+  currentFile.value = null
   fileList.value = []
+  customFileName.value = ''
   uploadRef.value?.clearFiles()
   emit('update:modelValue', '')
 }
@@ -650,15 +539,21 @@ const clearFiles = async () => {
 // 根据文件扩展名或类型获取对应的图标组件
 const getFileIcon = (file: any) => {
   const fileName = file.name || ''
-  // 优先使用上传后返回的文件类型，如果没有则使用原始文件类型
+  // 优先使用上传后的文件类型，如果没有则使用原始文件类型
   const fileType = file.fileInfo?.type || file.type || ''
 
   // 根据MIME类型判断
   if (fileType.includes('image/')) {
     return 'Picture' // 图片文件
   }
+  if (fileType.includes('video/')) {
+    return 'Video' // 视频文件
+  }
+  if (fileType.includes('audio/')) {
+    return 'Audio' // 音频文件
+  }
   if (fileType.includes('zip') || fileType.includes('rar') || fileType.includes('7z') || fileType.includes('tar')) {
-    return 'Folder'
+    return 'Folder' // 压缩文件
   }
 
   // 根据文件扩展名判断
@@ -670,11 +565,31 @@ const getFileIcon = (file: any) => {
     case 'gif':
     case 'webp':
     case 'svg':
+    case 'bmp':
+    case 'ico':
       return 'Picture'
+    case 'mp4':
+    case 'avi':
+    case 'mov':
+    case 'wmv':
+    case 'flv':
+    case 'mkv':
+    case 'webm':
+      return 'Video'
+    case 'mp3':
+    case 'wav':
+    case 'flac':
+    case 'aac':
+    case 'ogg':
+    case 'm4a':
+    case 'wma':
+      return 'Audio'
     case 'zip':
     case 'rar':
     case '7z':
     case 'tar':
+    case 'gz':
+    case 'bz2':
       return 'Folder'
     default:
       return 'Document'
@@ -699,36 +614,43 @@ const handleUploadSuccess: UploadProps['onSuccess'] = (response, file) => {
     uploadProgress.value.show = false
 
     console.log('上传成功，完整响应:', response)
+    console.log('文件对象:', file)
 
-    // 正确处理响应数据结构
-    const fileData = response.data || response
-
-    // 更新selectedFiles中对应文件的信息
-    const selectedFile = selectedFiles.value.find(f => f.uid === file.uid)
-    if (selectedFile) {
-      selectedFile.uploading = false
-      selectedFile.uploaded = true
-      selectedFile.fileInfo = fileData
-      selectedFile.error = false
-      selectedFile.progress = { percentage: 100, status: 'success' }
-
-      // 记录文件ID用于后续清理
-      if (fileData && fileData.id) {
-        uploadedFileIds.value.push(fileData.id)
+    // 兼容不同后端返回：可能是文件完整信息对象、文件ID（number/string）或URL（string）
+    const rawData = (response && typeof response === 'object' && 'data' in response) ? (response as any).data : response
+    const normalizedInfo: any = (() => {
+      if (rawData && typeof rawData === 'object') return rawData
+      if (typeof rawData === 'number') return { id: rawData }
+      if (typeof rawData === 'string') {
+        const maybeId = Number(rawData)
+        if (!Number.isNaN(maybeId) && rawData.trim() !== '' && /^\d+$/.test(rawData)) return { id: maybeId }
+        return { url: rawData }
       }
+      return {}
+    })()
+
+    console.log('处理后的文件数据:', normalizedInfo)
+
+    // 更新当前文件信息
+    if (currentFile.value) {
+      currentFile.value.uploading = false
+      currentFile.value.uploaded = true
+      currentFile.value.fileInfo = normalizedInfo
+      currentFile.value.error = false
     }
 
-    // 构造返回数据：{ 文件名: 完整文件信息 }
+    // 构造返回数据：{ 文件名: 文件信息/地址 }
     const fileName = customFileName.value || file.name
     const result = {
-      [fileName]: fileData
+      [fileName]: normalizedInfo.url ?? normalizedInfo.id ?? normalizedInfo
     }
 
     emit('upload-success', result, file)
     message.success('文件上传成功')
 
-    // 更新modelValue
-    emitUpdateModelValue(fileData.url)
+    // 更新modelValue（优先使用URL，否则使用ID字符串）
+    const urlOrId = normalizedInfo.url ?? (normalizedInfo.id != null ? String(normalizedInfo.id) : '')
+    emitUpdateModelValue(urlOrId)
   }, 1000)
 }
 
@@ -736,6 +658,13 @@ const handleUploadSuccess: UploadProps['onSuccess'] = (response, file) => {
 const handleUploadError: UploadProps['onError'] = (error, file) => {
   uploading.value = false
   uploadProgress.value.status = 'exception'
+  
+  // 更新当前文件错误状态
+  if (currentFile.value) {
+    currentFile.value.uploading = false
+    currentFile.value.error = true
+  }
+  
   emit('upload-error', error, file)
   message.error('文件上传失败')
 }
@@ -751,6 +680,7 @@ const handleRemove = (file) => {
   if (index > -1) {
     fileList.value.splice(index, 1)
     customFileName.value = ''
+    currentFile.value = null
     emitUpdateModelValue()
   }
 }
@@ -804,19 +734,7 @@ const formatRemainingTime = (seconds: number): string => {
   }
 }
 
-// 格式化时间戳为可读日期
-const formatTime = (timestamp: number): string => {
-  if (!timestamp) return '-'
-  const date = new Date(timestamp)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  })
-}
+
 
 // 监听模型绑定值变动
 watch(
@@ -855,28 +773,8 @@ const emitUpdateModelValue = (url?: string) => {
   }
 }
 
-// 清理所有已上传的文件（页面销毁时调用）
-const cleanupUploadedFiles = async () => {
-  for (const fileId of uploadedFileIds.value) {
-    try {
-      await FileApi.deleteFile(fileId)
-    } catch (error) {
-      console.error('清理文件失败:', error)
-    }
-  }
-  uploadedFileIds.value = []
-}
-
-// 页面销毁前清理未保存的文件
-onBeforeUnmount(() => {
-  if (uploadedFileIds.value.length > 0) {
-    cleanupUploadedFiles()
-  }
-})
-
 // 暴露方法给父组件
 defineExpose({
-  startUpload,
   clearFiles,
   cancelUpload
 })
@@ -1000,22 +898,178 @@ defineExpose({
   }
 }
 
-// 已选择文件显示样式
-.selected-files {
+// 文件卡片样式
+.file-card {
+  position: relative;
+  width: 200px;
+  padding: 16px;
   margin-top: 16px;
+  background: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
 
-  .files-header {
+  &:hover {
+    border-color: #409eff;
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
+    transform: translateY(-2px);
+  }
+
+  // 右上角删除按钮
+  .file-close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: rgba(245, 108, 108, 0.9);
+    border-radius: 50%;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-    padding: 8px 0;
-    border-bottom: 1px solid #e4e7ed;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    opacity: 0.8;
+    transition: all 0.2s ease;
+    z-index: 10;
 
-    span {
+    &:hover {
+      opacity: 1;
+      background: rgba(245, 108, 108, 1);
+      transform: scale(1.1);
+    }
+  }
+
+  // 文件图标区域
+  .file-icon-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 16px;
+    position: relative;
+
+    .file-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      color: #409eff;
+      background: #ecf5ff;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      position: relative;
+
+      &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(64, 158, 255, 0.2);
+      }
+
+      // 预览悬浮层
+      .preview-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: all 0.3s ease;
+
+        .preview-text {
+          font-size: 12px;
+          margin-top: 4px;
+        }
+      }
+    }
+
+    .file-progress-circle {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      // 取消上传按钮
+      .progress-cancel-btn {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: rgba(245, 108, 108, 0.9);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: white;
+        transition: all 0.2s ease;
+        z-index: 10;
+
+        &:hover {
+          background: rgba(245, 108, 108, 1);
+          transform: scale(1.1);
+        }
+      }
+    }
+  }
+
+  // 文件信息区域
+  .file-info-area {
+    text-align: center;
+    width: 100%;
+
+    .file-name {
       font-size: 14px;
-      font-weight: 500;
-      color: #606266;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 8px;
+    }
+
+    .file-size {
+      font-size: 12px;
+      color: #909399;
+      margin-bottom: 4px;
+    }
+
+    .file-type {
+      font-size: 10px;
+      color: #67c23a;
+      background: #f0f9f0;
+      padding: 2px 8px;
+      border-radius: 10px;
+      display: inline-block;
+      margin-bottom: 4px;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    // 上传状态信息
+    .upload-info {
+      margin-top: 8px;
+      
+      .upload-speed {
+        font-size: 11px;
+        color: #409eff;
+        margin-bottom: 2px;
+      }
+
+      .upload-time {
+        font-size: 10px;
+        color: #909399;
+      }
     }
   }
 }
@@ -1340,6 +1394,12 @@ defineExpose({
   to {
     transform: rotate(360deg);
   }
+}
+
+// 上传状态样式
+.uploading {
+  animation: rotate 1s linear infinite;
+  color: #409eff;
 }
 
 // 文件项样式
