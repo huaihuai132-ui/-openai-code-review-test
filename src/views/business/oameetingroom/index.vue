@@ -56,7 +56,7 @@
           type="primary"
           plain
           @click="openForm('create')"
-          v-hasPermi="['bpm:oa-meeting-room:create']"
+          v-hasPermi="['business:oa-meeting-room:create']"
         >
           <Icon icon="ep:plus" class="mr-5px" /> 新增
         </el-button>
@@ -65,7 +65,7 @@
           plain
           @click="handleExport"
           :loading="exportLoading"
-          v-hasPermi="['bpm:oa-meeting-room:export']"
+          v-hasPermi="['business:oa-meeting-room:export']"
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
@@ -97,7 +97,7 @@
             link
             type="primary"
             @click="openForm('update', scope.row.id)"
-            v-hasPermi="['bpm:oa-meeting-room:update']"
+            v-hasPermi="['business:oa-meeting-room:update']"
           >
             编辑
           </el-button>
@@ -105,7 +105,7 @@
             link
             type="danger"
             @click="handleDelete(scope.row.id)"
-            v-hasPermi="['bpm:oa-meeting-room:delete']"
+            v-hasPermi="['business:oa-meeting-room:delete']"
           >
             删除
           </el-button>
@@ -129,7 +129,7 @@
 import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { OaMeetingRoomApi, OaMeetingRoomVO } from '@/api/bpm/oameetingroom'
+import { OaMeetingRoomApi, OaMeetingRoomVO } from 'src/api/business/oameetingroom'
 import OaMeetingRoomForm from './OaMeetingRoomForm.vue'
 
 /** 会议室信息 列表 */

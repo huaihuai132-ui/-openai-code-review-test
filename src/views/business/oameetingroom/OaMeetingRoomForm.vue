@@ -33,7 +33,7 @@
 </template>
 <script setup lang="ts">
 import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
-import { OaMeetingRoomApi, OaMeetingRoomVO } from '@/api/bpm/oameetingroom'
+import { OaMeetingRoomApi, OaMeetingRoomVO } from 'src/api/business/oameetingroom'
 
 /** 会议室信息 表单 */
 defineOptions({ name: 'OaMeetingRoomForm' })

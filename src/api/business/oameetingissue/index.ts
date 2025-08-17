@@ -29,31 +29,36 @@ export interface OaMeetingIssueVO {
 export const OaMeetingIssueApi = {
   // 查询会议议题分页
   getOaMeetingIssuePage: async (params: any) => {
-    return await request.get({ url: `/bpm/oa-meeting-issue/page`, params })
+    return await request.get({ url: `/business/oa-meeting-issue/page`, params })
   },
 
   // 查询会议议题详情
   getOaMeetingIssue: async (id: number) => {
-    return await request.get({ url: `/bpm/oa-meeting-issue/get?id=` + id })
+    return await request.get({ url: `/business/oa-meeting-issue/get?id=` + id })
   },
 
   // 新增会议议题
   createOaMeetingIssue: async (data: OaMeetingIssueVO) => {
-    return await request.post({ url: `/bpm/oa-meeting-issue/create`, data })
+    return await request.post({ url: `/business/oa-meeting-issue/create`, data })
   },
 
   // 修改会议议题
   updateOaMeetingIssue: async (data: OaMeetingIssueVO) => {
-    return await request.put({ url: `/bpm/oa-meeting-issue/update`, data })
+    return await request.put({ url: `/business/oa-meeting-issue/update`, data })
   },
 
   // 删除会议议题
   deleteOaMeetingIssue: async (id: number) => {
-    return await request.delete({ url: `/bpm/oa-meeting-issue/delete?id=` + id })
+    return await request.delete({ url: `/business/oa-meeting-issue/delete?id=` + id })
   },
 
   // 导出会议议题 Excel
   exportOaMeetingIssue: async (params) => {
-    return await request.download({ url: `/bpm/oa-meeting-issue/export-excel`, params })
+    return await request.download({ url: `/business/oa-meeting-issue/export-excel`, params })
+  },
+
+  // 议题送审
+  sendApprove: async (id: number) => {
+    return await request.post({ url: `/business/oa-meeting-issue/sendApprove?id=` + id })
   },
 }

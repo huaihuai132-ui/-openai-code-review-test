@@ -16,7 +16,7 @@
       <el-form-item label="议题标题" prop="issueTitle">
         <el-input v-model="formData.issueTitle" placeholder="请输入议题标题" />
       </el-form-item> 
-      <el-form-item label="议题类型" prop="issueType">
+      <el-form-item label="议题类型" prop="issueType">  
         <el-select v-model="formData.issueType" placeholder="请选择议题类型">
           <el-option
             v-for="dict in getIntDictOptions(DICT_TYPE.MEET_ISSUE_TYPE)"
@@ -73,7 +73,7 @@
 </template>
 <script setup lang="ts">
 import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
-import { OaMeetingIssueApi, OaMeetingIssueVO, FileAttachmentVO } from '@/api/bpm/oameetingissue'
+import { OaMeetingIssueApi, OaMeetingIssueVO, FileAttachmentVO } from 'src/api/business/oameetingissue/index.ts'
 import { UploadFile } from '@/components/UploadFile'
 
 
@@ -83,7 +83,7 @@ defineOptions({ name: 'OaMeetingIssueForm' })
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
 
-const dialogVisible = ref(false) // 弹窗的是否展示
+const dialogVisible = ref(false) // 弹窗的是否展示 
 const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
@@ -164,12 +164,14 @@ const submitForm = async () => {
     
     if (formType.value === 'create') {
       await OaMeetingIssueApi.createOaMeetingIssue(data)
-      message.success(t('common.createSuccess'))
+      message.success('发起成功')
+      console.log('发起成功后执行关闭操作')
     } else {
       await OaMeetingIssueApi.updateOaMeetingIssue(data)
       message.success(t('common.updateSuccess'))
     }
     dialogVisible.value = false
+    console.log('弹窗已关闭')
     // 发送操作成功的事件
     emit('success')
   } finally {

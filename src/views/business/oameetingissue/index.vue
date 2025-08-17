@@ -113,16 +113,16 @@
           type="primary"
           plain
           @click="openForm('create')"
-          v-hasPermi="['bpm:oa-meeting-issue:create']"
+          v-hasPermi="['business:oa-meeting-issue:create']"
         >
           <Icon icon="ep:plus" class="mr-5px" /> 新增
         </el-button>
         <el-button
           type="success"
           plain
-          @click="handleExport"
+          @click="handleExport" 
           :loading="exportLoading"
-          v-hasPermi="['bpm:oa-meeting-issue:export']"
+          v-hasPermi="['business:oa-meeting-issue:export']"
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
@@ -168,22 +168,32 @@
       />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
-          <el-button
-            link
-            type="primary"
-            @click="openForm('update', scope.row.id)"
-            v-hasPermi="['bpm:oa-meeting-issue:update']"
-          >
-            编辑
-          </el-button>
-          <el-button
-            link
-            type="danger"
-            @click="handleDelete(scope.row.id)"
-            v-hasPermi="['bpm:oa-meeting-issue:delete']"
-          >
-            删除
-          </el-button>
+          <template v-if="scope.row.status === -1">
+            <el-button
+              link 
+              type="primary"
+              @click="openForm('update', scope.row.id)"
+              v-hasPermi="['business:oa-meeting-issue:update']"
+            >
+              编辑
+            </el-button>
+            <el-button
+              link
+              type="primary"
+              @click="sendApprove(scope.row.id)"
+              v-hasPermi="['business:oa-meeting-issue:sendApprove']"
+            >
+              送审
+            </el-button>
+            <el-button
+              link
+              type="danger"
+              @click="handleDelete(scope.row.id)"
+              v-hasPermi="['business:oa-meeting-issue:delete']"
+            >
+              删除
+            </el-button>
+          </template>
         </template>
       </el-table-column>
     </el-table>
@@ -204,8 +214,9 @@
 import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { OaMeetingIssueApi, OaMeetingIssueVO } from '@/api/bpm/oameetingissue'
+import { OaMeetingIssueApi, OaMeetingIssueVO } from 'src/api/business/oameetingissue/index.ts'
 import OaMeetingIssueForm from './OaMeetingIssueForm.vue'
+import {FinanceLeaseApi} from "@/api/business/financelease";
 
 /** 会议议题 列表 */
 defineOptions({ name: 'OaMeetingIssue' })
@@ -261,6 +272,22 @@ const resetQuery = () => {
 const formRef = ref()
 const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
+}
+
+/** 送审按钮操作 */
+const sendApprove = async (id: number) => {
+  try {
+    // 送审的二次确认
+    await message.sendApproveConfirm()
+    // 发起删除
+    await OaMeetingIssueApi.sendApprove(id)
+    message.success(t('common.sendApproveSuccess'))
+    // 刷新列表
+    await getList()
+  } catch {
+  } finally {
+
+  }
 }
 
 /** 删除按钮操作 */
