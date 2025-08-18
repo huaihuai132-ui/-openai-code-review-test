@@ -17,14 +17,17 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="融资标的物名称" prop="leasedProperty">
-        <el-input v-model="formData.leasedProperty" placeholder="请输入融资标的物名称" />
+      <el-form-item label="立项申请编码" prop="applicationCode">
+        <el-input v-model="formData.applicationCode" placeholder="请输入立项申请编码" />
       </el-form-item>
-      <el-form-item label="融资标的物数量" prop="leasedPropertyNum">
-        <el-input v-model="formData.leasedPropertyNum" placeholder="请输入融资标的物数量" />
+      <el-form-item label="标的名称" prop="leasedProperty">
+        <el-input v-model="formData.leasedProperty" placeholder="请输入标的名称" />
       </el-form-item>
-      <el-form-item label="拟融资标的物净值" prop="leasedPropertyValue">
-        <el-input v-model="formData.leasedPropertyValue" placeholder="请输入拟融资标的物净值" />
+      <el-form-item label="标的数量" prop="leasedPropertyNum">
+        <el-input v-model="formData.leasedPropertyNum" placeholder="请输入标的数量" />
+      </el-form-item>
+      <el-form-item label="拟标的净值" prop="leasedPropertyValue">
+        <el-input v-model="formData.leasedPropertyValue" placeholder="请输入拟标的净值" />
       </el-form-item>
       <el-form-item label="申请额度" prop="leaseAmount">
         <el-input v-model="formData.leaseAmount" placeholder="请输入申请额度" />
@@ -155,6 +158,7 @@ const formLoading = ref(false) // 表单的加载中：1）修改时的数据加
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
+  applicationCode: undefined,
   userId: undefined,
   companyId: undefined,
   leasedProperty: undefined,
@@ -178,9 +182,9 @@ const formData = ref({
 const formRules = reactive({
   userId: [{ required: true, message: '申请人的用户编号不能为空', trigger: 'blur' }],
   companyId: [{ required: true, message: '企业id不能为空', trigger: 'change' }],
-  leasedProperty: [{ required: true, message: '融资标的物名称不能为空', trigger: 'blur' }],
-  leasedPropertyNum: [{ required: true, message: '融资标的物数量不能为空', trigger: 'blur' }],
-  leasedPropertyValue: [{ required: true, message: '拟融资标的物净值不能为空', trigger: 'blur' }],
+  leasedProperty: [{ required: true, message: '标的名称不能为空', trigger: 'blur' }],
+  leasedPropertyNum: [{ required: true, message: '标的数量不能为空', trigger: 'blur' }],
+  leasedPropertyValue: [{ required: true, message: '拟标的净值不能为空', trigger: 'blur' }],
   leaseAmount: [{ required: true, message: '申请额度不能为空', trigger: 'blur' }],
   leaseTerm: [{ required: true, message: '承租租期不能为空', trigger: 'blur' }],
   restrictedByPolicy: [{ required: true, message: '是否列为国家产业政策限制/淘汰的高能耗、高水耗、高污染企业	不能为空', trigger: 'blur' }],

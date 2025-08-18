@@ -84,7 +84,8 @@
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />
-      <el-table-column label="编号" align="center" prop="id" />
+<!--      <el-table-column label="编号" align="center" prop="id" />-->
+      <el-table-column label="编号" align="center" prop="applicationCode" />
       <el-table-column label="企业" align="center" prop="companyId" />
       <el-table-column label="标的名称" align="center" prop="leasedProperty" />
       <el-table-column label="标的数量" align="center" prop="leasedPropertyNum" />
