@@ -17,14 +17,19 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="企业id" prop="companyId">
+      <el-form-item label="企业" prop="companyId">
         <el-select
           v-model="queryParams.companyId"
-          placeholder="请选择企业id"
+          placeholder="请选择企业"
           clearable
           class="!w-240px"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option
+            v-for="item in companyList"
+            :key="item.id"
+            :label="item.enterpriseName"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="融资标的物名称" prop="leasedProperty">
@@ -73,7 +78,12 @@
           clearable
           class="!w-240px"
         >
-          <el-option label="请选择字典生成" value="" />
+          <el-option
+            v-for="dict in getIntDictOptions(DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -124,7 +134,7 @@
       <el-table-column type="selection" width="55" />
       <el-table-column label="编号" align="center" prop="id" />
       <el-table-column label="融资租赁立项编号" align="center" prop="applicationId" />
-      <el-table-column label="企业id" align="center" prop="companyId" />
+      <el-table-column label="企业" align="center" prop="companyId" />
       <el-table-column label="标的名称" align="center" prop="leasedProperty" />
       <el-table-column label="标的数量" align="center" prop="leasedPropertyNum" />
       <el-table-column label="标的净值" align="center" prop="leasedPropertyValue" />
@@ -148,7 +158,11 @@
       />
       <el-table-column label="承租租期" align="center" prop="leaseTerm" />
       <el-table-column label="利率" align="center" prop="interestRate" />
-      <el-table-column label="单据状态" align="center" prop="status" />
+      <el-table-column label="单据状态" align="center" prop="status" >
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status" />
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
           <el-button
@@ -205,6 +219,7 @@ import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { FinanceLeaseApi, FinanceLeaseVO } from '@/api/business/financelease'
 import FinanceLeaseForm from './FinanceLeaseForm.vue'
+import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
 
 /** 融资租赁 列表 */
 defineOptions({ name: 'FinanceLease' })
@@ -237,7 +252,7 @@ const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 const selectedIds = ref<number[]>([]) // 表格的选中 ID 数组
 const selectedRows = ref<FinanceLeaseVO[]>([]) // 表格的选中 数据 数组
-
+const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
 /** 表格选中事件 */
 const handleSelectionChange = (rows: FinanceLeaseVO[]) => {
   selectedIds.value = rows.map((row) => row.id)
@@ -367,7 +382,8 @@ const handleDeviceExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
+onMounted(async () => {
   getList()
+  companyList.value = await FinanceCompanyApi.getSimpleFinanceCompanyList()
 })
 </script>
