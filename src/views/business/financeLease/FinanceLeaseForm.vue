@@ -17,6 +17,9 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="项目申请" prop="leasedCode">
+        <el-input v-model="formData.leasedCode" placeholder="请输入项目申请" />
+      </el-form-item>
       <el-form-item label="标的名称" prop="leasedProperty">
         <el-input v-model="formData.leasedProperty" placeholder="请输入融资标的物名称" />
       </el-form-item>
@@ -98,6 +101,7 @@ const formLoading = ref(false) // 表单的加载中：1）修改时的数据加
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
+  leasedCode: undefined,
   applicationId: undefined,
   userId: undefined,
   companyId: undefined,

@@ -3,6 +3,7 @@ import request from '@/config/axios'
 // 融资租赁 VO
 export interface FinanceLeaseVO {
   id: number // 融资租赁表单主键
+  leasedCode: string // 融资租赁项目申请编码
   applicationId: number // 融资租赁立项编号
   userId: number // 申请人的用户编号
   companyId: number // 企业id

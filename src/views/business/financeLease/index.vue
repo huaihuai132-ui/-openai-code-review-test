@@ -132,7 +132,9 @@
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />
-      <el-table-column label="编号" align="center" prop="id" />
+<!--      <el-table-column label="编号" align="center" prop="id" />-->
+      <el-table-column label="项目申请编码" align="center" prop="leasedCode" />
+
       <el-table-column label="融资租赁立项编号" align="center" prop="applicationId" />
       <el-table-column label="企业" align="center" prop="companyId" />
       <el-table-column label="标的名称" align="center" prop="leasedProperty" />
