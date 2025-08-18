@@ -55,14 +55,15 @@
         />
       </el-form-item>
       <el-form-item label="议题附件" prop="issueAttachment">
-        <UploadFile
-          v-model="uploadFileUrls"
-          :limit="10"
-          :file-type="['jpg', 'png', 'pdf', 'doc', 'docx']"
-          :file-size="10"
-          :drag="true"
-          directory="uploads"
-        />
+          <BatchFileUpload
+            ref="batchUploadRef"
+            v-model:fileList="formData.fileList"
+            mode="create"
+            file-type="common"
+            directory="documents"
+            :max-files="5"
+            tip="支持批量上传多个文件，最多5个"
+          />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -96,7 +97,9 @@ const formData = ref({
   meetingType: undefined,
   issueContent: undefined,
   description: undefined,
-  issueAttachment: [] as FileAttachmentVO[],
+  // issueAttachment: [] as FileAttachmentVO[],
+  fileList: [] as number[],  // Long类型数组
+  sequenceCode: undefined,
 })
 const formRules = reactive({
   // userId: [{ required: true, message: '议题发起人ID不能为空', trigger: 'blur' }],
@@ -107,46 +110,46 @@ const formRules = reactive({
 })
 const formRef = ref() // 表单 Ref
 
-// 上传文件 URL 数组，用于与 UploadFile 组件绑定
-const uploadFileUrls = ref<string[]>([])
+// 上传组件引用
+const batchUploadRef = ref<typeof BatchFileUpload | null>(null)
 
 // 监听文件 URL 变化，转换为 FileAttachmentVO 对象
-watch(uploadFileUrls, (newUrls: string[]) => {
-  formData.value.issueAttachment = newUrls.map(url => {
-    // 从 URL 中提取文件名
-    const fileName = url.substring(url.lastIndexOf('/') + 1)
-    const originalFileName = fileName.split('_').slice(1).join('_') || fileName // 去掉时间戳前缀
-    
-    return {
-      name: originalFileName,
-      path: fileName,
-      url: url,
-      businessCode: 'MEETING_ISSUE'
-    } as FileAttachmentVO
-  })
-  console.log('转换后的附件对象:', formData.value.issueAttachment)
-}, { deep: true })
-
-/** 打开弹窗 */
-const open = async (type: string, id?: number) => {
-  dialogVisible.value = true
-  dialogTitle.value = t('action.' + type)
-  formType.value = type
-  resetForm()
-  // 修改时，设置数据
-  if (id) {
-    formLoading.value = true
-    try {
-      formData.value = await OaMeetingIssueApi.getOaMeetingIssue(id)
-      // 将 FileAttachmentVO[] 转换为 string[] 用于 UploadFile 组件显示
-      if (formData.value.issueAttachment && formData.value.issueAttachment.length > 0) {
-        uploadFileUrls.value = formData.value.issueAttachment.map(attachment => attachment.url)
-      }
-    } finally {
-      formLoading.value = false
-    }
-  }
-}
+// watch(uploadFileUrls, (newUrls: string[]) => {
+//   formData.value.issueAttachment = newUrls.map(url => {
+//     // 从 URL 中提取文件名
+//     const fileName = url.substring(url.lastIndexOf('/') + 1)
+//     const originalFileName = fileName.split('_').slice(1).join('_') || fileName // 去掉时间戳前缀
+//
+//     return {
+//       name: originalFileName,
+//       path: fileName,
+//       url: url,
+//       businessCode: 'MEETING_ISSUE'
+//     } as FileAttachmentVO
+//   })
+//   console.log('转换后的附件对象:', formData.value.issueAttachment)
+// }, { deep: true })
+//
+// /** 打开弹窗 */
+// const open = async (type: string, id?: number) => {
+//   dialogVisible.value = true
+//   dialogTitle.value = t('action.' + type)
+//   formType.value = type
+//   resetForm()
+//   // 修改时，设置数据
+//   if (id) {
+//     formLoading.value = true
+//     try {
+//       formData.value = await OaMeetingIssueApi.getOaMeetingIssue(id)
+//       // 将 FileAttachmentVO[] 转换为 string[] 用于 UploadFile 组件显示
+//       if (formData.value.issueAttachment && formData.value.issueAttachment.length > 0) {
+//         uploadFileUrls.value = formData.value.issueAttachment.map(attachment => attachment.url)
+//       }
+//     } finally {
+//       formLoading.value = false
+//     }
+//   }
+// }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 
 /** 提交表单 */
@@ -180,7 +183,7 @@ const submitForm = async () => {
 }
 
 /** 重置表单 */
-const resetForm = () => {
+const resetForm = async () => {
   formData.value = {
     id: undefined,
     userId: undefined,
@@ -190,9 +193,17 @@ const resetForm = () => {
     meetingType: undefined,
     issueContent: undefined,
     description: undefined,
-    issueAttachment: [] as FileAttachmentVO[],
+    fileList: [] as number[],  // 重置为Long类型数组
+    sequenceCode: undefined,
   }
-  uploadFileUrls.value = [] // 重置上传文件 URL 数组
+
+  // 清理未保存的文件
+  if (batchUploadRef.value) {
+    await batchUploadRef.value.clearUnsavedFiles?.()
+    batchUploadRef.value.resetComponent?.()
+  }
+
+  // 重置表单数据
   formRef.value?.resetFields()
 }
 

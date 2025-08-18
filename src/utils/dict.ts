@@ -254,4 +254,5 @@ export enum DICT_TYPE {
   MEET_TYPE = 'meet_type',
   ISSUE_STATUS = 'issue_status',
   ISSUE_AUDIT_STATUS = 'issue_audit_status',
+  MEET_STATUS = 'meet_status',
 }
