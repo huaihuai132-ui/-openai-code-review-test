@@ -330,6 +330,30 @@ const remainingRouter: AppRouteRecordRaw[] = [
         }
       },
       {
+        path: 'oa/financeLease/create',
+        component: () => import('@/views/bpm/oa/financeLease/create.vue'),
+        name: 'OAFinanceLeaseCreate',
+        meta: {
+          noCache: true,
+          hidden: true,
+          canTo: true,
+          title: '发起融资租赁申请',
+          activeMenu: '/bpm/oa/financeLease'
+        }
+      },
+      {
+        path: 'oa/financeLease/detail',
+        component: () => import('@/views/bpm/oa/financeLease/detail.vue'),
+        name: 'OAFinanceLeaseDetail',
+        meta: {
+          noCache: true,
+          hidden: true,
+          canTo: true,
+          title: '查看融资租赁申请',
+          activeMenu: '/bpm/oa/financeLease'
+        }
+      },
+      {
         path: 'manager/model/create',
         component: () => import('@/views/bpm/model/form/index.vue'),
         name: 'BpmModelCreate',
