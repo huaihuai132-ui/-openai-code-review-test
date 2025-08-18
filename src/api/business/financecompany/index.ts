@@ -48,4 +48,9 @@ export const FinanceCompanyApi = {
   exportFinanceCompany: async (params) => {
     return await request.download({ url: `/business/finance-company/export-excel`, params })
   },
-}
+
+  getSimpleFinanceCompanyList: async (): Promise<FinanceCompanyVO[]> => {
+    return await request.download({ url: `/business/finance-company/list-all-simple` })
+  }
+
+}
