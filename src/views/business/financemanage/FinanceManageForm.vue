@@ -706,7 +706,8 @@ const open = async (type: string, id?: number) => {
       formLoading.value = false
     }
   }
-  companyList.value = await FinanceCompanyApi.getSimpleFinanceCompanyList()
+  const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
+  companyList.value = response.data
 
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
