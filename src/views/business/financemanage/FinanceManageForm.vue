@@ -10,6 +10,9 @@
       <el-form-item label="融资租赁单编号" prop="leaseId">
         <el-input v-model="formData.leaseId" placeholder="请输入融资租赁单编号" />
       </el-form-item>
+      <el-form-item label="租后管理编码" prop="manageCode">
+        <el-input v-model="formData.manageCode" placeholder="请输入租后管理编码" />
+      </el-form-item>
       <el-form-item label="企业" prop="companyId">
         <el-select v-model="formData.companyId" placeholder="请选择企业id">
           <el-option
@@ -553,6 +556,7 @@ const formLoading = ref(false) // 表单的加载中：1）修改时的数据加
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
+  manageCode: undefined,
   leaseId: undefined,
   companyId: undefined,
   leaseAmount: undefined,

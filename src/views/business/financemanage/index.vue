@@ -95,7 +95,8 @@
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />
-      <el-table-column label="编号" align="center" prop="id" />
+<!--      <el-table-column label="编号" align="center" prop="id" />-->
+      <el-table-column label="租后管理编码" align="center" prop="manageCode" />
       <el-table-column label="企业" align="center" prop="companyId" />
       <el-table-column label="租赁总额" align="center" prop="leaseAmount" />
       <el-table-column label="租赁余额" align="center" prop="leaseAmountSurplus" />

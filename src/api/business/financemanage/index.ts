@@ -3,6 +3,7 @@ import request from '@/config/axios'
 // 融资租赁租后管理 VO
 export interface FinanceManageVO {
   id: number // 融资租赁租后管理表单主键
+  manageCode: string // 租后管理编码
   leaseId: number // 融资租赁单编号
   companyId: number // 企业id
   leaseAmount: number // 租赁总额
