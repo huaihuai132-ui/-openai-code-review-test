@@ -154,7 +154,7 @@
   <!-- 列表 -->
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
-      <el-table-column label="主键ID" align="center" prop="id" />
+      <!-- <el-table-column label="主键ID" align="center" prop="id" /> -->
       <el-table-column label="企业全称" align="center" prop="enterpriseName" />
       <el-table-column label="统一社会信用代码" align="center" prop="creditCode" />
       <el-table-column label="企业简称" align="center" prop="shortName" />
@@ -166,6 +166,7 @@
       <el-table-column label="主营业务" align="center" prop="mainBusiness" />
       <el-table-column label="主要产品" align="center" prop="mainProducts" />
       <el-table-column label="备注信息" align="center" prop="remark" />
+      <el-table-column label="文件路径" align="center" prop="filePath" />
       <!-- <el-table-column
         label="创建时间"
         align="center"

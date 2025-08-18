@@ -15,6 +15,7 @@ export interface FinanceCompanyVO {
   mainProducts: string // 主要产品
   remark: string // 备注信息
   deptId: number // 部门编号
+  filePath: string // 文件路径
 }
 
 // 企业名单管理 API

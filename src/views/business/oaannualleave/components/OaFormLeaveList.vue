@@ -24,7 +24,13 @@
         width="180px"
       />
       <el-table-column label="请假天数" align="center" prop="day" />
-      <el-table-column label="请假结果" align="center" prop="status" />
+      <el-table-column label="请假结果" align="center">
+        <template #default="scope">
+          <span v-if="scope.row.status === 1">通过</span>
+          <span v-else-if="scope.row.status === 2">不通过</span>
+          <span v-else>审批中</span>
+        </template>
+      </el-table-column>
       <el-table-column label="流程实例的编号" align="center" prop="processInstanceId" />
       <!-- <el-table-column
         label="创建时间"

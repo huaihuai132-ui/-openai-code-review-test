@@ -43,6 +43,9 @@
       <el-form-item label="部门编号" prop="deptId">
         <el-input v-model="formData.deptId" placeholder="请输入部门编号" />
       </el-form-item>
+      <el-form-item label="文件路径" prop="filePath">
+        <el-input v-model="formData.filePath" placeholder="请输入文件路径" />
+      </el-form-item>
     </el-form>
     <template #footer>
       <el-button @click="submitForm" type="primary" :disabled="formLoading">确 定</el-button>
@@ -77,6 +80,7 @@ const formData = ref({
   mainProducts: undefined,
   remark: undefined,
   deptId: undefined,
+  filePath: undefined,
 })
 const formRules = reactive({
   enterpriseName: [{ required: true, message: '企业全称不能为空', trigger: 'blur' }],
@@ -143,6 +147,7 @@ const resetForm = () => {
     mainProducts: undefined,
     remark: undefined,
     deptId: undefined,
+    filePath: undefined,
   }
   formRef.value?.resetFields()
 }
