@@ -10,9 +10,14 @@
       <el-form-item label="融资租赁单编号" prop="leaseId">
         <el-input v-model="formData.leaseId" placeholder="请输入融资租赁单编号" />
       </el-form-item>
-      <el-form-item label="企业id" prop="companyId">
+      <el-form-item label="企业" prop="companyId">
         <el-select v-model="formData.companyId" placeholder="请选择企业id">
-          <el-option label="请选择字典生成" value="" />
+          <el-option
+            v-for="item in companyList"
+            :key="item.id"
+            :label="item.enterpriseName"
+            :value="item.id"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="租赁总额" prop="leaseAmount">
@@ -514,7 +519,14 @@
         <el-input v-model="formData.riskMgmtSuggestion" placeholder="请输入对该项目的风险管理策略建议" />
       </el-form-item>
       <el-form-item label="文件路径" prop="filePath">
-        <el-input v-model="formData.filePath" placeholder="请输入文件路径" />
+        <UploadFile
+          v-model="formData.filePath"
+          :limit="10"
+          :file-type="['jpg', 'png', 'pdf', 'doc', 'docx']"
+          :file-size="10"
+          :drag="true"
+          directory="uploads"
+        />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -526,6 +538,8 @@
 <script setup lang="ts">
 import { getBoolDictOptions, DICT_TYPE } from '@/utils/dict'
 import { FinanceManageApi, FinanceManageVO } from '@/api/business/financemanage'
+import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
+import { UploadFile } from '@/components/UploadFile'
 
 /** 融资租赁租后管理 表单 */
 defineOptions({ name: 'FinanceManageForm' })
@@ -671,6 +685,7 @@ const formRules = reactive({
   status: [{ required: true, message: '单据状态不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
+const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
 
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
@@ -687,6 +702,8 @@ const open = async (type: string, id?: number) => {
       formLoading.value = false
     }
   }
+  companyList.value = await FinanceCompanyApi.getSimpleFinanceCompanyList()
+
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 
