@@ -113,22 +113,22 @@ const selectedCategory = ref('');
 const queryParams = reactive({
   waiting: {
     pageNo: 1,
-    pageSize: 10,
+    pageSize: 100,
     createTime: []
   },
   done: {
     pageNo: 1,
-    pageSize: 10,
+    pageSize: 100,
     createTime: []
   },
   apply: {
     pageNo: 1,
-    pageSize: 10,
+    pageSize: 100,
     createTime: []
   },
   copy: {
     pageNo: 1,
-    pageSize: 10,
+    pageSize: 100,
     createTime: []
   }
 });
