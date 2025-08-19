@@ -69,6 +69,9 @@
                     </el-radio>
                   </el-radio-group>
                 </el-form-item>
+                <el-form-item label="是否列为国家产业政策限制/淘汰的高能耗、高水耗、高污染企业备注" prop="restrictedByPolicyReason">
+                  <el-input v-model="formData.restrictedByPolicyReason" placeholder="请输入是否列为国家产业政策限制/淘汰的高能耗、高水耗、高污染企业备注" />
+                </el-form-item>
                 <el-form-item label="租赁物是否为行业先进技术设备" prop="advancedTechEquip" label-width="388px">
                   <el-radio-group v-model="formData.advancedTechEquip">
                     <el-radio
@@ -81,6 +84,9 @@
                   </el-radio-group>
                 </el-form-item>
               </div>
+              <el-form-item label="租赁物是否为行业先进技术设备备注" prop="advancedTechEquipReason">
+                <el-input v-model="formData.advancedTechEquipReason" placeholder="请输入租赁物是否为行业先进技术设备备注" />
+              </el-form-item>
               <div class="radio-row">
                 <el-form-item label="租赁物是否为濒临淘汰或折旧严重的设备" prop="obsoleteOrOverdep" label-width="388px">
                   <el-radio-group v-model="formData.obsoleteOrOverdep">
@@ -93,6 +99,9 @@
                     </el-radio>
                   </el-radio-group>
                 </el-form-item>
+                <el-form-item label="租赁物是否为濒临淘汰或折旧严重的设备备注" prop="obsoleteOrOverdepReason">
+                  <el-input v-model="formData.obsoleteOrOverdepReason" placeholder="请输入租赁物是否为濒临淘汰或折旧严重的设备备注" />
+                </el-form-item>
                 <el-form-item label="是否涉嫌走私、偷逃税款或骗取出口退税" prop="taxFraudRisk" label-width="388px">
                   <el-radio-group v-model="formData.taxFraudRisk">
                     <el-radio
@@ -104,10 +113,13 @@
                     </el-radio>
                   </el-radio-group>
                 </el-form-item>
+                <el-form-item label="是否涉嫌走私、偷逃税款或骗取出口退税备注" prop="taxFraudRiskReason">
+                  <el-input v-model="formData.taxFraudRiskReason" placeholder="请输入是否涉嫌走私、偷逃税款或骗取出口退税备注" />
+                </el-form-item>
               </div>
               <div class="radio-row">
-                <el-form-item label="企业（项目）立项、生产经营用地批文是否齐全" prop="landPermitOk" label-width="388px">
-                  <el-radio-group v-model="formData.landPermitOk">
+                <el-form-item label="企业（项目）立项、生产经营用地批文是否齐全;环评、能耗、安全消防是否达标" prop="landPermitEhsOk" label-width="388px">
+                  <el-radio-group v-model="formData.landPermitEhsOk">
                     <el-radio
                       v-for="dict in getBoolDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)"
                       :key="String(dict.value)"
@@ -117,16 +129,8 @@
                     </el-radio>
                   </el-radio-group>
                 </el-form-item>
-                <el-form-item label="环评、能耗、安全消防是否达标" prop="ehsCompliance" label-width="388px">
-                  <el-radio-group v-model="formData.ehsCompliance">
-                    <el-radio
-                      v-for="dict in getBoolDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)"
-                      :key="String(dict.value)"
-                      :label="dict.value"
-                    >
-                      {{ dict.label }}
-                    </el-radio>
-                  </el-radio-group>
+                <el-form-item label="企业（项目）立项、生产经营用地批文是否齐全;环评、能耗、安全消防是否达标备注" prop="landPermitEhsOkReason">
+                  <el-input v-model="formData.landPermitEhsOkReason" placeholder="请输入企业（项目）立项、生产经营用地批文是否齐全;环评、能耗、安全消防是否达标备注" />
                 </el-form-item>
               </div>
               <div class="radio-row">
@@ -141,6 +145,9 @@
                     </el-radio>
                   </el-radio-group>
                 </el-form-item>
+                <el-form-item label="营业执照等证件是否经过当地年检备注" prop="licenseAnnualOkReason">
+                  <el-input v-model="formData.licenseAnnualOkReason" placeholder="请输入营业执照等证件是否经过当地年检备注" />
+                </el-form-item>
                 <el-form-item label="申请人及其法定代表人是否有不良信用记录" prop="badCreditRecord" label-width="388px">
                   <el-radio-group v-model="formData.badCreditRecord">
                     <el-radio
@@ -151,6 +158,9 @@
                       {{ dict.label }}
                     </el-radio>
                   </el-radio-group>
+                </el-form-item>
+                <el-form-item label="申请人及其法定代表人是否有不良信用记录备注" prop="badCreditRecordReason">
+                  <el-input v-model="formData.badCreditRecordReason" placeholder="请输入申请人及其法定代表人是否有不良信用记录备注" />
                 </el-form-item>
               </div>
             </div>
@@ -208,7 +218,7 @@ const formData = ref({
   advancedTechEquip: undefined,
   obsoleteOrOverdep: undefined,
   taxFraudRisk: undefined,
-  landPermitOk: undefined,
+  landPermitEhsOk: undefined,
   ehsCompliance: undefined,
   licenseAnnualOk: undefined,
   badCreditRecord: undefined,
@@ -229,7 +239,7 @@ const formRules = reactive({
   advancedTechEquip: [{ required: true, message: '租赁物是否为行业先进技术设备不能为空', trigger: 'blur' }],
   obsoleteOrOverdep: [{ required: true, message: '租赁物是否为濒临淘汰或折旧严重的设备不能为空', trigger: 'blur' }],
   taxFraudRisk: [{ required: true, message: '是否涉嫌走私、偷逃税款或骗取出口退税不能为空', trigger: 'blur' }],
-  landPermitOk: [{ required: true, message: '企业（项目）立项、生产经营用地批文是否齐全不能为空', trigger: 'blur' }],
+  landPermitEhsOk: [{ required: true, message: '企业（项目）立项、生产经营用地批文是否齐全不能为空', trigger: 'blur' }],
   ehsCompliance: [{ required: true, message: '环评、能耗、安全消防是否达标不能为空', trigger: 'blur' }],
   licenseAnnualOk: [{ required: true, message: '营业执照等证件是否经过当地年检不能为空', trigger: 'blur' }],
   badCreditRecord: [{ required: true, message: '申请人及其法定代表人是否有不良信用记录不能为空', trigger: 'blur' }],
@@ -300,7 +310,7 @@ const resetForm = () => {
     advancedTechEquip: undefined,
     obsoleteOrOverdep: undefined,
     taxFraudRisk: undefined,
-    landPermitOk: undefined,
+    landPermitEhsOk: undefined,
     ehsCompliance: undefined,
     licenseAnnualOk: undefined,
     badCreditRecord: undefined,
