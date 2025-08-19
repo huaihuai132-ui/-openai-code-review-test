@@ -57,7 +57,7 @@
       <el-table-column label="文件内容" align="center" prop="url" width="110px">
         <template #default="{ row }">
           <el-image v-if="row.type && row.type.includes('image') && row.configId === 0" class="h-80px w-80px" lazy
-            :src="getStaticImageUrl(row.path)" :preview-src-list="[getStaticImageUrl(row.path)]" preview-teleported
+            :src="row.url" :preview-src-list="[row.url]" preview-teleported
             fit="cover" />
           <el-link v-else type="primary" @click="previewFile(row)" :underline="false">
             预览
@@ -344,11 +344,11 @@ const copyToClipboard = (text: string) => {
 }
 
 // 获取静态图片URL
-const getStaticImageUrl = (path: string) => {
-  if (!path) return ''
-  // 拼接minio静态桶地址
-  return `${FIXED_DOMAIN}/minio/static/${path}`
-}
+// const getStaticImageUrl = (path: string) => {
+//   if (!path) return ''
+//   // 拼接minio静态桶地址
+//   return `${FIXED_DOMAIN}/minio/static/${path}`
+// }
 
 // 预览文件
 const previewFile = async (file) => {
@@ -365,7 +365,7 @@ const previewFile = async (file) => {
         return
       } else {
         // 静态非图片文件：拼接预览地址
-        const staticFileUrl = `${FIXED_DOMAIN}/minio/static/${file.path}` + `?nickname=${nickname}`
+        const staticFileUrl = `${file.url}` + `?nickname=${nickname}`
         const encodedUrl = encodeURIComponent(base64Encode(staticFileUrl))
         const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
         window.open(previewUrl, '_blank')
@@ -373,23 +373,12 @@ const previewFile = async (file) => {
     } else {
       // 普通文件预览 - 不能修改签名URL的查询参数，否则会破坏签名
       const signedUrl = await FileApi.getDownloadUrl(file.id)
-
-      // 解析原始URL并替换域名，但保持查询参数不变
-      const urlObj = new URL(signedUrl)
-      const pathAndQuery = urlObj.pathname + urlObj.search
-
       // 构建文件访问URL，保持签名完整性
-      const fileUrl = `${FIXED_DOMAIN}/minio${pathAndQuery}` + `&nickname=${nickname}`
+      const fileUrl = signedUrl + `&nickname=${nickname}`
 
       // 构建预览URL，将nickName作为预览服务的参数而不是文件URL的参数
       const encodedUrl = encodeURIComponent(base64Encode(fileUrl))
       let previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
-
-      // 将用户昵称作为预览服务的参数传递，而不是文件URL的参数
-      if (nickname) {
-        previewUrl += `&nickname=${encodeURIComponent(nickname)}`
-      }
-
       window.open(previewUrl, '_blank')
     }
   } catch (error) {
@@ -405,19 +394,13 @@ const downloadFile = async (file) => {
 
     // 判断是否为静态文件
     if (file.configId === 0) {
-      // 静态文件下载：直接拼接静态文件下载地址
-      const staticDownloadUrl = `${FIXED_DOMAIN}/minio/static/${file.path}`
+      // 静态文件下载：
+      const staticDownloadUrl = `${file.url}`
       window.open(staticDownloadUrl, '_blank')
     } else {
       // 普通文件下载：获取签名地址并替换域名，保持签名完整性
       const signedUrl = await FileApi.getDownloadUrl(file.id)
-
-      // 解析原始URL并替换域名，但保持查询参数不变以维护签名
-      const urlObj = new URL(signedUrl)
-      const pathAndQuery = urlObj.pathname + urlObj.search
-
-      // 构建新的下载URL：固定域名 + /minio/ + 原路径和查询参数（包含签名）
-      const downloadUrl = `${FIXED_DOMAIN}/minio${pathAndQuery}`
+      const downloadUrl = `${signedUrl}`
       window.open(downloadUrl, '_blank')
     }
   } catch (error) {

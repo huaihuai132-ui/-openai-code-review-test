@@ -2,31 +2,16 @@
   <div class="static-img-upload">
     <!-- 文件全能框列表 -->
     <div class="file-box-list" :class="{ 'single-mode': maxFiles === 1 }">
-      <div 
-        v-for="(box, index) in fileBoxes" 
-        :key="box.id" 
-        class="file-box"
-        :class="{ 
-          'empty': box.status === 'empty',
-          'selected': box.status === 'selected',
-          'uploading': box.status === 'uploading',
-          'uploaded': box.status === 'uploaded',
-          'error': box.status === 'error'
-        }"
-        @click="handleBoxClick(index)"
-        @drop="handleDrop(index, $event)"
-        @dragover.prevent
-        @dragenter.prevent
-      >
+      <div v-for="(box, index) in fileBoxes" :key="box.id" class="file-box" :class="{
+        'empty': box.status === 'empty',
+        'selected': box.status === 'selected',
+        'uploading': box.status === 'uploading',
+        'uploaded': box.status === 'uploaded',
+        'error': box.status === 'error'
+      }" @click="handleBoxClick(index)" @drop="handleDrop(index, $event)" @dragover.prevent @dragenter.prevent>
         <!-- 隐藏的文件输入框 -->
-        <input
-          :id="`${instanceId}-fileInput${index}`"
-          type="file"
-          :accept="fileType.join(',')"
-          @change="handleFileSelect(index, $event)"
-          style="display: none"
-          :multiple="false"
-        />
+        <input :id="`${instanceId}-fileInput${index}`" type="file" :accept="fileType.join(',')"
+          @change="handleFileSelect(index, $event)" style="display: none" :multiple="false" />
 
         <!-- 空状态 -->
         <div v-if="box.status === 'empty'" class="empty-state">
@@ -47,7 +32,7 @@
           <div class="image-preview">
             <img :src="getImagePreviewUrl(box.file!)" alt="预览图片" />
           </div>
-          
+
           <!-- 文件信息和操作 -->
           <div class="file-info">
             <!-- 文件名编辑 -->
@@ -55,25 +40,19 @@
               <div v-if="!box.editing" class="file-name" @click="startEditName(index)">
                 <span class="name-text">{{ box.displayName }}</span>
                 <Icon icon="ep:edit" class="edit-icon" />
-          </div>
+              </div>
               <div v-else class="file-name-edit">
-                <el-input
-                  v-model="box.editingName"
-                  size="small"
-                  @blur="finishEditName(index)"
-                  @keyup.enter="finishEditName(index)"
-                  @keyup.esc="cancelEditName(index)"
-                  ref="nameInput"
-                />
+                <el-input v-model="box.editingName" size="small" @blur="finishEditName(index)"
+                  @keyup.enter="finishEditName(index)" @keyup.esc="cancelEditName(index)" ref="nameInput" />
                 <Icon icon="ep:check" class="confirm-icon" @click="finishEditName(index)" />
-          </div>
-        </div>
+              </div>
+            </div>
 
             <!-- 上传按钮 -->
             <el-button type="primary" size="small" @click.stop="uploadFile(index)" :loading="false">
               上传图片
-          </el-button>
-        </div>
+            </el-button>
+          </div>
 
           <!-- 删除按钮 -->
           <div class="delete-btn" @click.stop="deleteFile(index)">
@@ -85,18 +64,13 @@
         <div v-else-if="box.status === 'uploading'" class="uploading-state">
           <!-- 进度圆环 -->
           <div class="progress-container" @mouseenter="box.showCancel = true" @mouseleave="box.showCancel = false">
-            <el-progress 
-              type="circle" 
-              :percentage="box.progress || 0" 
-              :width="80"
-              :stroke-width="6"
-            />
+            <el-progress type="circle" :percentage="box.progress || 0" :width="80" :stroke-width="6" />
             <!-- 取消按钮 -->
             <div v-if="box.showCancel" class="cancel-btn" @click.stop="cancelUpload(index)">
               <Icon icon="ep:close" />
             </div>
           </div>
-          
+
           <!-- 上传信息 -->
           <div class="upload-info">
             <div class="upload-speed">{{ formatSpeed(box.speed || 0) }}</div>
@@ -109,7 +83,7 @@
           <!-- 显示图片 -->
           <div class="uploaded-image" @mouseenter="box.showPreview = true" @mouseleave="box.showPreview = false">
             <img :src="getStaticImageUrl(box.fileInfo.path)" :alt="box.fileInfo.name" />
-            
+
             <!-- 预览按钮 -->
             <div v-if="box.showPreview" class="preview-btn" @click.stop="handlePreview(index)">
               <Icon icon="ep:zoom-in" />
@@ -120,22 +94,22 @@
           <div class="file-info-uploaded">
             <div class="file-name">{{ box.fileInfo.name }}</div>
             <div class="file-size">{{ formatFileSize(box.fileInfo.size) }}</div>
-        </div>
+          </div>
 
           <!-- 删除按钮 -->
           <div class="delete-btn" @click.stop="deleteFile(index)">
             <Icon icon="ep:close" />
           </div>
-    </div>
+        </div>
 
         <!-- 错误状态 -->
         <div v-else-if="box.status === 'error'" class="error-state">
           <Icon icon="ep:warning" class="error-icon" />
           <div class="error-text">上传失败</div>
           <el-button size="small" @click.stop="retryUpload(index)">重试</el-button>
-          </div>
-          </div>
         </div>
+      </div>
+    </div>
 
     <!-- 单图片模式不显示批量操作按钮 -->
 
@@ -244,30 +218,30 @@ const createEmptyFileBox = (): FileBox => ({
 // 初始化文件框
 const initFileBoxes = async () => {
   console.log('初始化文件框, sequenceCode:', props.sequenceCode, 'fileList:', props.fileList)
-  
+
   try {
     if (props.sequenceCode) {
       // 序列模式：根据序列配置创建固定数量的文件框
       console.log('使用序列模式，查询序列配置...')
       const response = await FileBusinessSequenceApi.getFileBusinessSequenceGroupListByCode(props.sequenceCode)
       console.log('序列查询响应:', response)
-      
+
       let sequences = response.data || response
       console.log('序列数据 (处理前):', sequences)
-      
+
       // 处理嵌套数组的情况
       if (Array.isArray(sequences) && sequences.length > 0 && Array.isArray(sequences[0])) {
         sequences = sequences[0]
         console.log('展开嵌套数组后的序列数据:', sequences)
       }
-      
+
       sequenceInfo.value = sequences || []
       console.log('最终序列信息:', sequenceInfo.value)
-      
+
       // 根据序列长度创建文件框
       const sequenceLength = sequenceInfo.value.length || 1
       console.log('创建', sequenceLength, '个序列文件框')
-      
+
       fileBoxes.value = Array.from({ length: sequenceLength }, () => createEmptyFileBox())
     } else {
       // 普通模式：静态图片上传只支持单张图片
@@ -280,7 +254,7 @@ const initFileBoxes = async () => {
       console.log('加载现有文件:', props.fileList)
       await loadExistingFiles()
     }
-    
+
     console.log('文件框初始化完成:', fileBoxes.value)
   } catch (error) {
     console.error('初始化文件框失败:', error)
@@ -293,15 +267,15 @@ const initFileBoxes = async () => {
 // 加载现有文件
 const loadExistingFiles = async () => {
   if (!props.fileList || props.fileList.length === 0) return
-  
+
   try {
     console.log('加载现有文件，ID列表:', props.fileList)
     const response = await FileApi.getFilesByIds(props.fileList)
     console.log('文件详情响应:', response)
-    
+
     const files = (response as any).data || response
     console.log('获取到的文件列表:', files)
-    
+
     if (Array.isArray(files)) {
       files.forEach((file, index) => {
         if (index < fileBoxes.value.length && file && typeof file.id === 'number') {
@@ -324,7 +298,7 @@ const loadExistingFiles = async () => {
 // 文件框点击处理
 const handleBoxClick = (index: number) => {
   if (props.mode === 'view') return
-  
+
   const box = fileBoxes.value[index]
   if (box.status === 'empty') {
     // 触发文件选择
@@ -338,7 +312,7 @@ const handleBoxClick = (index: number) => {
 // 拖拽处理
 const handleDrop = (index: number, event: DragEvent) => {
   if (props.mode === 'view') return
-  
+
   event.preventDefault()
   const files = event.dataTransfer?.files
   if (files && files.length > 0) {
@@ -378,7 +352,7 @@ const validateFile = (file: File): boolean => {
     }
     return file.type === type
   })
-  
+
   if (!isValidType) {
     ElMessage.error(`只能上传 ${props.fileType.join(', ')} 格式的图片文件`)
     return false
@@ -470,7 +444,7 @@ const uploadFile = async (index: number) => {
             box.speed = bytesUploaded / timeElapsed
             const remainingBytes = progressEvent.total - progressEvent.loaded
             box.remainingTime = remainingBytes / box.speed
-            
+
             lastTime = currentTime
             lastLoaded = progressEvent.loaded
           }
@@ -520,7 +494,7 @@ const uploadFile = async (index: number) => {
 
   } catch (error) {
     console.error(`文件 ${index} 上传失败:`, error)
-    
+
     if (axios.isCancel(error)) {
       box.status = 'selected'
       ElMessage.warning('上传已取消')
@@ -528,7 +502,7 @@ const uploadFile = async (index: number) => {
       box.status = 'error'
       ElMessage.error('图片上传失败: ' + ((error as any).message || '未知错误'))
     }
-    
+
     box.progress = 0
     box.speed = 0
     box.remainingTime = 0
@@ -563,7 +537,7 @@ const deleteFile = async (index: number) => {
       // 已上传的文件，需要调用删除接口
       const fileId = box.fileInfo.id
       console.log('调用静态文件删除接口，文件ID:', fileId, '类型:', typeof fileId)
-      
+
       if (!fileId || typeof fileId !== 'number') {
         console.error('文件ID无效:', fileId)
         ElMessage.error('删除失败: 文件ID无效')
@@ -605,11 +579,11 @@ const handlePreview = (index: number) => {
 
   try {
     console.log('预览静态图片:', box.fileInfo)
-    
-    // 构建静态图片URL
-    const imageUrl = getStaticImageUrl(box.fileInfo.path)
+
+    // 构建静态图片URL，使用fileInfo.url
+    const imageUrl = box.fileInfo.url
     console.log('图片预览URL:', imageUrl)
-    
+
     // 使用图片查看器预览
     createImageViewer({
       zIndex: 9999999,
@@ -650,7 +624,7 @@ const clearUnsavedFiles = async () => {
   if (unsavedFileIds.value.length === 0) return
 
   console.log('清理未保存的静态文件:', unsavedFileIds.value)
-  
+
   try {
     for (const fileId of unsavedFileIds.value) {
       if (typeof fileId === 'number') {
@@ -696,7 +670,7 @@ const formatTime = (seconds: number): string => {
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
   const secs = Math.floor(seconds % 60)
-  
+
   if (hours > 0) {
     return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   } else {
@@ -736,7 +710,7 @@ watch(() => props.fileList, () => {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 16px;
-    
+
     &.single-mode {
       grid-template-columns: 1fr;
       max-width: 300px;
@@ -832,7 +806,7 @@ watch(() => props.fileList, () => {
       align-items: center;
       justify-content: center;
       padding: 8px;
-      
+
       img {
         max-width: 100%;
         max-height: 120px;
@@ -863,8 +837,8 @@ watch(() => props.fileList, () => {
 
           .name-text {
             flex: 1;
-      font-size: 12px;
-      color: #606266;
+            font-size: 12px;
+            color: #606266;
             word-break: break-all;
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -912,17 +886,17 @@ watch(() => props.fileList, () => {
       background-color: rgba(0, 0, 0, 0.6);
       color: white;
       border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
       font-size: 12px;
       transition: background-color 0.3s ease;
 
-  &:hover {
+      &:hover {
         background-color: #f56c6c;
-  }
-  }
+      }
+    }
   }
 
   // 上传中状态
@@ -962,7 +936,7 @@ watch(() => props.fileList, () => {
 
     .upload-info {
       text-align: center;
-    font-size: 12px;
+      font-size: 12px;
       color: #666;
 
       .upload-speed,
@@ -981,11 +955,11 @@ watch(() => props.fileList, () => {
     .uploaded-image {
       flex: 1;
       position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 8px;
-      
+
       img {
         max-width: 100%;
         max-height: 140px;
@@ -1003,10 +977,10 @@ watch(() => props.fileList, () => {
         background-color: rgba(0, 0, 0, 0.6);
         color: white;
         border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
         font-size: 18px;
         transition: all 0.3s ease;
 
@@ -1096,11 +1070,10 @@ watch(() => props.fileList, () => {
 
   // 提示信息
   .upload-tip {
-  margin-top: 8px;
+    margin-top: 8px;
     font-size: 12px;
     color: #666;
-  text-align: center;
+    text-align: center;
   }
 }
 </style>
-

@@ -130,3 +130,23 @@ export const getFileContent = (id: number) => {
 export const getFilesByIds = (ids: number[]) => {
   return request.post<FileVO[]>({ url: '/infra/file/getFilesByIds', data: ids })
 }
+
+// 设置文件为公共文件
+export const setFilePublic = (fileId: number) => {
+  return request.post({ url: `/infra/file/setPublic/${fileId}` })
+}
+
+// 移动文件到指定目录
+export const moveFile = (fileId: number, targetDir: string) => {
+  return request.post({ url: `/infra/file/move/${fileId}`, data: { dir: targetDir } })
+}
+
+// 批量移动文件
+export const batchMoveFiles = (fileIds: number[], targetDir: string) => {
+  return request.post({ url: '/infra/file/batch-move', data: { fileIds, dir: targetDir } })
+}
+
+// 重命名文件
+export const renameFile = (fileId: number, newName: string) => {
+  return request.post({ url: `/infra/file/rename/${fileId}`, data: { name: newName } })
+}

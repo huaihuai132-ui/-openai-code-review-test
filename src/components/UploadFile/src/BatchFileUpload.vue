@@ -2,31 +2,18 @@
   <div class="batch-upload-file-container">
     <!-- 文件全能框列表 -->
     <div class="file-boxes-container">
-      <div 
-        v-for="(fileBox, index) in fileBoxes" 
-        :key="index" 
-        class="file-all-in-one-box"
-        :class="{
-          'is-empty': !fileBox.file,
-          'is-selected': fileBox.file && !fileBox.uploading && !fileBox.uploaded,
-          'is-uploading': fileBox.uploading,
-          'is-uploaded': fileBox.uploaded,
-          'is-error': fileBox.error,
-          'is-hover': fileBox.isHover && !fileBox.uploading
-        }"
-        @mouseenter="fileBox.isHover = true"
-        @mouseleave="fileBox.isHover = false"
-        @click="handleBoxClick(index)"
-        @drop="handleDrop($event, index)"
-        @dragover.prevent
-        @dragenter.prevent
-      >
+      <div v-for="(fileBox, index) in fileBoxes" :key="index" class="file-all-in-one-box" :class="{
+        'is-empty': !fileBox.file,
+        'is-selected': fileBox.file && !fileBox.uploading && !fileBox.uploaded,
+        'is-uploading': fileBox.uploading,
+        'is-uploaded': fileBox.uploaded,
+        'is-error': fileBox.error,
+        'is-hover': fileBox.isHover && !fileBox.uploading
+      }" @mouseenter="fileBox.isHover = true" @mouseleave="fileBox.isHover = false" @click="handleBoxClick(index)"
+        @drop="handleDrop($event, index)" @dragover.prevent @dragenter.prevent>
         <!-- 右上角删除按钮 -->
-        <div 
-          v-if="fileBox.file && (mode === 'create' || mode === 'edit')" 
-          class="file-close-btn" 
-          @click.stop="deleteFile(index)"
-        >
+        <div v-if="fileBox.file && (mode === 'create' || mode === 'edit')" class="file-close-btn"
+          @click.stop="deleteFile(index)">
           <el-icon :size="14">
             <Close />
           </el-icon>
@@ -34,16 +21,13 @@
 
         <!-- 空状态 -->
         <div v-if="!fileBox.file" class="empty-state">
-          <el-icon 
-            class="plus-icon" 
-            :class="{ 'hover-blue': fileBox.isHover }"
-          >
+          <el-icon class="plus-icon" :class="{ 'hover-blue': fileBox.isHover }">
             <Plus />
           </el-icon>
           <div class="upload-text">
             {{ getEmptyStateText(index) }}
           </div>
-          </div>
+        </div>
 
         <!-- 已选择文件状态 -->
         <div v-else-if="fileBox.file && !fileBox.uploading && !fileBox.uploaded" class="selected-state">
@@ -56,8 +40,8 @@
               <Folder v-else-if="getFileIcon(fileBox.file) === 'Folder'" />
               <Document v-else />
             </el-icon>
-        </div>
-          
+          </div>
+
           <!-- 文件名和编辑 -->
           <div class="file-name-section">
             <div v-if="!fileBox.editingName" class="file-name-display">
@@ -65,48 +49,33 @@
               <el-icon class="edit-icon" @click.stop="startEditName(index)">
                 <Edit />
               </el-icon>
-      </div>
+            </div>
             <div v-else class="file-name-edit">
-              <el-input 
-                v-model="fileBox.tempName" 
-                size="small" 
-                @keyup.enter="finishEditName(index)"
-                @keyup.esc="cancelEditName(index)"
-                ref="nameInput"
-              />
+              <el-input v-model="fileBox.tempName" size="small" @keyup.enter="finishEditName(index)"
+                @keyup.esc="cancelEditName(index)" ref="nameInput" />
               <el-icon class="confirm-icon" @click.stop="finishEditName(index)">
                 <Check />
-          </el-icon>
+              </el-icon>
             </div>
-      </div>
+          </div>
 
           <!-- 上传按钮 -->
           <div class="upload-button-section">
             <el-button type="primary" size="small" @click.stop="uploadFile(index)">
               上传文件
-        </el-button>
+            </el-button>
           </div>
-      </div>
+        </div>
 
         <!-- 上传中状态 -->
         <div v-else-if="fileBox.uploading" class="uploading-state">
           <!-- 圆形进度条 -->
           <div class="progress-circle-container">
-            <el-progress 
-              type="circle" 
-              :percentage="fileBox.progress" 
-              :width="80" 
-              :stroke-width="6"
-              :show-text="false" 
-              color="#409eff" 
-            />
-            
+            <el-progress type="circle" :percentage="fileBox.progress" :width="80" :stroke-width="6" :show-text="false"
+              color="#409eff" />
+
             <!-- 取消按钮 (悬停显示) -->
-            <div 
-              v-if="fileBox.isHover" 
-              class="progress-cancel-btn" 
-              @click.stop="cancelUpload(index)"
-            >
+            <div v-if="fileBox.isHover" class="progress-cancel-btn" @click.stop="cancelUpload(index)">
               <el-icon :size="16">
                 <Close />
               </el-icon>
@@ -117,8 +86,8 @@
               <div class="upload-speed">{{ formatSpeed(fileBox.speed) }}</div>
               <div class="remaining-time">剩余 {{ formatRemainingTime(fileBox.remainingTime) }}</div>
             </div>
-            </div>
           </div>
+        </div>
 
         <!-- 上传完成状态 -->
         <div v-else-if="fileBox.uploaded" class="uploaded-state">
@@ -132,49 +101,42 @@
                 <Document v-else />
               </el-icon>
             </div>
-            
+
             <!-- 预览遮罩 -->
             <div v-if="fileBox.isHover" class="preview-overlay" @click="handlePreview(index)">
               <el-icon :size="24">
                 <View />
               </el-icon>
               <div class="preview-text">预览</div>
+            </div>
           </div>
-        </div>
-          
+
           <div class="file-name">{{ fileBox.displayName }}</div>
-      </div>
+        </div>
 
         <!-- 隐藏的文件输入框 -->
-        <input 
-          type="file" 
-          :id="`${instanceId}-fileInput${index}`"
-          :accept="accept"
-          :multiple="false"
-          style="display: none"
-          @change="handleFileSelect($event, index)"
-        />
-    </div>
+        <input type="file" :id="`${instanceId}-fileInput${index}`" :accept="accept" :multiple="false"
+          style="display: none" @change="handleFileSelect($event, index)" />
+      </div>
 
       <!-- 添加更多文件按钮 (批量模式) -->
-      <div 
-        v-if="fileBoxes.length < maxFiles && !sequenceCode"
-        class="file-all-in-one-box add-more-box"
-        @click="addNewFileBox"
-      >
+      <div v-if="fileBoxes.length < maxFiles && !sequenceCode" class="file-all-in-one-box add-more-box"
+        @click="addNewFileBox">
         <div class="empty-state">
           <el-icon class="plus-icon">
             <Plus />
           </el-icon>
           <div class="upload-text">添加更多文件</div>
-      </div>
+        </div>
       </div>
     </div>
 
     <!-- 批量操作按钮 -->
     <div v-if="hasSelectedFiles" class="batch-actions">
       <el-button type="primary" @click="uploadAllFiles" :disabled="isUploading">
-        <el-icon><Upload /></el-icon>
+        <el-icon>
+          <Upload />
+        </el-icon>
         {{ isUploading ? '上传中...' : `上传全部 (${selectedFilesCount})` }}
       </el-button>
       <el-button @click="clearAllFiles">清空全部</el-button>
@@ -299,10 +261,10 @@ const initFileBoxes = async () => {
     try {
       const response = await FileBusinessSequenceApi.getFileBusinessSequenceGroupListByCode(props.sequenceCode)
       console.log('批量上传-序列API返回结果:', response)
-      
+
       const data = response.data || response
       console.log('批量上传-解析后的data:', data)
-      
+
       // 数据结构是 [[ { sequenceFile: "商品清单1", sequenceValue: 1 } ]]
       let sequences: any[] = []
       if (Array.isArray(data) && data.length > 0 && Array.isArray(data[0])) {
@@ -310,16 +272,16 @@ const initFileBoxes = async () => {
       } else if (Array.isArray(data)) {
         sequences = data
       }
-      
+
       console.log('批量上传-处理后的sequences:', sequences)
-      
+
       sequenceInfo.value = sequences.map((item: any) => ({
         sequenceFile: item.sequenceFile,
         sequenceValue: item.sequenceValue
       }))
-      
+
       console.log('批量上传-最终sequenceInfo:', sequenceInfo.value)
-      
+
       // 根据序列长度创建文件框
       fileBoxes.value = sequences.map(() => createEmptyFileBox())
     } catch (error) {
@@ -331,7 +293,7 @@ const initFileBoxes = async () => {
     // 普通模式：根据maxFiles创建初始文件框
     fileBoxes.value = [createEmptyFileBox()]
   }
-  
+
   // 如果是查看或编辑模式，加载已有文件
   if ((props.mode === 'view' || props.mode === 'edit') && props.fileList.length > 0) {
     await loadExistingFiles()
@@ -348,7 +310,7 @@ const createEmptyFileBox = () => ({
   uploaded: false,
   error: false,
   progress: 0,
-    speed: 0,
+  speed: 0,
   remainingTime: 0,
   isHover: false,
   fileInfo: null,
@@ -363,7 +325,7 @@ const loadExistingFiles = async () => {
     console.log('批量上传-加载已有文件-API返回结果:', props.fileList as number[])
 
     const fileData = files.data || files
-    
+
     // 为每个已有文件创建文件框
     fileData.forEach((file: any, index: number) => {
       if (fileBoxes.value[index]) {
@@ -373,7 +335,7 @@ const loadExistingFiles = async () => {
         fileBoxes.value[index].saved = true // 已有文件标记为已保存
       }
     })
-    
+
     updateUploadedFileIds()
   } catch (error) {
     console.error('加载已有文件失败:', error)
@@ -385,7 +347,7 @@ const loadExistingFiles = async () => {
 const handleBoxClick = (index: number) => {
   const box = fileBoxes.value[index]
   if (props.mode === 'view' || box.uploaded) return
-  
+
   const input = document.getElementById(`${instanceId}-fileInput${index}`)
   input?.click()
 }
@@ -395,13 +357,13 @@ const handleFileSelect = (event: Event, index: number) => {
   const target = event.target as HTMLInputElement
   const files = target.files
   if (!files || files.length === 0) return
-  
+
   const file = files[0]
   const box = fileBoxes.value[index]
-  
+
   // 验证文件
   if (!validateFile(file)) return
-  
+
   // 设置文件信息
   box.file = file
   box.displayName = getFileNameWithoutExtension(file.name)
@@ -411,7 +373,7 @@ const handleFileSelect = (event: Event, index: number) => {
   box.error = false
   box.progress = 0
   box.fileInfo = null
-  
+
   // 清空input值，允许选择同一文件
   target.value = ''
 }
@@ -421,15 +383,15 @@ const handleDrop = (event: DragEvent, index: number) => {
   event.preventDefault()
   const box = fileBoxes.value[index]
   if (props.mode === 'view' || box.uploaded) return
-  
+
   const files = event.dataTransfer?.files
   if (!files || files.length === 0) return
-  
+
   const file = files[0]
-  
+
   // 验证文件
   if (!validateFile(file)) return
-  
+
   // 设置文件信息
   box.file = file
   box.displayName = getFileNameWithoutExtension(file.name)
@@ -446,7 +408,7 @@ const startEditName = async (index: number) => {
   const box = fileBoxes.value[index]
   box.editingName = true
   box.tempName = box.displayName
-  
+
   await nextTick()
   const input = document.querySelector('.file-name-edit input') as HTMLInputElement
   input?.focus()
@@ -474,17 +436,17 @@ const cancelEditName = (index: number) => {
 const uploadFile = async (index: number) => {
   const box = fileBoxes.value[index]
   if (!box.file || box.uploading || box.uploaded) return
-  
+
   try {
     box.uploading = true
     box.error = false
     box.progress = 0
     box.speed = 0
     box.remainingTime = 0
-    
+
     // 创建取消令牌
     box.cancelTokenSource = axios.CancelToken.source()
-    
+
     // 根据文件类型选择上传方法
     let uploadResult
     if (props.fileType === 'static') {
@@ -492,23 +454,23 @@ const uploadFile = async (index: number) => {
     } else {
       uploadResult = await uploadCommonFile(box)
     }
-    
+
     // 上传成功
     box.uploading = false
     box.uploaded = true
     box.fileInfo = uploadResult
     box.progress = 100
-    
+
     // 更新已上传文件ID列表
     updateUploadedFileIds()
-    
+
     message.success(`${box.displayName} 上传成功`)
-    
+
   } catch (error: any) {
     box.uploading = false
     box.error = true
     box.progress = 0
-    
+
     if (axios.isCancel(error)) {
       message.info(`${box.displayName} 上传已取消`)
     } else {
@@ -522,7 +484,7 @@ const uploadFile = async (index: number) => {
 const uploadCommonFile = async (box: any) => {
   // 1. 获取预签名URL
   const presignedData = await FileApi.getFilePresignedUrl(box.file.name, props.directory)
-  
+
   // 2. 直传到MinIO
   const startTime = Date.now()
   await axios.put(presignedData.uploadUrl, box.file, {
@@ -534,7 +496,7 @@ const uploadCommonFile = async (box: any) => {
       if (progressEvent.total) {
         const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
         box.progress = progress
-        
+
         // 计算速度和剩余时间
         const elapsed = (Date.now() - startTime) / 1000
         if (elapsed > 0) {
@@ -545,7 +507,7 @@ const uploadCommonFile = async (box: any) => {
       }
     }
   })
-  
+
   // 3. 创建文件记录
   const createFileData = {
     configId: presignedData.configId,
@@ -556,15 +518,15 @@ const uploadCommonFile = async (box: any) => {
     size: box.file.size,
     dir: props.directory
   }
-  
+
   const response = await FileApi.createFile(createFileData) as any
   console.log('批量上传-FileApi.createFile 返回结果:', response)
-  
+
   // 根据用户描述，后端返回格式：{code: 0, data: {id: 80, configId: 28, ...}, msg: ""}
   if (response && response.data) {
     return response.data
   }
-  
+
   // 兜底：如果没有data字段，直接返回response
   return response
 }
@@ -573,7 +535,7 @@ const uploadCommonFile = async (box: any) => {
 const uploadStaticFile = async (box: any) => {
   // 1. 获取静态文件预签名URL
   const presignedData = await StaticFileApi.getStaticFilePresignedUrl(box.file.name, props.directory)
-  
+
   // 2. 直传到MinIO
   const startTime = Date.now()
   await axios.put(presignedData.uploadUrl, box.file, {
@@ -585,7 +547,7 @@ const uploadStaticFile = async (box: any) => {
       if (progressEvent.total) {
         const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
         box.progress = progress
-        
+
         // 计算速度和剩余时间
         const elapsed = (Date.now() - startTime) / 1000
         if (elapsed > 0) {
@@ -596,7 +558,7 @@ const uploadStaticFile = async (box: any) => {
       }
     }
   })
-  
+
   // 3. 创建静态文件记录
   const createFileData = {
     configId: presignedData.configId,
@@ -607,15 +569,15 @@ const uploadStaticFile = async (box: any) => {
     size: box.file.size,
     dir: props.directory
   }
-  
+
   const response = await StaticFileApi.createStaticFile(createFileData) as any
   console.log('批量上传-StaticFileApi.createStaticFile 返回结果:', response)
-  
+
   // 根据用户描述，后端返回格式：{code: 0, data: {id: 80, configId: 0, ...}, msg: ""}
   if (response && response.data) {
     return response.data
   }
-  
+
   // 兜底：如果没有data字段，直接返回response
   return response
 }
@@ -623,7 +585,7 @@ const uploadStaticFile = async (box: any) => {
 // 批量上传所有文件
 const uploadAllFiles = async () => {
   const filesToUpload = fileBoxes.value.filter(box => box.file && !box.uploaded && !box.uploading)
-  
+
   if (filesToUpload.length === 0) {
     message.warning('没有需要上传的文件')
     return
@@ -635,7 +597,7 @@ const uploadAllFiles = async () => {
   for (let i = 0; i < filesToUpload.length; i += concurrency) {
     chunks.push(filesToUpload.slice(i, i + concurrency))
   }
-  
+
   for (const chunk of chunks) {
     await Promise.all(chunk.map(box => {
       const index = fileBoxes.value.indexOf(box)
@@ -662,36 +624,36 @@ const addNewFileBox = () => {
     message.warning(`最多只能上传 ${props.maxFiles} 个文件`)
     return
   }
-  
+
   fileBoxes.value.push(createEmptyFileBox())
 }
 
 // 删除文件
 const deleteFile = async (index: number) => {
   const box = fileBoxes.value[index]
-  
+
   if (box.uploaded && box.fileInfo?.id) {
     // 删除已上传的文件
     try {
       await message.delConfirm('确定要删除这个文件吗？')
-      
+
       console.log('批量上传-删除文件 - fileInfo:', box.fileInfo)
       const fileId = box.fileInfo.id
       console.log('批量上传-删除文件 - fileId:', fileId, 'type:', typeof fileId)
-      
+
       // 确保fileId是数字类型
       if (!fileId || typeof fileId === 'object') {
         console.error('文件ID无效:', fileId)
         message.error('文件ID无效，无法删除')
         return
       }
-      
+
       // 查找要删除的文件信息
       const fileToDelete = box.fileInfo
-      
+
       // 判断是否为静态文件（通过configId是否为0来判断）
       const isStaticFile = fileToDelete && fileToDelete.configId === 0
-      
+
       if (isStaticFile) {
         // 删除静态文件
         await StaticFileApi.deleteStaticFile(fileId)
@@ -701,10 +663,10 @@ const deleteFile = async (index: number) => {
         await FileApi.deleteFile(fileId)
         message.success('文件删除成功')
       }
-      
+
       // 触发删除事件
       emit('delete', fileId)
-      
+
     } catch (error) {
       if (error !== 'cancel') {
         console.error('删除文件失败:', error)
@@ -713,15 +675,20 @@ const deleteFile = async (index: number) => {
       return
     }
   }
-  
-  // 批量模式：移除这个框
-  if (fileBoxes.value.length > 1) {
-    fileBoxes.value.splice(index, 1)
-  } else {
-    // 只有一个框时：重置为空状态
+
+  // 序列模式：重置为空状态，保持序列结构
+  if (props.sequenceCode) {
     Object.assign(box, createEmptyFileBox())
+  } else {
+    // 普通批量模式：移除这个框
+    if (fileBoxes.value.length > 1) {
+      fileBoxes.value.splice(index, 1)
+    } else {
+      // 只有一个框时：重置为空状态
+      Object.assign(box, createEmptyFileBox())
+    }
   }
-  
+
   // 更新文件ID列表
   updateUploadedFileIds()
 }
@@ -730,14 +697,14 @@ const deleteFile = async (index: number) => {
 const clearAllFiles = async () => {
   try {
     await message.delConfirm('确定要清空所有文件吗？')
-    
+
     // 删除已上传的文件
     for (const box of fileBoxes.value) {
       if (box.uploaded && box.fileInfo?.id && !box.saved) {
         try {
           const fileId = box.fileInfo.id
           const isStaticFile = box.fileInfo.configId === 0
-          
+
           if (isStaticFile) {
             await StaticFileApi.deleteStaticFile(fileId)
           } else {
@@ -748,7 +715,7 @@ const clearAllFiles = async () => {
         }
       }
     }
-    
+
     // 重置文件框
     if (props.sequenceCode) {
       // 序列模式：重新初始化
@@ -757,7 +724,7 @@ const clearAllFiles = async () => {
       // 普通模式：保留一个空框
       fileBoxes.value = [createEmptyFileBox()]
     }
-    
+
     updateUploadedFileIds()
     message.success('已清空所有文件')
   } catch (error) {
@@ -771,30 +738,22 @@ const clearAllFiles = async () => {
 const handlePreview = async (index: number) => {
   const box = fileBoxes.value[index]
   if (!box.uploaded || !box.fileInfo) return
-  
+
   try {
+    console.log('批量上传-预览文件 - fileInfo:', box.fileInfo)
+    // 添加用户昵称参数
     const nickname = userStore.getUser?.nickname || ''
     const fileInfo = box.fileInfo
-    
-    console.log('批量上传-预览文件 - fileInfo:', fileInfo)
-    console.log('批量上传-预览文件 - fileId:', fileInfo.id, 'type:', typeof fileInfo.id)
-    
-    // 确保fileId是有效的
-    if (!fileInfo.id || typeof fileInfo.id === 'object') {
-      console.error('文件ID无效:', fileInfo.id)
-      message.error('文件ID无效，无法预览')
-      return
-    }
-    
-    // 判断是否为静态文件（通过configId是否为0来判断）
+
+    // 判断是否为静态文件
     if (fileInfo.configId === 0) {
       // 静态文件预览
       if (fileInfo.type && fileInfo.type.includes('image')) {
-        // 静态图片文件：直接显示
+        // 静态图片文件：使用现有的图片预览功能
         return
       } else {
         // 静态非图片文件：拼接预览地址
-        const staticFileUrl = `${FIXED_DOMAIN}/minio/static/${fileInfo.path}` + `?nickname=${nickname}`
+        const staticFileUrl = `${fileInfo.url}` + `?nickname=${nickname}`
         const encodedUrl = encodeURIComponent(base64Encode(staticFileUrl))
         const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
         window.open(previewUrl, '_blank')
@@ -802,23 +761,12 @@ const handlePreview = async (index: number) => {
     } else {
       // 普通文件预览 - 不能修改签名URL的查询参数，否则会破坏签名
       const signedUrl = await FileApi.getDownloadUrl(fileInfo.id)
-
-      // 解析原始URL并替换域名，但保持查询参数不变
-      const urlObj = new URL(signedUrl)
-      const pathAndQuery = urlObj.pathname + urlObj.search
-
       // 构建文件访问URL，保持签名完整性
-      const fileUrl = `${FIXED_DOMAIN}/minio${pathAndQuery}` + `&nickname=${nickname}`
+      const fileUrl = signedUrl + `&nickname=${nickname}`
 
-      // 构建预览URL，将nickname作为预览服务的参数而不是文件URL的参数
+      // 构建预览URL
       const encodedUrl = encodeURIComponent(base64Encode(fileUrl))
       let previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
-
-      // 将用户昵称作为预览服务的参数传递，而不是文件URL的参数
-      if (nickname) {
-        previewUrl += `&nickname=${encodeURIComponent(nickname)}`
-      }
-
       window.open(previewUrl, '_blank')
     }
   } catch (error) {
@@ -830,33 +778,33 @@ const handlePreview = async (index: number) => {
 // 清空所有未保存的文件
 const clearUnsavedFiles = async () => {
   // 只清理已上传但未保存的文件
-  const unsavedFiles = fileBoxes.value.filter(box => 
+  const unsavedFiles = fileBoxes.value.filter(box =>
     box.uploaded && box.fileInfo?.id && !box.saved
   )
-  
+
   console.log('批量上传-准备清理未保存的文件:', unsavedFiles.length, '个')
-  
+
   for (const box of unsavedFiles) {
     try {
       const fileId = box.fileInfo.id
-      
+
       // 确保fileId是有效的数字类型
       if (!fileId || typeof fileId === 'object') {
         console.error('清理文件时发现无效ID:', fileId)
         continue
       }
-      
+
       console.log('批量上传-清理文件:', fileId, box.fileInfo.name)
-      
+
       // 判断是否为静态文件（通过configId是否为0来判断）
       const isStaticFile = box.fileInfo.configId === 0
-      
+
       if (isStaticFile) {
         await StaticFileApi.deleteStaticFile(fileId)
-    } else {
+      } else {
         await FileApi.deleteFile(fileId)
       }
-      
+
       console.log('批量上传-文件清理成功:', fileId)
     } catch (error) {
       console.error('清理文件失败:', error)
@@ -870,23 +818,23 @@ const validateFile = (file: File): boolean => {
   // 检查文件类型
   if (props.acceptTypes && props.acceptTypes.length > 0) {
     const fileExtension = getFileExtension(file.name).toLowerCase()
-    const isValidType = props.acceptTypes.some(type => 
+    const isValidType = props.acceptTypes.some(type =>
       type.toLowerCase() === fileExtension
     )
-    
+
     if (!isValidType) {
       message.error(`不支持的文件类型：${fileExtension}`)
       return false
     }
   }
-  
+
   // 检查文件大小
   const maxSize = props.fileSize * 1024 * 1024 // MB转字节
   if (file.size > maxSize) {
     message.error(`文件大小不能超过 ${props.fileSize}MB`)
     return false
   }
-  
+
   return true
 }
 
@@ -904,13 +852,13 @@ const getFileNameWithoutExtension = (filename: string): string => {
 // 获取文件图标类型
 const getFileIcon = (file: File | null): string => {
   if (!file) return 'Document'
-  
+
   const type = file.type
   if (type.startsWith('image/')) return 'Picture'
   if (type.startsWith('video/')) return 'Video'
   if (type.startsWith('audio/')) return 'Audio'
   if (type.includes('zip') || type.includes('rar') || type.includes('7z')) return 'Folder'
-  
+
   return 'Document'
 }
 
@@ -948,7 +896,7 @@ const getEmptyStateText = (index: number): string => {
   console.log('批量上传-getEmptyStateText - sequenceCode:', props.sequenceCode)
   console.log('批量上传-getEmptyStateText - sequenceInfo:', sequenceInfo.value)
   console.log('批量上传-getEmptyStateText - sequenceInfo[index]:', sequenceInfo.value[index])
-  
+
   if (props.sequenceCode && sequenceInfo.value[index]) {
     const text = `请上传 ${sequenceInfo.value[index].sequenceFile}`
     console.log('批量上传-getEmptyStateText - 返回文本:', text)
@@ -962,7 +910,7 @@ const updateUploadedFileIds = () => {
   const ids = fileBoxes.value
     .filter(box => box.uploaded && box.fileInfo?.id)
     .map(box => box.fileInfo.id)
-  
+
   uploadedFileIds.value = ids
   emit('update:fileList', ids)
 }
@@ -987,12 +935,12 @@ const validateFiles = (): { valid: boolean; message?: string } => {
     // 序列模式：检查是否所有序列位置都有文件
     const requiredCount = sequenceInfo.value.length
     const uploadedCount = fileBoxes.value.filter(box => box.uploaded).length
-    
+
     if (uploadedCount < requiredCount) {
       const missingFiles = sequenceInfo.value
         .filter((_, index) => !fileBoxes.value[index]?.uploaded)
         .map(seq => seq.sequenceFile)
-      
+
       return {
         valid: false,
         message: `还有${requiredCount - uploadedCount}个文件未上传：${missingFiles.join(', ')}`
@@ -1008,7 +956,7 @@ const validateFiles = (): { valid: boolean; message?: string } => {
       }
     }
   }
-  
+
   return { valid: true }
 }
 
@@ -1031,7 +979,7 @@ const markFilesAsSaved = () => {
 // ========== 生命周期 ==========
 onMounted(() => {
   initFileBoxes()
-  
+
   // 监听页面刷新和关闭事件
   window.addEventListener('beforeunload', clearUnsavedFiles)
 })
@@ -1072,65 +1020,65 @@ defineExpose({
 <style scoped lang="scss">
 .batch-upload-file-container {
   width: 100%;
-  
+
   .file-boxes-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 16px;
     margin-bottom: 16px;
   }
-  
+
   .file-all-in-one-box {
     width: 100%;
     height: 200px;
     border: 2px dashed #d9d9d9;
     border-radius: 8px;
-      display: flex;
+    display: flex;
     flex-direction: column;
-      align-items: center;
+    align-items: center;
     justify-content: center;
     position: relative;
     cursor: pointer;
     transition: all 0.3s ease;
     background: #fafafa;
-    
+
     &.is-hover:not(.is-uploading) {
       border-color: #409eff;
       background: #f0f8ff;
     }
-    
+
     &.is-selected {
       border-color: #409eff;
       background: #f0f8ff;
     }
-    
+
     &.is-uploading {
       border-color: #409eff;
       background: #f0f8ff;
       cursor: default;
     }
-    
+
     &.is-uploaded {
       border-color: #67c23a;
       background: #f0f9f0;
     }
-    
+
     &.is-error {
       border-color: #f56c6c;
       background: #fef0f0;
     }
-    
+
     &.add-more-box {
       border-style: dashed;
       border-color: #c0c4cc;
       background: #f9f9f9;
 
-    &:hover {
+      &:hover {
         border-color: #409eff;
         background: #f0f8ff;
       }
     }
-    
+
     .file-close-btn {
       position: absolute;
       top: 8px;
@@ -1146,7 +1094,7 @@ defineExpose({
       color: white;
       z-index: 10;
       transition: all 0.2s ease;
-      
+
       &:hover {
         background: rgba(245, 108, 108, 0.8);
         transform: scale(1.1);
@@ -1156,24 +1104,24 @@ defineExpose({
 
   // 空状态
   .empty-state {
-      display: flex;
+    display: flex;
     flex-direction: column;
-      align-items: center;
+    align-items: center;
     justify-content: center;
     height: 100%;
     padding: 16px;
-    
+
     .plus-icon {
       font-size: 48px;
       color: #c0c4cc;
       margin-bottom: 12px;
       transition: color 0.3s ease;
-      
+
       &.hover-blue {
         color: #409eff;
       }
     }
-    
+
     .upload-text {
       font-size: 14px;
       color: #606266;
@@ -1184,31 +1132,31 @@ defineExpose({
 
   // 已选择状态
   .selected-state {
-        display: flex;
+    display: flex;
     flex-direction: column;
-        align-items: center;
+    align-items: center;
     justify-content: center;
     height: 100%;
     padding: 16px;
 
-        .file-icon {
-          color: #409eff;
+    .file-icon {
+      color: #409eff;
       margin-bottom: 12px;
-        }
+    }
 
     .file-name-section {
-          flex: 1;
+      flex: 1;
       width: 100%;
       margin-bottom: 12px;
-      
+
       .file-name-display {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        
+
         .file-name-text {
-            font-size: 14px;
+          font-size: 14px;
           color: #333;
           text-align: center;
           word-break: break-all;
@@ -1218,45 +1166,45 @@ defineExpose({
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          }
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
 
         .edit-icon {
           font-size: 16px;
           color: #409eff;
           cursor: pointer;
           flex-shrink: 0;
-          
+
           &:hover {
             color: #66b1ff;
           }
         }
       }
-      
+
       .file-name-edit {
         display: flex;
         align-items: center;
         gap: 8px;
         width: 100%;
-        
+
         .el-input {
-        flex: 1;
-      }
+          flex: 1;
+        }
 
         .confirm-icon {
           font-size: 16px;
           color: #67c23a;
           cursor: pointer;
-        flex-shrink: 0;
-          
+          flex-shrink: 0;
+
           &:hover {
             color: #85ce61;
           }
         }
       }
     }
-    
+
     .upload-button-section {
       width: 100%;
     }
@@ -1276,15 +1224,15 @@ defineExpose({
       display: flex;
       align-items: center;
       justify-content: center;
-      
+
       .progress-cancel-btn {
         position: absolute;
         width: 24px;
         height: 24px;
         background: rgba(245, 108, 108, 0.9);
         border-radius: 50%;
-      display: flex;
-      align-items: center;
+        display: flex;
+        align-items: center;
         justify-content: center;
         cursor: pointer;
         color: white;
@@ -1296,17 +1244,17 @@ defineExpose({
           transform: scale(1.1);
         }
       }
-      
+
       .progress-info {
         position: absolute;
         text-align: center;
-        
+
         .upload-speed {
           font-size: 12px;
           color: #409eff;
           margin-bottom: 4px;
         }
-        
+
         .remaining-time {
           font-size: 10px;
           color: #909399;
@@ -1317,21 +1265,21 @@ defineExpose({
 
   // 上传完成状态
   .uploaded-state {
-  display: flex;
+    display: flex;
     flex-direction: column;
-  align-items: center;
-  justify-content: center;
+    align-items: center;
+    justify-content: center;
     height: 100%;
     padding: 16px;
-    
+
     .file-icon-container {
       position: relative;
       margin-bottom: 16px;
-      
+
       .file-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         width: 64px;
         height: 64px;
         color: #67c23a;
@@ -1339,13 +1287,13 @@ defineExpose({
         border-radius: 12px;
         transition: all 0.3s ease;
         cursor: pointer;
-        
+
         &:hover {
           transform: scale(1.05);
           box-shadow: 0 4px 8px rgba(103, 194, 58, 0.2);
         }
       }
-      
+
       .preview-overlay {
         position: absolute;
         top: 0;
@@ -1354,21 +1302,21 @@ defineExpose({
         bottom: 0;
         background: rgba(0, 0, 0, 0.7);
         border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         color: white;
         transition: all 0.3s ease;
         cursor: pointer;
-        
+
         .preview-text {
           font-size: 12px;
           margin-top: 4px;
         }
       }
     }
-    
+
     .file-name {
       font-size: 14px;
       color: #333;
@@ -1399,16 +1347,16 @@ defineExpose({
   .upload-tip {
     margin-top: 8px;
     text-align: center;
-    
+
     .tip-item {
-    font-size: 12px;
-    color: #909399;
+      font-size: 12px;
+      color: #909399;
       margin-bottom: 4px;
-      
+
       b {
         color: #f56c6c;
       }
-      
+
       &:last-child {
         margin-bottom: 0;
       }
@@ -1416,4 +1364,3 @@ defineExpose({
   }
 }
 </style>
-
