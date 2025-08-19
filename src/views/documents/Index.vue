@@ -153,6 +153,55 @@
         </ContentWrap>
       </el-tab-pane>
 
+      <!-- 共享文件柜 -->
+      <el-tab-pane label="共享文件柜" name="shared">
+        <ContentWrap>
+          <div class="toolbar">
+            <el-button @click="refreshSharedFiles">
+              <Icon icon="ep:refresh" class="mr-5px" /> 刷新
+            </el-button>
+            <el-button @click="showMySharedFiles">
+              <Icon icon="ep:share" class="mr-5px" /> 查看我分享的文件
+            </el-button>
+          </div>
+
+          <div v-loading="sharedLoading" class="file-grid">
+            <div v-for="file in sharedFiles" :key="'shared-' + file.id" class="file-card" @dblclick="previewFile(file)"
+              @contextmenu.prevent="showContextMenu($event, file, 'shared-file')">
+              <div class="file-icon-container">
+                <el-image v-if="file.type && file.type.includes('image') && file.configId === 0" :src="file.url"
+                  class="file-thumbnail" fit="cover" :preview-src-list="[file.url]" preview-teleported />
+                <div v-else class="file-icon"
+                  style="color: #409eff !important; font-size: 96px !important; display: flex !important; width: 96px !important; height: 96px !important; align-items: center !important; justify-content: center !important; line-height: 1;">
+                  {{ getFileTypeIcon(file.name || '') }}
+                </div>
+              </div>
+              <div class="file-info">
+                <div class="file-name" :title="file.name">{{ file.name }}</div>
+                <div class="file-meta">
+                  <span>{{ fileSizeFormatter(null, null, file.size) }}</span>
+                  <span class="file-date">{{ dateFormatter(null, null, file.createTime) }}</span>
+                  <div class="sharer-info">
+                    <span class="sharer-label">分享者：</span>
+                    <span class="sharer-name">{{ file.sharerNickname || '未知' }}</span>
+                  </div>
+                  <div v-if="file.permission === 1" class="permission-info">
+                    <Icon icon="ep:view" class="permission-icon" />
+                    <span>只读</span>
+                  </div>
+                  <div v-else-if="file.permission === 2" class="permission-info">
+                    <Icon icon="ep:edit" class="permission-icon" />
+                    <span>可写</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <el-empty v-if="!sharedLoading && sharedFiles.length === 0" description="暂无共享文件" />
+        </ContentWrap>
+      </el-tab-pane>
+
       <!-- 公共文件柜 -->
       <el-tab-pane label="公共文件柜" name="public">
         <ContentWrap>
@@ -240,6 +289,21 @@
           删除文件夹
         </div>
       </div>
+      <div v-else-if="contextMenuType === 'shared-file'" class="menu-items">
+        <div class="menu-item" @click="previewFile(contextMenuTarget)">
+          <Icon icon="ep:view" class="menu-icon" />
+          预览
+        </div>
+        <div class="menu-item" @click="downloadFile(contextMenuTarget)">
+          <Icon icon="ep:download" class="menu-icon" />
+          下载
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" @click="unshareFromMe(contextMenuTarget)">
+          <Icon icon="ep:close" class="menu-icon" />
+          取消订阅
+        </div>
+      </div>
       <div v-else-if="contextMenuType === 'public-file'" class="menu-items">
         <div class="menu-item" @click="previewFile(contextMenuTarget)">
           <Icon icon="ep:view" class="menu-icon" />
@@ -294,27 +358,53 @@
     </el-dialog>
 
     <!-- 文件分享弹窗 -->
-    <el-dialog v-model="shareVisible" title="分享文件" width="400px">
+    <el-dialog v-model="shareVisible" title="分享文件" width="600px">
       <el-form :model="shareForm" label-width="80px">
-        <el-form-item label="用户ID">
-          <el-input v-model="shareForm.userId" placeholder="请输入用户ID" />
-        </el-form-item>
-        <el-form-item label="权限类型">
-          <el-select v-model="shareForm.permission" placeholder="请选择权限">
-            <el-option label="只读" :value="1" />
-            <el-option label="可写" :value="2" />
-          </el-select>
+        <el-form-item label="分享给">
+          <div class="share-users-container">
+            <div v-if="selectedUsers.length === 0" class="no-users-selected">
+              <Icon icon="ep:user-filled" class="user-icon" />
+              <span class="placeholder-text">请选择要分享的用户</span>
+              <el-button type="text" @click="openUserSelect" class="select-user-btn">
+                <Icon icon="ep:plus" class="mr-5px" />
+                选择用户
+              </el-button>
+            </div>
+            <div v-else class="selected-users-container">
+              <div class="selected-users-header">
+                <span class="users-count">已选择 {{ selectedUsers.length }} 个用户</span>
+                <el-button type="text" @click="openUserSelect" class="add-more-btn">
+                  <Icon icon="ep:plus" class="mr-5px" />
+                  添加更多
+                </el-button>
+              </div>
+              <div class="selected-users-list">
+                <el-tag v-for="user in selectedUsers" :key="user.id" closable @close="removeUser(user.id)"
+                  class="user-tag" type="info" effect="plain">
+                  <Icon icon="ep:user" class="mr-5px" />
+                  {{ user.nickname }}
+                </el-tag>
+              </div>
+            </div>
+          </div>
         </el-form-item>
         <el-form-item label="到期时间">
           <el-date-picker v-model="shareForm.expiredTime" type="datetime" placeholder="选择到期时间，留空表示永久有效"
-            format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" clearable />
+            format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" clearable style="width: 100%" />
+          <div class="time-tip">
+            <Icon icon="ep:info-filled" class="tip-icon" />
+            <span>不设置到期时间表示永久有效</span>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="shareVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmShare">确认分享</el-button>
+        <el-button type="primary" @click="confirmShare" :disabled="selectedUsers.length === 0">确认分享</el-button>
       </template>
     </el-dialog>
+
+    <!-- 用户选择组件 -->
+    <UserSelectForm ref="userSelectFormRef" @confirm="handleUserSelect" />
 
     <!-- 移动文件弹窗 -->
     <el-dialog v-model="moveDialogVisible" title="移动文件到目录" width="500px">
@@ -372,6 +462,76 @@
       </template>
     </el-dialog>
 
+    <!-- 我分享的文件弹窗 -->
+    <el-dialog v-model="mySharedDialogVisible" title="我分享的文件" width="800px">
+      <div v-loading="mySharedLoading">
+        <div v-if="mySharedFiles.length === 0" class="empty-state">
+          <el-empty description="暂无分享的文件" />
+        </div>
+        <div v-else>
+          <div v-for="file in mySharedFiles" :key="file.id" class="shared-file-item">
+            <div class="file-header">
+              <div class="file-basic-info">
+                <div class="file-icon" style="font-size: 24px; color: #409eff;">
+                  {{ getFileTypeIcon(file.name || '') }}
+                </div>
+                <div class="file-details">
+                  <div class="file-name">{{ file.name }}</div>
+                  <div class="file-meta">
+                    <span>{{ fileSizeFormatter(null, null, file.size) }}</span>
+                    <span class="file-date">{{ dateFormatter(null, null, file.createTime) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="file-actions">
+                <el-button size="small" @click="previewFile(file)">
+                  <Icon icon="ep:view" class="mr-5px" />
+                  预览
+                </el-button>
+                <el-button size="small" @click="downloadFile(file)">
+                  <Icon icon="ep:download" class="mr-5px" />
+                  下载
+                </el-button>
+              </div>
+            </div>
+
+            <div class="shared-users-section">
+              <div class="section-title">
+                <Icon icon="ep:user" class="mr-5px" />
+                已分享给 {{ file.sharedToUsers.length }} 个用户
+              </div>
+              <div class="shared-users-list">
+                <div v-for="user in file.sharedToUsers" :key="user.userId" class="shared-user-item">
+                  <div class="user-info">
+                    <Icon icon="ep:user" class="user-icon" />
+                    <span class="user-name">{{ user.nickname }}</span>
+                  </div>
+                  <div class="share-details">
+                    <el-tag v-if="user.permission === 1" type="info" size="small">
+                      <Icon icon="ep:view" class="mr-2px" />
+                      只读
+                    </el-tag>
+                    <el-tag v-else-if="user.permission === 2" type="success" size="small">
+                      <Icon icon="ep:edit" class="mr-2px" />
+                      可写
+                    </el-tag>
+                    <span class="share-time">{{ dateFormatter(null, null, user.shareTime) }}</span>
+                    <span v-if="user.expiredTime" class="expire-time">
+                      到期：{{ dateFormatter(null, null, user.expiredTime) }}
+                    </span>
+                    <span v-else class="expire-time permanent">永久有效</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="mySharedDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
 
   </div>
 </template>
@@ -382,8 +542,10 @@ import { UploadFile } from '@/components/UploadFile'
 import { fileSizeFormatter } from '@/utils'
 import { dateFormatter } from '@/utils/formatTime'
 import * as FileApi from '@/api/infra/file/index'
+import type { MySharedFileVO } from '@/api/infra/file/index'
 import { useUserStore } from '@/store/modules/user'
 import { useMessage } from '@/hooks/web/useMessage'
+import UserSelectForm from '@/components/UserSelectForm/index.vue'
 
 defineOptions({ name: 'FileCabinet' })
 
@@ -410,6 +572,15 @@ const personalFiles = ref<any[]>([])
 // 公共文件
 const publicLoading = ref(false)
 const publicFiles = ref<any[]>([])
+
+// 共享文件
+const sharedLoading = ref(false)
+const sharedFiles = ref<any[]>([])
+
+// 我分享的文件相关
+const mySharedDialogVisible = ref(false)
+const mySharedLoading = ref(false)
+const mySharedFiles = ref<MySharedFileVO[]>([])
 
 // 当前路径和文件夹结构
 const currentPath = ref('')
@@ -480,6 +651,8 @@ const shareForm = ref({
   permission: 1,
   expiredTime: ''
 })
+const selectedUsers = ref<any[]>([])
+const userSelectFormRef = ref()
 
 // 计算属性：面包屑导航
 const breadcrumbFolders = computed(() => {
@@ -634,6 +807,29 @@ const getPublicFiles = async () => {
     publicFiles.value = []
   } finally {
     publicLoading.value = false
+  }
+}
+
+// 获取共享文件列表
+const getSharedFiles = async () => {
+  sharedLoading.value = true
+  try {
+    const response = await FileApi.getSharedFiles()
+
+    // 处理API响应：检查是否直接返回数组还是标准格式
+    if (Array.isArray(response)) {
+      sharedFiles.value = response
+    } else if (response && response.code === 0 && response.data) {
+      sharedFiles.value = response.data
+    } else {
+      sharedFiles.value = []
+    }
+  } catch (error) {
+    console.error('获取共享文件失败:', error)
+    message.error('获取共享文件失败')
+    sharedFiles.value = []
+  } finally {
+    sharedLoading.value = false
   }
 }
 
@@ -963,6 +1159,54 @@ const refreshPublicFiles = () => {
   getPublicFiles()
 }
 
+// 刷新共享文件
+const refreshSharedFiles = () => {
+  getSharedFiles()
+}
+
+// 获取我分享的文件列表
+const getMySharedFiles = async () => {
+  try {
+    mySharedLoading.value = true
+    const data = await FileApi.getMySharedFiles()
+    mySharedFiles.value = data || []
+  } catch (error) {
+    console.error('获取我分享的文件失败:', error)
+    message.error('获取我分享的文件失败')
+  } finally {
+    mySharedLoading.value = false
+  }
+}
+
+// 显示我分享的文件弹窗
+const showMySharedFiles = async () => {
+  mySharedDialogVisible.value = true
+  await getMySharedFiles()
+}
+
+// 取消订阅（从我这里移除）
+const unshareFromMe = async (file) => {
+  try {
+    hideContextMenu() // 隐藏右键菜单
+    await message.delConfirm('确定要取消此文件的分享吗？')
+
+    const currentUserId = userStore.getUser?.id?.toString()
+    if (!currentUserId) {
+      message.error('用户信息获取失败')
+      return
+    }
+
+    await FileApi.unshareFile(file.id, currentUserId)
+    message.success('取消订阅成功！')
+    refreshSharedFiles()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('取消订阅失败:', error)
+      message.error('取消订阅失败')
+    }
+  }
+}
+
 // 切换排序方式
 const toggleSort = (type: 'time' | 'name') => {
   if (sortBy.value === type) {
@@ -1229,16 +1473,38 @@ const shareFile = (file) => {
     permission: 1,
     expiredTime: ''
   }
+  selectedUsers.value = []
   shareVisible.value = true
 }
 
 // 确认分享
 const confirmShare = async () => {
   try {
-    console.log('分享文件:', shareForm.value)
-    await FileApi.shareFile(shareForm.value)
-    message.success('文件分享成功！')
+    if (selectedUsers.value.length === 0) {
+      message.error('请选择要分享的用户')
+      return
+    }
+
+    const userIds = selectedUsers.value.map(user => user.id)
+
+    // 处理expiredTime：确保传递null而不是空字符串或无效日期
+    let expiredTime = shareForm.value.expiredTime
+    if (!expiredTime || expiredTime === '' || expiredTime === 'Invalid Date') {
+      expiredTime = null
+    }
+
+    const shareData = {
+      fileId: shareForm.value.fileId,
+      userIds: userIds,
+      permission: shareForm.value.permission,
+      expiredTime: expiredTime
+    }
+
+    console.log('批量分享文件:', shareData)
+    await FileApi.shareFileBatch(shareData)
+    message.success(`文件分享成功！已分享给${selectedUsers.value.length}个用户`)
     shareVisible.value = false
+    selectedUsers.value = []
   } catch (error) {
     console.error('文件分享失败:', error)
     message.error('文件分享失败')
@@ -1411,11 +1677,27 @@ const bulkDelete = async () => {
   }
 }
 
+// 打开用户选择弹窗
+const openUserSelect = () => {
+  userSelectFormRef.value?.open(shareForm.value.fileId, selectedUsers.value)
+}
+
+// 处理用户选择确认
+const handleUserSelect = (fileId: number, userList: any[]) => {
+  selectedUsers.value = userList
+}
+
+// 移除选中的用户
+const removeUser = (userId: string) => {
+  selectedUsers.value = selectedUsers.value.filter(user => user.id !== userId)
+}
+
 
 
 // 初始化
 onMounted(() => {
   getPersonalFiles()
+  getSharedFiles()
   getPublicFiles()
 })
 </script>
@@ -1873,6 +2155,245 @@ onMounted(() => {
     .path-icon {
       margin-right: 8px;
       font-size: 16px;
+    }
+  }
+}
+
+.share-users-container {
+  .no-users-selected {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    background: #f8f9fa;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: #409eff;
+      background: #f0f9ff;
+    }
+
+    .user-icon {
+      font-size: 20px;
+      color: #9ca3af;
+      margin-right: 12px;
+    }
+
+    .placeholder-text {
+      flex: 1;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .select-user-btn {
+      color: #409eff;
+      font-weight: 500;
+
+      &:hover {
+        color: #337ecc;
+      }
+    }
+  }
+
+  .selected-users-container {
+    .selected-users-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e5e7eb;
+
+      .users-count {
+        font-size: 14px;
+        color: #374151;
+        font-weight: 500;
+      }
+
+      .add-more-btn {
+        color: #409eff;
+        font-size: 13px;
+
+        &:hover {
+          color: #337ecc;
+        }
+      }
+    }
+
+    .selected-users-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .user-tag {
+        margin: 0;
+        border-radius: 20px;
+        padding: 6px 12px;
+        font-size: 13px;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+        }
+      }
+    }
+  }
+}
+
+.time-tip {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6b7280;
+
+  .tip-icon {
+    margin-right: 4px;
+    color: #409eff;
+    font-size: 14px;
+  }
+}
+
+.sharer-info {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #909399;
+
+  .sharer-label {
+    margin-right: 4px;
+  }
+
+  .sharer-name {
+    color: #409eff;
+    font-weight: 500;
+  }
+}
+
+.permission-info {
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
+  font-size: 10px;
+  color: #67c23a;
+
+  .permission-icon {
+    margin-right: 2px;
+    font-size: 10px;
+  }
+}
+
+// 我分享的文件弹窗样式
+.shared-file-item {
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+
+  .file-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e4e7ed;
+
+    .file-basic-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .file-details {
+        .file-name {
+          font-size: 16px;
+          font-weight: 600;
+          color: #303133;
+          margin-bottom: 4px;
+        }
+
+        .file-meta {
+          display: flex;
+          gap: 12px;
+          font-size: 12px;
+          color: #909399;
+
+          .file-date {
+            color: #606266;
+          }
+        }
+      }
+    }
+
+    .file-actions {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  .shared-users-section {
+    padding: 16px;
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #606266;
+      margin-bottom: 12px;
+    }
+
+    .shared-users-list {
+      .shared-user-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        margin-bottom: 8px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .user-info {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .user-icon {
+            color: #409eff;
+            font-size: 16px;
+          }
+
+          .user-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #303133;
+          }
+        }
+
+        .share-details {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 12px;
+
+          .share-time {
+            color: #909399;
+          }
+
+          .expire-time {
+            color: #f56c6c;
+
+            &.permanent {
+              color: #67c23a;
+            }
+          }
+        }
+      }
     }
   }
 }

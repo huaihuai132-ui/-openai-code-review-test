@@ -20,6 +20,53 @@ export interface FileShareVO {
   expiredTime?: string | null
 }
 
+export interface FileBatchShareVO {
+  fileId: number
+  userIds: string[]
+  permission: number
+  expiredTime?: string | null
+}
+
+export interface SharedFileVO {
+  id: number
+  configId: number
+  name: string
+  path: string
+  url: string
+  type: string
+  size: number
+  businessCode?: string
+  dir?: string
+  createTime: string
+  updateTime: string
+  permission: number
+  expiredTime?: string | null
+  sharerNickname: string
+}
+
+export interface MySharedFileVO {
+  id: number
+  configId: number
+  name: string
+  path: string
+  url: string
+  type: string
+  size: number
+  businessCode?: string
+  dir?: string
+  createTime: string
+  updateTime: string
+  sharedToUsers: SharedToUser[]
+}
+
+export interface SharedToUser {
+  userId: string
+  nickname: string
+  permission: number
+  expiredTime?: string | null
+  shareTime: string
+}
+
 // 文件预签名地址 Response VO
 export interface FilePresignedUrlRespVO {
   // 文件配置编号
@@ -106,6 +153,16 @@ export const getPublicFiles = () => {
   return request.get({ url: '/infra/file/public' })
 }
 
+// 获取共享文件列表
+export const getSharedFiles = () => {
+  return request.get<SharedFileVO[]>({ url: '/infra/file/shared' })
+}
+
+// 获取我分享的文件列表
+export const getMySharedFiles = () => {
+  return request.get<MySharedFileVO[]>({ url: '/infra/file/my-shared' })
+}
+
 // 获取业务相关文件列表
 export const getBusinessFiles = (businessCode: string) => {
   return request.get({ url: '/infra/file/business', params: { businessCode } })
@@ -114,6 +171,11 @@ export const getBusinessFiles = (businessCode: string) => {
 // 分享文件
 export const shareFile = (data: FileShareVO) => {
   return request.post({ url: '/infra/file/share', data })
+}
+
+// 批量分享文件给多个用户
+export const shareFileBatch = (data: FileBatchShareVO) => {
+  return request.post({ url: '/infra/file/share-batch', data })
 }
 
 // 取消文件分享
