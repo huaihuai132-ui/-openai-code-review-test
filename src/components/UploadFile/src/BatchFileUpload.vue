@@ -360,6 +360,8 @@ const createEmptyFileBox = () => ({
 const loadExistingFiles = async () => {
   try {
     const files = await FileApi.getFilesByIds(props.fileList as number[])
+    console.log('批量上传-加载已有文件-API返回结果:', props.fileList as number[])
+
     const fileData = files.data || files
     
     // 为每个已有文件创建文件框
@@ -973,6 +975,7 @@ const getFileList = (): number[] => {
 
 // 获取文件详细信息列表
 const getFileDetails = () => {
+  console.log('批量上传-------------', fileBoxes.value)
   return fileBoxes.value
     .filter(box => box.uploaded && box.fileInfo)
     .map(box => box.fileInfo)
@@ -1043,7 +1046,7 @@ watch(
   () => props.fileList,
   () => {
     if (props.mode === 'view' || props.mode === 'edit') {
-      loadExistingFiles()
+      // loadExistingFiles()
     }
   }
 )

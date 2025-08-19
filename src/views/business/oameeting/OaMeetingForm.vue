@@ -34,7 +34,7 @@
       <el-form-item label="开始时间" prop="startTime">
         <el-date-picker
           v-model="formData.startTime"
-          type="date"
+          type="datetime"
           value-format="x"
           placeholder="选择开始时间"
         />
@@ -42,10 +42,10 @@
       <el-form-item label="结束时间" prop="endTime">
         <el-date-picker
           v-model="formData.endTime"
-          type="date"
+          type="datetime"
           value-format="x"
           placeholder="选择结束时间"
-        />
+        /> 
       </el-form-item>
       <el-form-item label="会议室" prop="meetRoomId">
         <el-select v-model="formData.meetRoomId" placeholder="请选择会议室" style="width: 100%;">
@@ -132,7 +132,7 @@ const formData = ref({
   endTime: undefined,
   meetRoomId: undefined,
   reason: undefined,
-  description: undefined,
+  description: undefined, 
   status: undefined,
   fileList: [] as number[],  // Long类型数组
   sequenceCode: undefined,
@@ -169,23 +169,59 @@ const batchUploadRef = ref<typeof BatchFileUpload | null>(null)
 
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
-  dialogVisible.value = true
-  dialogTitle.value = t('action.' + type)
+  // 先设置表单类型
   formType.value = type
+  dialogTitle.value = t('action.' + type)
+  
+  // 先重置表单，确保表单完全清空
+  await resetForm()
   
   // 加载会议室列表
   await getMeetingRooms()
   
-  await resetForm() // 确保异步重置完成
+  // 最后打开弹窗
+  dialogVisible.value = true
+  
   // 修改时，设置数据
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await OaMeetingApi.getOaMeeting(id)
-      // 确保fileList是数组类型
-      if (!Array.isArray(formData.value.fileList)) {
-        formData.value.fileList = [] as number[]
+      const meetingData = await OaMeetingApi.getOaMeeting(id)
+      // 确保所有字段都正确设置，避免引用问题
+      // 特别处理日期和时间字段
+      const processedData = { ...meetingData }
+      
+      // 处理会议日期
+      if (processedData.meetDate && processedData.meetDate !== 0) {
+        // 确保值为数字类型的时间戳
+        processedData.meetDate = typeof processedData.meetDate === 'string' ? 
+          parseInt(processedData.meetDate) : processedData.meetDate
+      } else {
+        processedData.meetDate = undefined
       }
+      
+      // 处理开始时间
+      if (processedData.startTime && processedData.startTime !== 0) {
+        // 确保值为数字类型的时间戳
+        processedData.startTime = typeof processedData.startTime === 'string' ? 
+          parseInt(processedData.startTime) : processedData.startTime
+      } else {
+        processedData.startTime = undefined
+      }
+      
+      // 处理结束时间
+      if (processedData.endTime && processedData.endTime !== 0) {
+        // 确保值为数字类型的时间戳
+        processedData.endTime = typeof processedData.endTime === 'string' ? 
+          parseInt(processedData.endTime) : processedData.endTime
+      } else {
+        processedData.endTime = undefined
+      }
+      
+      // 确保fileList是数组类型
+      processedData.fileList = Array.isArray(processedData.fileList) ? processedData.fileList : [] as number[]
+      
+      formData.value = processedData
     } finally {
       formLoading.value = false
     }

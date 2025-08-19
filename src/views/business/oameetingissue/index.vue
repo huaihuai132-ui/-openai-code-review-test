@@ -106,7 +106,7 @@
           class="!w-220px"
         />
       </el-form-item>
-      <el-form-item>
+      <el-form-item> 
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
         <el-button
@@ -166,8 +166,16 @@
         :formatter="dateFormatter"
         width="180px"
       />
-      <el-table-column label="操作" align="center" min-width="120px">
+      <el-table-column label="操作" align="center" min-width="180px">
         <template #default="scope">
+          <el-button
+            link 
+            type="info"
+            @click="openDetail(scope.row.id)"
+            v-hasPermi="['business:oa-meeting-issue:query']"
+          >
+            详情
+          </el-button>
           <template v-if="scope.row.status === -1">
             <el-button
               link 
@@ -208,15 +216,17 @@
 
   <!-- 表单弹窗：添加/修改 -->
   <OaMeetingIssueForm ref="formRef" @success="getList" />
+  <!-- 详情弹窗 -->
+  <OaMeetingIssueDetail ref="detailRef" />
 </template>
 
 <script setup lang="ts">
 import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { OaMeetingIssueApi, OaMeetingIssueVO } from 'src/api/business/oameetingissue/index.ts'
+import { OaMeetingIssueApi, OaMeetingIssueVO } from '@/api/business/oameetingissue/index.ts'
 import OaMeetingIssueForm from './OaMeetingIssueForm.vue'
-import {FinanceLeaseApi} from "@/api/business/financelease";
+import OaMeetingIssueDetail from './OaMeetingIssueDetail.vue'
 
 /** 会议议题 列表 */
 defineOptions({ name: 'OaMeetingIssue' })
@@ -249,8 +259,21 @@ const getList = async () => {
   loading.value = true
   try {
     const data = await OaMeetingIssueApi.getOaMeetingIssuePage(queryParams)
-    list.value = data.list
-    total.value = data.total
+    // 检查数据结构是否正确
+    if (data && typeof data === 'object') {
+      // 适配不同的数据结构
+      if (data.list !== undefined) {
+        list.value = data.list
+        total.value = data.total || 0
+      } else {
+        // 如果返回的直接是数组
+        list.value = data || []
+        total.value = data ? data.length : 0
+      }
+    } 
+  } catch (error) {
+    console.error('获取议题列表失败:', error)
+    message.error('获取列表失败，请稍后重试')
   } finally {
     loading.value = false
   }
@@ -272,6 +295,12 @@ const resetQuery = () => {
 const formRef = ref()
 const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
+}
+
+/** 详情操作 */
+const detailRef = ref()
+const openDetail = (id: number) => {
+  detailRef.value.open(id)
 }
 
 /** 送审按钮操作 */

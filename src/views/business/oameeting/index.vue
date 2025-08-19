@@ -171,14 +171,14 @@
           <dict-tag :type="DICT_TYPE.MEET_TYPE" :value="scope.row.meetType" />
         </template>
       </el-table-column>
-      <el-table-column label="会议日期" align="center" prop="meetDate" />
-      <el-table-column label="开始时间" align="center" prop="startTime" />
-      <el-table-column label="结束时间" align="center" prop="endTime" />
+      <el-table-column label="会议日期" align="center" prop="meetDate" :formatter="dateFormatter" width="180px" />
+      <el-table-column label="开始时间" align="center" prop="startTime" :formatter="dateFormatter" width="180px" />
+      <el-table-column label="结束时间" align="center" prop="endTime" :formatter="dateFormatter" width="180px" />
 <!--      <el-table-column label="会议室ID" align="center" prop="meetRoomId" />-->
       <el-table-column label="会议事由" align="center" prop="reason" />
       <el-table-column label="会议概述" align="center" prop="description" />
       <el-table-column label="会议状态" align="center" prop="status">
-        <template #default="scope">
+        <template #default="scope"> 
           <dict-tag :type="DICT_TYPE.MEET_STATUS" :value="scope.row.status" />
         </template>
       </el-table-column>
