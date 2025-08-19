@@ -224,7 +224,7 @@
 import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { OaMeetingIssueApi, OaMeetingIssueVO } from '@/api/business/oameetingissue/index.ts'
+import { OaMeetingIssueApi, OaMeetingIssueVO } from '@/api/business/oameetingissue'
 import OaMeetingIssueForm from './OaMeetingIssueForm.vue'
 import OaMeetingIssueDetail from './OaMeetingIssueDetail.vue'
 
