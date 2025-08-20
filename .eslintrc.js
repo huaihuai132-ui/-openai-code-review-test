@@ -28,6 +28,7 @@ module.exports = defineConfig({
     'vue/no-setup-props-destructure': 'off',
     'vue/script-setup-uses-vars': 'error',
     'vue/no-reserved-component-names': 'off',
+    'vue/first-attribute-linebreak': 'off', // 禁用属性换行规则，避免格式冲突
     '@typescript-eslint/ban-ts-ignore': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
