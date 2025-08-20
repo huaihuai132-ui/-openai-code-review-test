@@ -123,6 +123,6 @@ export const FinanceManageApi = {
 
   // 导出融资租赁租后管理 Excel
   exportFinanceManageDoc: async (id: number) => {
-    return await request.download({ url: `/business/finance-manage/export-doc?id=` + id })
+    return await request.download({ url: `/business/finance-manage/fill-word-template?id=` + id })
   },
 }

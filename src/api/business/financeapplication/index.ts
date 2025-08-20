@@ -70,6 +70,6 @@ export const FinanceApplicationApi = {
 
   // 导出融资租赁立项申请表
   exportFinanceApplicationDoc: async (id: number) => {
-    return await request.download({ url: `/business/finance-application/export-doc?id=` + id })
+    return await request.download({ url: `/business/finance-application/fill-word-template?id=` + id })
   },
 }

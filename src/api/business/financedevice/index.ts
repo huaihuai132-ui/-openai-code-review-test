@@ -46,4 +46,4 @@ export const FinanceDeviceApi = {
   exportFinanceDevice: async (params) => {
     return await request.download({ url: `/business/finance-device/export-excel`, params })
   },
-}
+}

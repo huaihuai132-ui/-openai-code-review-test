@@ -61,11 +61,11 @@ export const FinanceLeaseApi = {
 
   // 导出融资租赁申请表 doc
   exportFinanceLeaseDoc: async (id: number) => {
-    return await request.download({ url: `/business/finance-lease/export-doc?id=` + id })
+    return await request.download({ url: `business/finance-lease/fill-word-template?id=` + id })
   },
 
   // 导出融资租赁设备清单 doc
-  exportFinanceLeaseDeviceDoc: async (id: number) => {
-    return await request.download({ url: `/business/finance-lease/export-devicedoc?id=` + id })
+  exportFinanceLeaseDeviceDoc: async (leaseId: number) => {
+    return await request.download({ url: `/business/finance-device/fill-word-template?leaseId=` + leaseId })
   },
 }

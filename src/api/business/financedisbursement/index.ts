@@ -59,7 +59,7 @@ export const FinanceDisbursementApi = {
   },
 
   // 导出融资租赁放款 Excel
-  exportFinanceDisbursement: async (params) => {
-    return await request.download({ url: `/business/finance-disbursement/export-excel`, params })
+  exportFinanceDisbursement: async (id: number) => {
+    return await request.download({ url: `/business/finance-disbursement/fill-word-template?id=`+ id })
   },
-}
+}
