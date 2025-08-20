@@ -1,5 +1,5 @@
 <template>
-  <Dialog :title="dialogTitle" v-model="dialogVisible">
+  <Dialog :title="dialogTitle" v-model="dialogVisible" class="right-full-dia">
     <el-form
       ref="formRef"
       :model="formData"
@@ -7,8 +7,8 @@
       label-width="100px"
       v-loading="formLoading"
     >
-<!--      <el-form-item label="会议发起人ID" prop="userId">-->
-<!--        <el-input v-model="formData.userId" placeholder="请输入会议发起人ID" />-->
+      <!--      <el-form-item label="会议发起人ID" prop="userId">-->
+      <!--        <el-input v-model="formData.userId" placeholder="请输入会议发起人ID" />-->
 
       <el-form-item label="会议名称" prop="meetName">
         <el-input v-model="formData.meetName" placeholder="请输入会议名称" />
@@ -45,10 +45,10 @@
           type="datetime"
           value-format="x"
           placeholder="选择结束时间"
-        /> 
+        />
       </el-form-item>
       <el-form-item label="会议室" prop="meetRoomId">
-        <el-select v-model="formData.meetRoomId" placeholder="请选择会议室" style="width: 100%;">
+        <el-select v-model="formData.meetRoomId" placeholder="请选择会议室" style="width: 100%">
           <el-option
             v-for="room in meetingRooms"
             :key="room.id"
@@ -61,12 +61,12 @@
         <el-input v-model="formData.reason" placeholder="请输入会议事由" />
       </el-form-item>
       <el-form-item label="会议概述" prop="description">
-        <el-input 
-          v-model="formData.description" 
-          type="textarea" 
+        <el-input
+          v-model="formData.description"
+          type="textarea"
           :rows="3"
           placeholder="请输入会议概述"
-          style="width: 500px;"
+          style="width: 500px"
         />
       </el-form-item>
       <el-form-item label="会议状态" prop="status">
@@ -80,24 +80,31 @@
           </el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="会议附件" prop="fileList">
-          <BatchFileUpload
-            ref="batchUploadRef"
-            v-model:fileList="formData.fileList"
-            mode="create"
-            file-type="common"
-            directory="meeting"
-            :max-files="5"
-            tip="支持批量上传多个文件，最多5个"
-          />
-      </el-form-item>
 
-<!--      <el-form-item label="文件id列表" prop="fileList">-->
-<!--        <el-input v-model="formData.fileList" placeholder="请输入文件id列表" />-->
-<!--      </el-form-item>-->
-<!--      <el-form-item label="文件序列编码" prop="sequenceCode">-->
-<!--        <el-input v-model="formData.sequenceCode" placeholder="请输入文件序列编码" />-->
-<!--      </el-form-item>-->
+      <!--      <el-form-item label="文件id列表" prop="fileList">-->
+      <!--        <el-input v-model="formData.fileList" placeholder="请输入文件id列表" />-->
+      <!--      </el-form-item>-->
+      <!--      <el-form-item label="文件序列编码" prop="sequenceCode">-->
+      <!--        <el-input v-model="formData.sequenceCode" placeholder="请输入文件序列编码" />-->
+      <!--      </el-form-item>-->
+
+      <el-tabs v-model="activeTab" class="form-tabs">
+        <el-tab-pane label="附件上传" name="file">
+          <el-form-item label="会议附件" prop="fileList">
+            <BatchFileUpload
+              ref="batchUploadRef"
+              v-model:fileList="formData.fileList"
+              mode="create"
+              file-type="common"
+              directory="meeting"
+              :max-files="5"
+              tip="支持批量上传多个文件，最多5个"
+            />
+          </el-form-item>
+        </el-tab-pane>
+        <el-tab-pane label="参会人员" name="participant" />
+        <el-tab-pane label="会议议题" name="agenda" />
+      </el-tabs>
     </el-form>
     <template #footer>
       <el-button @click="submitForm" type="primary" :disabled="formLoading">确 定</el-button>
@@ -132,11 +139,15 @@ const formData = ref({
   endTime: undefined,
   meetRoomId: undefined,
   reason: undefined,
-  description: undefined, 
+  description: undefined,
   status: undefined,
-  fileList: [] as number[],  // Long类型数组
-  sequenceCode: undefined,
+  fileList: [] as number[], // Long类型数组
+  sequenceCode: undefined
 })
+
+// #region tab相关
+const activeTab = ref('file')
+// #endregion
 
 // 会议室列表数据
 const meetingRooms = ref<any[]>([])
@@ -156,12 +167,12 @@ const getMeetingRooms = async () => {
   }
 }
 const formRules = reactive({
-    // userId: [{ required: true, message: '会议发起人ID不能为空', trigger: 'blur' }],
-    meetName: [{ required: true, message: '会议名称不能为空', trigger: 'blur' }],
-    meetType: [{ required: true, message: '会议类型不能为空', trigger: 'change' }],
-    meetRoomId: [{ required: true, message: '请选择会议室', trigger: 'change' }],
-    fileList: [{ required: false, message: '请上传会议附件', trigger: 'change' }], // 可选，但如果上传则必须有效
-  })
+  // userId: [{ required: true, message: '会议发起人ID不能为空', trigger: 'blur' }],
+  meetName: [{ required: true, message: '会议名称不能为空', trigger: 'blur' }],
+  meetType: [{ required: true, message: '会议类型不能为空', trigger: 'change' }],
+  meetRoomId: [{ required: true, message: '请选择会议室', trigger: 'change' }],
+  fileList: [{ required: false, message: '请上传会议附件', trigger: 'change' }] // 可选，但如果上传则必须有效
+})
 const formRef = ref() // 表单 Ref
 
 // 上传组件引用
@@ -172,16 +183,16 @@ const open = async (type: string, id?: number) => {
   // 先设置表单类型
   formType.value = type
   dialogTitle.value = t('action.' + type)
-  
+
   // 先重置表单，确保表单完全清空
   await resetForm()
-  
+
   // 加载会议室列表
   await getMeetingRooms()
-  
+
   // 最后打开弹窗
   dialogVisible.value = true
-  
+
   // 修改时，设置数据
   if (id) {
     formLoading.value = true
@@ -190,37 +201,45 @@ const open = async (type: string, id?: number) => {
       // 确保所有字段都正确设置，避免引用问题
       // 特别处理日期和时间字段
       const processedData = { ...meetingData }
-      
+
       // 处理会议日期
       if (processedData.meetDate && processedData.meetDate !== 0) {
         // 确保值为数字类型的时间戳
-        processedData.meetDate = typeof processedData.meetDate === 'string' ? 
-          parseInt(processedData.meetDate) : processedData.meetDate
+        processedData.meetDate =
+          typeof processedData.meetDate === 'string'
+            ? parseInt(processedData.meetDate)
+            : processedData.meetDate
       } else {
         processedData.meetDate = undefined
       }
-      
+
       // 处理开始时间
       if (processedData.startTime && processedData.startTime !== 0) {
         // 确保值为数字类型的时间戳
-        processedData.startTime = typeof processedData.startTime === 'string' ? 
-          parseInt(processedData.startTime) : processedData.startTime
+        processedData.startTime =
+          typeof processedData.startTime === 'string'
+            ? parseInt(processedData.startTime)
+            : processedData.startTime
       } else {
         processedData.startTime = undefined
       }
-      
+
       // 处理结束时间
       if (processedData.endTime && processedData.endTime !== 0) {
         // 确保值为数字类型的时间戳
-        processedData.endTime = typeof processedData.endTime === 'string' ? 
-          parseInt(processedData.endTime) : processedData.endTime
+        processedData.endTime =
+          typeof processedData.endTime === 'string'
+            ? parseInt(processedData.endTime)
+            : processedData.endTime
       } else {
         processedData.endTime = undefined
       }
-      
+
       // 确保fileList是数组类型
-      processedData.fileList = Array.isArray(processedData.fileList) ? processedData.fileList : [] as number[]
-      
+      processedData.fileList = Array.isArray(processedData.fileList)
+        ? processedData.fileList
+        : ([] as number[])
+
       formData.value = processedData
     } finally {
       formLoading.value = false
@@ -234,7 +253,7 @@ const emit = defineEmits(['success']) // 定义 success 事件，用于操作成
 const submitForm = async () => {
   // 校验表单
   await formRef.value.validate()
-  
+
   // 验证文件上传（如果有上传文件）
   const hasFiles = formData.value.fileList && formData.value.fileList.length > 0
   if (hasFiles && batchUploadRef.value) {
@@ -244,7 +263,7 @@ const submitForm = async () => {
       return
     }
   }
-  
+
   // 提交请求
   formLoading.value = true
   try {
@@ -255,7 +274,7 @@ const submitForm = async () => {
     } else {
       data.fileList = '[]' as any
     }
-    
+
     if (formType.value === 'create') {
       await OaMeetingApi.createOaMeeting(data)
       message.success(t('common.createSuccess'))
@@ -263,12 +282,12 @@ const submitForm = async () => {
       await OaMeetingApi.updateOaMeeting(data)
       message.success(t('common.updateSuccess'))
     }
-    
+
     // 标记文件为已保存
     if (hasFiles && batchUploadRef.value) {
       batchUploadRef.value.markFilesAsSaved?.()
     }
-    
+
     dialogVisible.value = false
     // 发送操作成功的事件
     emit('success')
@@ -291,8 +310,8 @@ const resetForm = async () => {
     reason: undefined,
     description: undefined,
     status: undefined,
-    fileList: [] as number[],  // 重置为Long类型数组
-    sequenceCode: undefined,
+    fileList: [] as number[], // 重置为Long类型数组
+    sequenceCode: undefined
   }
 
   // 清理未保存的文件
@@ -308,43 +327,39 @@ const resetForm = async () => {
 const submitForApproval = async () => {
   try {
     // 确认送审
-    await ElMessageBox.confirm(
-      '确定要送审该会议吗？送审后将进入审批流程。',
-      '确认送审',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    
+    await ElMessageBox.confirm('确定要送审该会议吗？送审后将进入审批流程。', '确认送审', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+
     // 校验表单
     await formRef.value.validate()
-    
+
     // 提交请求（这里假设API有送审方法）
-      formLoading.value = true
-      try {
-        const data = {
-          ...formData.value,
-          needApproval: true // 标记为需要审批
-        } as unknown as OaMeetingVO
-        
-        // 将fileList数组转换为字符串格式
-        if (data.fileList && Array.isArray(data.fileList) && data.fileList.length > 0) {
-          data.fileList = JSON.stringify(data.fileList) as any
-        } else {
-          data.fileList = '[]' as any
-        }
-        
-        if (formType.value === 'create') {
-          await OaMeetingApi.createOaMeeting(data)
-        } else {
-          await OaMeetingApi.updateOaMeeting(data)
-        }
-      
+    formLoading.value = true
+    try {
+      const data = {
+        ...formData.value,
+        needApproval: true // 标记为需要审批
+      } as unknown as OaMeetingVO
+
+      // 将fileList数组转换为字符串格式
+      if (data.fileList && Array.isArray(data.fileList) && data.fileList.length > 0) {
+        data.fileList = JSON.stringify(data.fileList) as any
+      } else {
+        data.fileList = '[]' as any
+      }
+
+      if (formType.value === 'create') {
+        await OaMeetingApi.createOaMeeting(data)
+      } else {
+        await OaMeetingApi.updateOaMeeting(data)
+      }
+
       // 如果有送审专用API，可以调用该API
       // await OaMeetingApi.submitForApproval(formData.value.id)
-      
+
       message.success('送审成功！')
       dialogVisible.value = false
       emit('success')
