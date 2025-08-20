@@ -251,6 +251,7 @@ const handleExport = async () => {
 onMounted(async () => {
   getList()
   // 加载岗位列表
-  companyList.value = await FinanceCompanyApi.getSimpleFinanceCompanyList()
+  const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
+  companyList.value = response.data
 })
 </script>

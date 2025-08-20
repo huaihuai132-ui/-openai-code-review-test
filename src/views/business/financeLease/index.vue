@@ -386,6 +386,7 @@ const handleDeviceExport = async () => {
 /** 初始化 **/
 onMounted(async () => {
   getList()
-  companyList.value = await FinanceCompanyApi.getSimpleFinanceCompanyList()
+  const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
+  companyList.value = response.data
 })
 </script>

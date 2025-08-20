@@ -41,10 +41,14 @@
         </div>
         <div class="form-row">
           <el-form-item label="承租租期" prop="leaseTerm">
-            <el-input v-model="formData.leaseTerm" placeholder="请输入承租租期" />
+            <el-input v-model="formData.leaseTerm" placeholder="请输入承租租期"  type="number">
+            <template #append>月</template>
+            </el-input>
           </el-form-item>
-          <el-form-item label="" prop="">
-            <div></div>
+          <el-form-item label="申请人的用户编号" prop="userId">
+            <el-input
+v-model="formData.userId" placeholder="请输入申请人编码" readonly
+              :disabled="true"/>
           </el-form-item>
           <el-form-item label="" prop="">
             <div></div>
@@ -55,7 +59,7 @@
       <!-- 下部分：Tab组件 -->
       <div class="form-section">
         <el-tabs v-model="activeTab" class="form-tabs">
-                    <el-tab-pane label="指标" name="radio">
+          <el-tab-pane label="指标" name="radio">
             <div class="radio-content">
               <div class="radio-row">
                 <el-form-item label="是否列为国家产业政策限制/淘汰的高能耗、高水耗、高污染企业" prop="restrictedByPolicy" label-width="388px">
@@ -69,9 +73,11 @@
                     </el-radio>
                   </el-radio-group>
                 </el-form-item>
-                <el-form-item label="是否列为国家产业政策限制/淘汰的高能耗、高水耗、高污染企业备注" prop="restrictedByPolicyReason">
-                  <el-input v-model="formData.restrictedByPolicyReason" placeholder="请输入是否列为国家产业政策限制/淘汰的高能耗、高水耗、高污染企业备注" />
+                <el-form-item label="备注" prop="restrictedByPolicyReason" v-if="formData.restrictedByPolicy === true">
+                  <el-input v-model="formData.restrictedByPolicyReason" placeholder="请输入备注" />
                 </el-form-item>
+              </div>
+              <div class="radio-row">
                 <el-form-item label="租赁物是否为行业先进技术设备" prop="advancedTechEquip" label-width="388px">
                   <el-radio-group v-model="formData.advancedTechEquip">
                     <el-radio
@@ -83,10 +89,10 @@
                     </el-radio>
                   </el-radio-group>
                 </el-form-item>
-              </div>
-              <el-form-item label="租赁物是否为行业先进技术设备备注" prop="advancedTechEquipReason">
-                <el-input v-model="formData.advancedTechEquipReason" placeholder="请输入租赁物是否为行业先进技术设备备注" />
+              <el-form-item label="备注" prop="advancedTechEquipReason" v-if="formData.advancedTechEquip === true">
+                <el-input v-model="formData.advancedTechEquipReason" placeholder="请输入备注" />
               </el-form-item>
+              </div>
               <div class="radio-row">
                 <el-form-item label="租赁物是否为濒临淘汰或折旧严重的设备" prop="obsoleteOrOverdep" label-width="388px">
                   <el-radio-group v-model="formData.obsoleteOrOverdep">
@@ -99,10 +105,12 @@
                     </el-radio>
                   </el-radio-group>
                 </el-form-item>
-                <el-form-item label="租赁物是否为濒临淘汰或折旧严重的设备备注" prop="obsoleteOrOverdepReason">
-                  <el-input v-model="formData.obsoleteOrOverdepReason" placeholder="请输入租赁物是否为濒临淘汰或折旧严重的设备备注" />
+                <el-form-item label="备注" prop="obsoleteOrOverdepReason" v-if="formData.obsoleteOrOverdep === true">
+                  <el-input v-model="formData.obsoleteOrOverdepReason" placeholder="请输入备注" />
                 </el-form-item>
-                <el-form-item label="是否涉嫌走私、偷逃税款或骗取出口退税" prop="taxFraudRisk" label-width="388px">
+              </div>
+              <div class="radio-row">
+                                <el-form-item label="是否涉嫌走私、偷逃税款或骗取出口退税" prop="taxFraudRisk" label-width="388px">
                   <el-radio-group v-model="formData.taxFraudRisk">
                     <el-radio
                       v-for="dict in getBoolDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)"
@@ -113,12 +121,12 @@
                     </el-radio>
                   </el-radio-group>
                 </el-form-item>
-                <el-form-item label="是否涉嫌走私、偷逃税款或骗取出口退税备注" prop="taxFraudRiskReason">
-                  <el-input v-model="formData.taxFraudRiskReason" placeholder="请输入是否涉嫌走私、偷逃税款或骗取出口退税备注" />
+                <el-form-item label="备注" prop="taxFraudRiskReason" v-if="formData.taxFraudRisk === true">
+                  <el-input v-model="formData.taxFraudRiskReason" placeholder="请输入备注" />
                 </el-form-item>
               </div>
               <div class="radio-row">
-                <el-form-item label="企业（项目）立项、生产经营用地批文是否齐全;环评、能耗、安全消防是否达标" prop="landPermitEhsOk" label-width="388px">
+                  <el-form-item label="企业（项目）立项、生产经营用地批文是否齐全;环评、能耗、安全消防是否达标" prop="landPermitEhsOk" label-width="388px">
                   <el-radio-group v-model="formData.landPermitEhsOk">
                     <el-radio
                       v-for="dict in getBoolDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)"
@@ -129,12 +137,12 @@
                     </el-radio>
                   </el-radio-group>
                 </el-form-item>
-                <el-form-item label="企业（项目）立项、生产经营用地批文是否齐全;环评、能耗、安全消防是否达标备注" prop="landPermitEhsOkReason">
-                  <el-input v-model="formData.landPermitEhsOkReason" placeholder="请输入企业（项目）立项、生产经营用地批文是否齐全;环评、能耗、安全消防是否达标备注" />
+                <el-form-item label="备注" prop="landPermitEhsOkReason" v-if="formData.landPermitEhsOk === true">
+                  <el-input v-model="formData.landPermitEhsOkReason" placeholder="请输入备注" />
                 </el-form-item>
               </div>
               <div class="radio-row">
-                <el-form-item label="营业执照等证件是否经过当地年检" prop="licenseAnnualOk" label-width="388px">
+            <el-form-item label="营业执照等证件是否经过当地年检" prop="licenseAnnualOk" label-width="388px">
                   <el-radio-group v-model="formData.licenseAnnualOk">
                     <el-radio
                       v-for="dict in getBoolDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)"
@@ -145,10 +153,12 @@
                     </el-radio>
                   </el-radio-group>
                 </el-form-item>
-                <el-form-item label="营业执照等证件是否经过当地年检备注" prop="licenseAnnualOkReason">
-                  <el-input v-model="formData.licenseAnnualOkReason" placeholder="请输入营业执照等证件是否经过当地年检备注" />
+                <el-form-item label="备注" prop="licenseAnnualOkReason" v-if="formData.licenseAnnualOk === true">
+                  <el-input v-model="formData.licenseAnnualOkReason" placeholder="请输入备注" />
                 </el-form-item>
-                <el-form-item label="申请人及其法定代表人是否有不良信用记录" prop="badCreditRecord" label-width="388px">
+              </div>
+            <div class="radio-row">
+            <el-form-item label="申请人及其法定代表人是否有不良信用记录" prop="badCreditRecord" label-width="388px">
                   <el-radio-group v-model="formData.badCreditRecord">
                     <el-radio
                       v-for="dict in getBoolDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)"
@@ -159,9 +169,9 @@
                     </el-radio>
                   </el-radio-group>
                 </el-form-item>
-                <el-form-item label="申请人及其法定代表人是否有不良信用记录备注" prop="badCreditRecordReason">
-                  <el-input v-model="formData.badCreditRecordReason" placeholder="请输入申请人及其法定代表人是否有不良信用记录备注" />
-                </el-form-item>
+                <el-form-item label="备注" prop="badCreditRecordReason" v-if="formData.badCreditRecord === true">
+                  <el-input v-model="formData.badCreditRecordReason" placeholder="请输入备注" />
+                </el-form-item> 
               </div>
             </div>
           </el-tab-pane>
@@ -193,9 +203,12 @@ import { getBoolDictOptions, DICT_TYPE } from '@/utils/dict'
 import { FinanceApplicationApi, FinanceApplicationVO } from '@/api/business/financeapplication'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
 import { UploadFile } from '@/components/UploadFile'
+import { useUserStore } from '@/store/modules/user'
 
 /** 融资租赁立项 表单 */
 defineOptions({ name: 'FinanceApplicationForm' })
+
+
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
@@ -204,10 +217,12 @@ const dialogVisible = ref(false) // 弹窗的是否展示
 const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
+
+const userStore = useUserStore()
 const formData = ref({
   id: undefined,
   applicationCode: undefined,
-  userId: undefined,
+  userId: userStore.getUser?.id,
   companyId: undefined,
   leasedProperty: undefined,
   leasedPropertyNum: undefined,
@@ -215,15 +230,22 @@ const formData = ref({
   leaseAmount: undefined,
   leaseTerm: undefined,
   restrictedByPolicy: undefined,
+  restrictedByPolicyReason: undefined,
   advancedTechEquip: undefined,
+  advancedTechEquipReason: undefined,
   obsoleteOrOverdep: undefined,
+  obsoleteOrOverdepReason: undefined,
   taxFraudRisk: undefined,
+  taxFraudRiskReason: undefined,
   landPermitEhsOk: undefined,
+  landPermitEhsOkReason: undefined,
   ehsCompliance: undefined,
   licenseAnnualOk: undefined,
+  licenseAnnualOkReason: undefined,
   badCreditRecord: undefined,
+  badCreditRecordReason: undefined,
   filePath: undefined,
-  status: undefined,
+  status: 1,
   processInstanceId: undefined,
   deptId: undefined,
 })
@@ -250,12 +272,19 @@ const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
 const activeTab = ref('radio') // 当前激活的tab
 
 
+
+
+
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
-  dialogVisible.value = true
   dialogTitle.value = t('action.' + type)
   formType.value = type
+  dialogVisible.value = true
   resetForm()
+    // 然后设置用户ID
+  formData.value.userId = userStore.getUser?.id
+  console.log("======", formData.value.userId)
+  
   // 修改时，设置数据
   if (id) {
     formLoading.value = true
@@ -307,15 +336,22 @@ const resetForm = () => {
     leaseAmount: undefined,
     leaseTerm: undefined,
     restrictedByPolicy: undefined,
+    restrictedByPolicyReason: undefined,
     advancedTechEquip: undefined,
+    advancedTechEquipReason: undefined,
     obsoleteOrOverdep: undefined,
+    obsoleteOrOverdepReason: undefined,
     taxFraudRisk: undefined,
+    taxFraudRiskReason: undefined,
     landPermitEhsOk: undefined,
+    landPermitEhsOkReason: undefined,
     ehsCompliance: undefined,
     licenseAnnualOk: undefined,
+    licenseAnnualOkReason: undefined,
     badCreditRecord: undefined,
+    badCreditRecordReason: undefined,
     filePath: undefined,
-    status: undefined,
+    status: 1,
     processInstanceId: undefined,
     deptId: undefined,
   }
@@ -363,40 +399,20 @@ const resetForm = () => {
 /* 单选部分一行两列布局 */
 .radio-row {
   display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .radio-row .el-form-item {
-  flex: 1;
   margin-bottom: 0;
 }
 
-/* 自定义对话框样式，占满除左侧导航栏以外的部分 */
-:deep(.right-full-dia) {
-  width: calc(100vw - 200px) !important;
-  max-width: none !important;
-  margin: 0 !important;
-  left: 200px !important;
-  top: 0 !important;
-  height: 100vh !important;
-  border-radius: 0 !important;
+/* 单选按钮列样式 */
+.radio-row .el-form-item:first-child {
+  flex: 1;
 }
 
-:deep(.right-full-dia .el-dialog__body) {
-  height: calc(100vh - 120px) !important;
-  overflow-y: auto;
-  padding: 20px;
-}
-
-:deep(.right-full-dia .el-dialog__header) {
-  padding: 20px 20px 0 20px;
-  border-bottom: 1px solid #e4e7ed;
-}
-
-:deep(.right-full-dia .el-dialog__footer) {
-  padding: 0 20px 20px 20px;
-  border-top: 1px solid #e4e7ed;
-  background: #fafafa;
+/* 备注输入框列样式 */
+.radio-row .el-form-item:last-child {
+  flex: 1;
 }
 </style>
