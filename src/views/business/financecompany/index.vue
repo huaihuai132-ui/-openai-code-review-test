@@ -127,6 +127,15 @@
           class="!w-240px"
         />
       </el-form-item>
+      <el-form-item label="企业联系电话" prop="phone">
+        <el-input
+          v-model="queryParams.phone"
+          placeholder="请输入企业联系电话"
+          clearable
+          @keyup.enter="handleQuery"
+          class="!w-240px"
+        />
+      </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
@@ -167,6 +176,7 @@
       <el-table-column label="主要产品" align="center" prop="mainProducts" />
       <el-table-column label="备注信息" align="center" prop="remark" />
       <el-table-column label="文件路径" align="center" prop="filePath" />
+      <el-table-column label="企业联系电话" align="center" prop="phone" />
       <!-- <el-table-column
         label="创建时间"
         align="center"
@@ -240,6 +250,7 @@ const queryParams = reactive({
   remark: undefined,
   createTime: [],
   deptId: undefined,
+  phone: undefined,
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
