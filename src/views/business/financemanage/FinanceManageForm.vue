@@ -35,8 +35,8 @@
           <el-form-item label="租赁余额" prop="leaseAmountSurplus">
             <el-input v-model="formData.leaseAmountSurplus" placeholder="请输入租赁余额" />
           </el-form-item>
-          <el-form-item label="检查人的用户编号" prop="userId">
-            <el-input v-model="formData.userId" placeholder="请输入检查人的用户编号" />
+            <el-form-item label="申请人的用户编号" prop="userId">
+            <el-input v-model="formData.userId" placeholder="请输入申请人编码" readonly :disabled="true"/>
           </el-form-item>
         </div>
         <div class="form-row">
@@ -710,6 +710,9 @@ import { getBoolDictOptions, DICT_TYPE } from '@/utils/dict'
 import { FinanceManageApi, FinanceManageVO } from '@/api/business/financemanage'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
 import { UploadFile } from '@/components/UploadFile'
+import { useUserStore } from '@/store/modules/user'
+
+const userStore = useUserStore()
 
 /** 融资租赁租后管理 表单 */
 defineOptions({ name: 'FinanceManageForm' })
@@ -728,7 +731,7 @@ const formData = ref({
   companyId: undefined,
   leaseAmount: undefined,
   leaseAmountSurplus: undefined,
-  userId: undefined,
+  userId: userStore.getUser?.id,
   manageDate: undefined,
   corpNameChanged: undefined,
   legalRepChanged: undefined,
@@ -869,6 +872,7 @@ const open = async (type: string, id?: number) => {
   dialogTitle.value = t('action.' + type)
   formType.value = type
   resetForm()
+  formData.value.userId = userStore.getUser?.id
   // 修改时，设置数据
   if (id) {
     formLoading.value = true

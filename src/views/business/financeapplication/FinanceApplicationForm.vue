@@ -45,10 +45,8 @@
             <template #append>月</template>
             </el-input>
           </el-form-item>
-          <el-form-item label="申请人的用户编号" prop="userId">
-            <el-input
-v-model="formData.userId" placeholder="请输入申请人编码" readonly
-              :disabled="true"/>
+          <el-form-item label="申请人编码" prop="userId">
+            <el-input v-model="formData.userId" placeholder="请输入申请人编码" readonly :disabled="true"/>
           </el-form-item>
           <el-form-item label="" prop="">
             <div></div>
@@ -281,9 +279,8 @@ const open = async (type: string, id?: number) => {
   formType.value = type
   dialogVisible.value = true
   resetForm()
-    // 然后设置用户ID
+    // 设置用户ID
   formData.value.userId = userStore.getUser?.id
-  console.log("======", formData.value.userId)
   
   // 修改时，设置数据
   if (id) {
