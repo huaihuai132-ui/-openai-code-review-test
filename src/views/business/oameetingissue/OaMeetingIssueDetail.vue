@@ -15,10 +15,10 @@
           <dict-tag :type="DICT_TYPE.MEET_TYPE" :value="formData.meetingType" />
         </el-descriptions-item>
         <el-descriptions-item label="议题状态">
-          <dict-tag :type="DICT_TYPE.ISSUE_STATUS" :value="formData.issueStatus" />
+          <dict-tag :type="DICT_TYPE.ISSUE_STATUS" :value="$attrs.issueStatus || formData.issueStatus" />
         </el-descriptions-item>
         <el-descriptions-item label="审核状态">
-          <dict-tag :type="DICT_TYPE.ISSUE_AUDIT_STATUS" :value="formData.status" />
+          <dict-tag :type="DICT_TYPE.ISSUE_AUDIT_STATUS" :value="$attrs.status || formData.status" />
         </el-descriptions-item>
         <el-descriptions-item label="议题概述" :span="2">
           <div class="whitespace-pre-wrap">
@@ -67,10 +67,10 @@
   </Dialog>
 </template>
 <script setup lang="ts">
-import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
+import { DICT_TYPE } from '@/utils/dict'
 import DictTag from '@/components/DictTag/src/DictTag.vue'
-import { OaMeetingIssueApi, OaMeetingIssueVO, FileAttachmentVO } from '@/api/business/oameetingissue/index.ts'
-import { dateFormatter, formatDate } from '@/utils/formatTime'
+import { OaMeetingIssueApi, OaMeetingIssueVO } from '@/api/business/oameetingissue'
+import { formatDate } from '@/utils/formatTime'
 import { Document } from '@element-plus/icons-vue'
 
 /** 会议议题 详情 */
@@ -91,16 +91,32 @@ const open = async (id: number) => {
     const data = await OaMeetingIssueApi.getOaMeetingIssue(id)
     formData.value = data
     
-    // 处理附件列表
-    if (data.fileList && data.fileList.length > 0) {
-      // 这里假设需要调用文件API获取附件详情
-      // 实际实现可能需要根据后端接口调整
-      fileList.value = data.fileList.map((fileId, index) => ({
-        id: fileId,
-        name: `附件${index + 1}`,
-        url: `/api/file/download?id=${fileId}` // 假设的下载URL，需要根据实际情况调整
-      }))
-    } else {
+    // 处理附件列表 - 安全地处理 fileList
+    try {
+      if (data.fileList && Array.isArray(data.fileList) && data.fileList.length > 0) {
+        // 检查 fileList 是否为数组，如果是文件ID数组，则转换为文件对象
+        if (typeof data.fileList[0] === 'number' || typeof data.fileList[0] === 'string') {
+          // 如果是ID数组，转换为文件对象
+          fileList.value = data.fileList.map((fileId, index) => ({
+            id: fileId,
+            name: `附件${index + 1}`,
+            url: `/api/file/download?id=${fileId}` // 假设的下载URL，需要根据实际情况调整
+          }))
+        } else if (typeof data.fileList[0] === 'object' && data.fileList[0] !== null) {
+          // 如果已经是文件对象数组，直接使用
+          fileList.value = data.fileList.map((file) => ({
+            id: file.id || file.fileId || file.file_id,
+            name: file.name || file.fileName || file.file_name || '未知文件',
+            url: file.url || file.downloadUrl || file.download_url || `/api/file/download?id=${file.id || file.fileId || file.file_id}`
+          }))
+        } else {
+          fileList.value = []
+        }
+      } else {
+        fileList.value = []
+      }
+    } catch (error) {
+      console.warn('处理附件列表时出错:', error)
       fileList.value = []
     }
     
