@@ -1,272 +1,370 @@
 <template>
-  <div class="upload-box">
-    <el-upload
-      :id="uuid"
-      :accept="fileType.join(',')"
-      :action="uploadUrl"
-      :before-upload="beforeUpload"
-      :class="['upload', drag ? 'no-border' : '']"
-      :disabled="disabled"
-      :drag="drag"
-      :http-request="httpRequest"
-      :multiple="false"
-      :on-error="uploadError"
-      :on-success="uploadSuccess"
-      :show-file-list="false"
-    >
-      <template v-if="modelValue">
-        <img :src="modelValue" class="upload-image" />
-        <div class="upload-handle" @click.stop>
-          <div v-if="!disabled" class="handle-icon" @click="editImg">
-            <Icon icon="ep:edit" />
-            <span v-if="showBtnText">{{ t('action.edit') }}</span>
-          </div>
-          <div class="handle-icon" @click="imagePreview(modelValue)">
-            <Icon icon="ep:zoom-in" />
-            <span v-if="showBtnText">{{ t('action.detail') }}</span>
-          </div>
-          <div v-if="showDelete && !disabled" class="handle-icon" @click="deleteImg">
-            <Icon icon="ep:delete" />
-            <span v-if="showBtnText">{{ t('action.del') }}</span>
+  <div class="avatar-upload-container">
+    <!-- 圆形头像上传区域 -->
+    <div class="avatar-upload-box" :class="{ 'has-image': modelValue, 'uploading': uploading }" @click="handleClick"
+      @drop="handleDrop" @dragover.prevent @dragenter.prevent>
+      <!-- 已有头像显示 -->
+      <div v-if="modelValue && !uploading" class="avatar-display">
+        <img :src="modelValue" class="avatar-image" alt="头像" />
+        <div class="avatar-overlay">
+          <div class="overlay-icons">
+            <div class="icon-btn" @click.stop="handlePreview">
+              👁️
+            </div>
+            <div v-if="!disabled" class="icon-btn" @click.stop="handleEdit">
+              ✏️
+            </div>
+            <div v-if="!disabled && showDelete" class="icon-btn" @click.stop="handleDelete">
+              🗑️
+            </div>
           </div>
         </div>
-      </template>
-      <template v-else>
-        <div class="upload-empty">
-          <slot name="empty">
-            <Icon icon="ep:plus" />
-            <!-- <span>请上传图片</span> -->
-          </slot>
+      </div>
+
+      <!-- 上传中状态 -->
+      <div v-else-if="uploading" class="avatar-uploading">
+        <div class="upload-progress">
+          <el-progress type="circle" :percentage="progress" :width="60" :stroke-width="4" />
         </div>
-      </template>
-    </el-upload>
-    <div class="el-upload__tip">
-      <slot name="tip"></slot>
+      </div>
+
+      <!-- 空状态 -->
+      <div v-else class="avatar-empty">
+        <div class="empty-icon">📷</div>
+        <div class="empty-text">上传头像</div>
+      </div>
+
+      <!-- 隐藏的文件输入 -->
+      <input ref="fileInputRef" type="file" :accept="fileType.join(',')" style="display: none"
+        @change="handleFileSelect" />
     </div>
+
+    <!-- 提示信息 -->
+    <div v-if="tip" class="upload-tip">{{ tip }}</div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import type { UploadProps } from 'element-plus'
-
-import { generateUUID } from '@/utils'
-import { propTypes } from '@/utils/propTypes'
+import { ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import axios from 'axios'
 import { createImageViewer } from '@/components/ImageViewer'
-import { useUpload } from '@/components/UploadFile/src/useUpload'
+import * as StaticFileApi from '@/api/infra/file/staticFile'
 
 defineOptions({ name: 'UploadImg' })
 
-type FileTypes =
-  | 'image/apng'
-  | 'image/bmp'
-  | 'image/gif'
-  | 'image/jpeg'
-  | 'image/pjpeg'
-  | 'image/png'
-  | 'image/svg+xml'
-  | 'image/tiff'
-  | 'image/webp'
-  | 'image/x-icon'
-
-// 接受父组件参数
+// 组件属性
 const props = defineProps({
-  modelValue: propTypes.string.def(''),
-  drag: propTypes.bool.def(true), // 是否支持拖拽上传 ==> 非必传（默认为 true）
-  disabled: propTypes.bool.def(false), // 是否禁用上传组件 ==> 非必传（默认为 false）
-  fileSize: propTypes.number.def(5), // 图片大小限制 ==> 非必传（默认为 5M）
-  fileType: propTypes.array.def(['image/jpeg', 'image/png', 'image/gif']), // 图片类型限制 ==> 非必传（默认为 ["image/jpeg", "image/png", "image/gif"]）
-  height: propTypes.string.def('150px'), // 组件高度 ==> 非必传（默认为 150px）
-  width: propTypes.string.def('150px'), // 组件宽度 ==> 非必传（默认为 150px）
-  borderradius: propTypes.string.def('8px'), // 组件边框圆角 ==> 非必传（默认为 8px）
-  showDelete: propTypes.bool.def(true), // 是否显示删除按钮
-  showBtnText: propTypes.bool.def(true), // 是否显示按钮文字
-  directory: propTypes.string.def(undefined) // 上传目录 ==> 非必传（默认为 undefined）
+  modelValue: {
+    type: String,
+    default: ''
+  },
+  disabled: {
+    type: Boolean,
+    default: false
+  },
+  fileSize: {
+    type: Number,
+    default: 5 // MB
+  },
+  fileType: {
+    type: Array as PropType<string[]>,
+    default: () => ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  },
+  size: {
+    type: Number,
+    default: 120 // 头像大小（像素）
+  },
+  showDelete: {
+    type: Boolean,
+    default: true
+  },
+  directory: {
+    type: String,
+    default: 'avatars'
+  },
+  tip: {
+    type: String,
+    default: ''
+  }
 })
-const { t } = useI18n() // 国际化
-const message = useMessage() // 消息弹窗
-// 生成组件唯一id
-const uuid = ref('id-' + generateUUID())
-// 查看图片
-const imagePreview = (imgUrl: string) => {
+// 组件事件
+const emit = defineEmits(['update:modelValue'])
+
+// 响应式数据
+const fileInputRef = ref<HTMLInputElement>()
+const uploading = ref(false)
+const progress = ref(0)
+
+// 处理点击事件
+const handleClick = () => {
+  if (props.disabled || uploading.value) return
+  fileInputRef.value?.click()
+}
+
+// 处理文件选择
+const handleFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  // 验证文件
+  if (!validateFile(file)) {
+    target.value = '' // 清空输入
+    return
+  }
+
+  // 开始上传
+  uploadFile(file)
+  target.value = '' // 清空输入，允许重新选择同一文件
+}
+
+// 处理拖拽上传
+const handleDrop = (event: DragEvent) => {
+  if (props.disabled || uploading.value) return
+
+  event.preventDefault()
+  const files = event.dataTransfer?.files
+  const file = files?.[0]
+
+  if (!file) return
+
+  if (!validateFile(file)) return
+
+  uploadFile(file)
+}
+
+// 文件验证
+const validateFile = (file: File): boolean => {
+  // 检查文件类型
+  const isValidType = props.fileType.some(type => {
+    if (type.startsWith('.')) {
+      return file.name.toLowerCase().endsWith(type.toLowerCase())
+    }
+    return file.type === type
+  })
+
+  if (!isValidType) {
+    ElMessage.error(`只能上传 ${props.fileType.join(', ')} 格式的图片文件`)
+    return false
+  }
+
+  // 检查文件大小
+  const isValidSize = file.size / 1024 / 1024 <= props.fileSize
+  if (!isValidSize) {
+    ElMessage.error(`图片大小不能超过 ${props.fileSize}MB`)
+    return false
+  }
+
+  return true
+}
+
+// 上传文件
+const uploadFile = async (file: File) => {
+  try {
+    uploading.value = true
+    progress.value = 0
+
+    // 1. 获取静态文件预签名URL
+    const presignedData = await StaticFileApi.getStaticFilePresignedUrl(file.name, props.directory)
+    const urlData = (presignedData as any).data || presignedData
+
+    // 2. 直传到MinIO
+    const startTime = Date.now()
+    await axios.put(urlData.uploadUrl, file, {
+      headers: {
+        'Content-Type': file.type
+      },
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          progress.value = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+        }
+      }
+    })
+
+    // 3. 创建静态文件记录
+    const createFileData = {
+      configId: urlData.configId || 0,
+      name: file.name,
+      path: urlData.path,
+      url: urlData.url,
+      type: file.type,
+      size: file.size,
+      dir: props.directory,
+      fileSource: 1 // 个人文件（头像等）
+    }
+
+    const response = await StaticFileApi.createStaticFile(createFileData) as any
+    console.log('头像上传-StaticFileApi.createStaticFile 返回结果:', response)
+
+    // 4. 上传成功，直接返回文件URL
+    uploading.value = false
+    progress.value = 100
+
+    // 直接使用文件URL，不返回文件ID
+    emit('update:modelValue', urlData.url)
+    ElMessage.success('头像上传成功')
+
+  } catch (error) {
+    console.error('头像上传失败:', error)
+    uploading.value = false
+    progress.value = 0
+    ElMessage.error('头像上传失败，请重试')
+  }
+}
+
+// 预览图片
+const handlePreview = () => {
+  if (!props.modelValue) return
+
   createImageViewer({
     zIndex: 9999999,
-    urlList: [imgUrl]
+    urlList: [props.modelValue]
   })
 }
 
-const emit = defineEmits(['update:modelValue'])
+// 编辑图片（重新选择）
+const handleEdit = () => {
+  fileInputRef.value?.click()
+}
 
-const deleteImg = () => {
+// 删除图片
+const handleDelete = () => {
   emit('update:modelValue', '')
-}
-
-const { uploadUrl, httpRequest } = useUpload(props.directory)
-
-const editImg = () => {
-  const dom = document.querySelector(`#${uuid.value} .el-upload__input`)
-  dom && dom.dispatchEvent(new MouseEvent('click'))
-}
-
-const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
-  const imgSize = rawFile.size / 1024 / 1024 < props.fileSize
-  const imgType = props.fileType
-  if (!imgType.includes(rawFile.type as FileTypes))
-    message.notifyWarning('上传图片不符合所需的格式！')
-  if (!imgSize) message.notifyWarning(`上传图片大小不能超过 ${props.fileSize}M！`)
-  return imgType.includes(rawFile.type as FileTypes) && imgSize
-}
-
-// 图片上传成功提示
-const uploadSuccess: UploadProps['onSuccess'] = (res: any): void => {
-  message.success('上传成功')
-  emit('update:modelValue', res.data)
-}
-
-// 图片上传错误提示
-const uploadError = () => {
-  message.notifyError('图片上传失败，请您重新上传！')
+  ElMessage.success('头像已删除')
 }
 </script>
-<style lang="scss" scoped>
-.is-error {
-  .upload {
-    :deep(.el-upload),
-    :deep(.el-upload-dragger) {
-      border: 1px dashed var(--el-color-danger) !important;
 
-      &:hover {
-        border-color: var(--el-color-primary) !important;
-      }
-    }
+<style lang="scss" scoped>
+.avatar-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar-upload-box {
+  position: relative;
+  width: v-bind('props.size + "px"');
+  height: v-bind('props.size + "px"');
+  border-radius: 50%;
+  border: 2px dashed #d9d9d9;
+  background-color: #fafafa;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+
+  &:hover {
+    border-color: #409eff;
+    background-color: #f0f9ff;
+  }
+
+  &.has-image {
+    border: none;
+    background: none;
+  }
+
+  &.uploading {
+    border-color: #409eff;
+    cursor: not-allowed;
   }
 }
 
-:deep(.disabled) {
-  .el-upload,
-  .el-upload-dragger {
-    cursor: not-allowed !important;
-    background: var(--el-disabled-bg-color);
-    border: 1px dashed var(--el-border-color-darker) !important;
+.avatar-display {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+
+  .avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 
     &:hover {
-      border: 1px dashed var(--el-border-color-darker) !important;
+      opacity: 1;
+    }
+
+    .overlay-icons {
+      display: flex;
+      gap: 8px;
+
+      .icon-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: white;
+          transform: scale(1.1);
+        }
+      }
     }
   }
 }
 
-.upload-box {
-  .no-border {
-    :deep(.el-upload) {
-      border: none !important;
-    }
+.avatar-uploading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+
+  .upload-progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.avatar-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #999;
+
+  .empty-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
   }
 
-  :deep(.upload) {
-    .el-upload {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: v-bind(width);
-      height: v-bind(height);
-      overflow: hidden;
-      border: 1px dashed var(--el-border-color-darker);
-      border-radius: v-bind(borderradius);
-      transition: var(--el-transition-duration-fast);
-
-      &:hover {
-        border-color: var(--el-color-primary);
-
-        .upload-handle {
-          opacity: 1;
-        }
-      }
-
-      .el-upload-dragger {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 100%;
-        padding: 0;
-        overflow: hidden;
-        background-color: transparent;
-        border: 1px dashed var(--el-border-color-darker);
-        border-radius: v-bind(borderradius);
-
-        &:hover {
-          border: 1px dashed var(--el-color-primary);
-        }
-      }
-
-      .el-upload-dragger.is-dragover {
-        background-color: var(--el-color-primary-light-9);
-        border: 2px dashed var(--el-color-primary) !important;
-      }
-
-      .upload-image {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-      }
-
-      .upload-empty {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        line-height: 30px;
-        color: var(--el-color-info);
-
-        .el-icon {
-          font-size: 28px;
-          color: var(--el-text-color-secondary);
-        }
-      }
-
-      .upload-handle {
-        position: absolute;
-        top: 0;
-        right: 0;
-        display: flex;
-        width: 100%;
-        height: 100%;
-        cursor: pointer;
-        background: rgb(0 0 0 / 60%);
-        opacity: 0;
-        box-sizing: border-box;
-        transition: var(--el-transition-duration-fast);
-        align-items: center;
-        justify-content: center;
-
-        .handle-icon {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 0 6%;
-          color: aliceblue;
-
-          .el-icon {
-            margin-bottom: 40%;
-            font-size: 130%;
-            line-height: 130%;
-          }
-
-          span {
-            font-size: 85%;
-            line-height: 85%;
-          }
-        }
-      }
-    }
+  .empty-text {
+    font-size: 12px;
+    color: #666;
   }
+}
 
-  .el-upload__tip {
-    line-height: 18px;
-    text-align: center;
-  }
+.upload-tip {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+  margin-top: 4px;
 }
 </style>

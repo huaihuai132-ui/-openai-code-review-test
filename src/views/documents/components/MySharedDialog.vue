@@ -44,14 +44,6 @@
                                     <span class="user-name">{{ user.nickname }}</span>
                                 </div>
                                 <div class="share-details">
-                                    <el-tag v-if="user.permission === 1" type="info" size="small">
-                                        <Icon icon="ep:view" class="mr-2px" />
-                                        只读
-                                    </el-tag>
-                                    <el-tag v-else-if="user.permission === 2" type="success" size="small">
-                                        <Icon icon="ep:edit" class="mr-2px" />
-                                        可写
-                                    </el-tag>
                                     <span class="share-time">{{ dateFormatter(null, null, user.shareTime) }}</span>
                                     <span v-if="user.expiredTime" class="expire-time">
                                         到期：{{ dateFormatter(null, null, user.expiredTime) }}

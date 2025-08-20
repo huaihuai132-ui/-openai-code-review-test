@@ -21,8 +21,8 @@
             </el-form-item>
         </el-form>
         <UploadFile ref="uploadFileRef" v-model="fileUrl" :drag="true"
-            :file-type="['jpg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'zip', 'rar']" :file-size="50"
-            :show-custom-file-name="true" :directory="'documents'" :dir="form.targetDir"
+            :accept-types="['jpg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'zip', 'rar']" :file-size="50"
+            :show-custom-file-name="true" :directory="'documents'" :dir="form.targetDir" :file-source="1"
             @upload-success="handleUploadSuccess" @upload-error="handleUploadError" />
         <template #footer>
             <el-button @click="visible = false">关闭</el-button>

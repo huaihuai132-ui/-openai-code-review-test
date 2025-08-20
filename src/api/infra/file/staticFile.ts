@@ -64,3 +64,8 @@ export const deleteStaticFile = (id: number) => {
     params: { id }
   })
 }
+
+// 根据 ID 列表批量查询静态文件详情
+export const getStaticFilesByIds = (ids: number[]) => {
+  return request.post<any[]>({ url: '/infra/static-file/getFilesByIds', data: ids })
+}

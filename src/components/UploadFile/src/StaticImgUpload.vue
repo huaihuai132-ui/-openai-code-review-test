@@ -16,7 +16,7 @@
         <!-- 空状态 -->
         <div v-if="box.status === 'empty'" class="empty-state">
           <div class="upload-icon" :class="{ 'hover': box.hover }">
-            <Icon icon="ep:plus" />
+            ➕
           </div>
           <div class="upload-text">
             <span v-if="sequenceCode && sequenceInfo[index]">
@@ -39,12 +39,12 @@
             <div class="file-name-section">
               <div v-if="!box.editing" class="file-name" @click="startEditName(index)">
                 <span class="name-text">{{ box.displayName }}</span>
-                <Icon icon="ep:edit" class="edit-icon" />
+                <div class="edit-icon">✏️</div>
               </div>
               <div v-else class="file-name-edit">
                 <el-input v-model="box.editingName" size="small" @blur="finishEditName(index)"
                   @keyup.enter="finishEditName(index)" @keyup.esc="cancelEditName(index)" ref="nameInput" />
-                <Icon icon="ep:check" class="confirm-icon" @click="finishEditName(index)" />
+                <div class="confirm-icon" @click="finishEditName(index)">✅</div>
               </div>
             </div>
 
@@ -82,11 +82,11 @@
         <div v-else-if="box.status === 'uploaded'" class="uploaded-state">
           <!-- 显示图片 -->
           <div class="uploaded-image" @mouseenter="box.showPreview = true" @mouseleave="box.showPreview = false">
-            <img :src="getStaticImageUrl(box.fileInfo.path)" :alt="box.fileInfo.name" />
+            <img :src="box.fileInfo.url" :alt="box.fileInfo.name" />
 
             <!-- 预览按钮 -->
             <div v-if="box.showPreview" class="preview-btn" @click.stop="handlePreview(index)">
-              <Icon icon="ep:zoom-in" />
+              👁️
             </div>
           </div>
 
@@ -98,13 +98,13 @@
 
           <!-- 删除按钮 -->
           <div class="delete-btn" @click.stop="deleteFile(index)">
-            <Icon icon="ep:close" />
+            ❌
           </div>
         </div>
 
         <!-- 错误状态 -->
         <div v-else-if="box.status === 'error'" class="error-state">
-          <Icon icon="ep:warning" class="error-icon" />
+          <div class="error-icon">❌</div>
           <div class="error-text">上传失败</div>
           <el-button size="small" @click.stop="retryUpload(index)">重试</el-button>
         </div>
@@ -129,7 +129,6 @@ import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import { generateUUID } from '@/utils'
 import * as StaticFileApi from '@/api/infra/file/staticFile'
-import * as FileApi from '@/api/infra/file'
 import { FileBusinessSequenceApi } from '@/api/infra/file/fileBusinessSequence'
 import { createImageViewer } from '@/components/ImageViewer'
 
@@ -190,15 +189,14 @@ interface FileBox {
   showPreview?: boolean
   fileInfo?: any
   uploadController?: AbortController
+  isNewFile?: boolean
 }
 
 // 响应式数据
 const fileBoxes = ref<FileBox[]>([])
 const sequenceInfo = ref<any[]>([])
-const unsavedFileIds = ref<number[]>([])
 
-// 固定域名配置
-const FIXED_DOMAIN = 'http://182.109.52.126:49090'
+
 
 // 静态图片上传是单图片模式，不需要批量操作的计算属性
 
@@ -270,7 +268,7 @@ const loadExistingFiles = async () => {
 
   try {
     console.log('加载现有文件，ID列表:', props.fileList)
-    const response = await FileApi.getFilesByIds(props.fileList)
+    const response = await StaticFileApi.getStaticFilesByIds(props.fileList)
     console.log('文件详情响应:', response)
 
     const files = (response as any).data || response
@@ -321,7 +319,7 @@ const handleDrop = (index: number, event: DragEvent) => {
 }
 
 // 文件选择处理
-const handleFileSelect = (index: number, event: Event) => {
+const handleFileSelect = async (index: number, event: Event) => {
   const target = event.target as HTMLInputElement
   const files = target.files
   if (!files || files.length === 0) return
@@ -339,8 +337,12 @@ const handleFileSelect = (index: number, event: Event) => {
   box.displayName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name
   box.editingName = box.displayName
   box.editing = false
+  box.isNewFile = true // 标记为新文件
 
   console.log(`文件框 ${index} 状态更新:`, box)
+
+  // 自动上传
+  await uploadFile(index)
 }
 
 // 文件验证
@@ -482,10 +484,6 @@ const uploadFile = async (index: number) => {
     box.progress = 100
     box.showPreview = false
 
-    // 添加到未保存文件列表
-    unsavedFileIds.value.push(fileId)
-    console.log('添加到未保存文件列表:', fileId, '当前列表:', unsavedFileIds.value)
-
     // 更新fileList并发出事件
     updateFileList()
 
@@ -547,13 +545,6 @@ const deleteFile = async (index: number) => {
       await StaticFileApi.deleteStaticFile(fileId)
       console.log('静态文件删除成功')
 
-      // 从未保存文件列表中移除
-      const index_unsaved = unsavedFileIds.value.indexOf(fileId)
-      if (index_unsaved > -1) {
-        unsavedFileIds.value.splice(index_unsaved, 1)
-        console.log('从未保存文件列表中移除:', fileId)
-      }
-
       // 发出删除事件
       emit('delete', fileId)
     }
@@ -595,11 +586,7 @@ const handlePreview = (index: number) => {
   }
 }
 
-// 获取静态图片URL
-const getStaticImageUrl = (path: string) => {
-  if (!path) return ''
-  return `${FIXED_DOMAIN}/minio/static/${path}`
-}
+
 
 // 获取图片预览URL（用于选择后的预览）
 const getImagePreviewUrl = (file: File) => {
@@ -619,24 +606,7 @@ const updateFileList = () => {
   emit('update:fileList', fileList)
 }
 
-// 清理未保存的文件
-const clearUnsavedFiles = async () => {
-  if (unsavedFileIds.value.length === 0) return
 
-  console.log('清理未保存的静态文件:', unsavedFileIds.value)
-
-  try {
-    for (const fileId of unsavedFileIds.value) {
-      if (typeof fileId === 'number') {
-        await StaticFileApi.deleteStaticFile(fileId)
-        console.log('清理静态文件成功:', fileId)
-      }
-    }
-    unsavedFileIds.value = []
-  } catch (error) {
-    console.error('清理未保存文件失败:', error)
-  }
-}
 
 // 验证文件
 const validateFiles = () => {
@@ -680,7 +650,6 @@ const formatTime = (seconds: number): string => {
 
 // 暴露方法给父组件
 defineExpose({
-  clearUnsavedFiles,
   validateFiles
 })
 
@@ -689,10 +658,7 @@ onMounted(() => {
   initFileBoxes()
 })
 
-onBeforeUnmount(() => {
-  // 组件销毁时清理未保存的文件
-  clearUnsavedFiles()
-})
+
 
 // 监听fileList变化
 watch(() => props.fileList, () => {

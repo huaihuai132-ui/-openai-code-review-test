@@ -5,8 +5,8 @@
 ## 📋 组件概览
 
 | 组件 | 功能定位 | 适用场景 | 存储位置 | 特色功能 |
-|------|----------|----------|----------|----------|
-| `UploadFile` | 单文件上传 | 表单中需要上传单个文件 | MinIO oafile 桶 | 文件全能框、实时别名编辑 |
+| --- | --- | --- | --- | --- |
+| `UploadFile` | 普通文件上传 | 表单中需要上传普通文件 | MinIO oafile 桶 | 文件全能框、实时别名编辑 |
 | `BatchFileUpload` | 批量文件上传 | 需要上传多个文件 | MinIO oafile 桶 | 动态文件框、序列模式 |
 | `StaticFileUpload` | 静态文件上传 | 公共资源、静态文件 | MinIO static 桶 | 匿名访问、公共存储 |
 | `StaticImgUpload` | 静态图片上传 | 头像、产品图片等 | MinIO static 桶 | 图片预览、格式限制 |
@@ -14,27 +14,32 @@
 ## ✨ 核心特性
 
 ### 🎯 文件全能框设计
+
 - **拖拽 + 点击**：支持文件拖拽和点击选择两种方式
 - **实时预览**：上传完成后悬停显示预览按钮
 - **视觉反馈**：不同状态下的清晰视觉指示
 
 ### 📝 实时别名编辑
+
 - **点击编辑**：点击 🖊 图标进入编辑模式
 - **即时保存**：点击 ✓ 确认保存别名
 - **表单集成**：别名作为文件的显示名称
 
 ### 📊 智能进度显示
+
 - **圆形进度条**：显示上传进度百分比
 - **速度监控**：实时显示上传速度（KB/s, MB/s）
 - **剩余时间**：动态计算预估完成时间
 - **取消功能**：悬停进度条显示红色取消按钮
 
 ### 🔄 序列模式支持
+
 - **业务序列表**：根据序列编码自动生成文件框
 - **有序上传**：按序列值顺序上传文件
 - **命名规范**：自动显示对应的文件名要求
 
 ### 🧹 自动清理机制
+
 - **生命周期管理**：页面离开时自动清理未保存文件
 - **内存优化**：及时释放未使用的文件资源
 - **状态跟踪**：区分已保存和未保存的文件
@@ -51,11 +56,10 @@
 <template>
   <el-form :model="form" :rules="rules" ref="formRef">
     <el-form-item label="合同文件" prop="fileList">
-      <UploadFile 
+      <UploadFile
         ref="uploadFileRef"
         v-model:fileList="form.fileList"
         mode="create"
-        file-type="common"
         directory="contracts"
         tip="支持上传单个文件，大小不超过10MB"
       />
@@ -83,22 +87,22 @@ const submitForm = async () => {
   // 1. 验证表单
   const formValid = await formRef.value?.validate()
   if (!formValid) return
-  
+
   // 2. 验证文件
   const fileValidation = uploadFileRef.value?.validateFiles()
   if (!fileValidation?.valid) {
     ElMessage.error(fileValidation.message)
     return
   }
-  
+
   // 3. 获取文件信息
   const fileList = uploadFileRef.value?.getFileList() || []
   const fileDetails = uploadFileRef.value?.getFileDetails() || []
-  
+
   // 4. 提交数据
   console.log('文件ID列表:', fileList)
   console.log('文件详细信息:', fileDetails)
-  
+
   // 5. 标记为已保存
   uploadFileRef.value?.markFilesAsSaved()
 }
@@ -114,7 +118,7 @@ onBeforeUnmount(() => {
 
 ```vue
 <template>
-  <UploadFile 
+  <UploadFile
     ref="uploadFileRef"
     v-model:fileList="form.fileList"
     :sequence-code="form.sequenceCode"
@@ -136,12 +140,12 @@ const form = reactive({
 #### Props 详解
 
 | 参数 | 类型 | 默认值 | 必填 | 描述 |
-|------|------|--------|------|------|
+| --- | --- | --- | --- | --- |
 | `fileList` | `number[]` | `[]` | ✓ | 文件ID列表，支持v-model双向绑定 |
 | `mode` | `'create' \| 'view' \| 'edit'` | `'create'` | - | 组件运行模式 |
 | `sequenceCode` | `string` | `''` | - | 业务序列编码，启用序列模式 |
-| `fileType` | `'common' \| 'static'` | `'common'` | - | 文件类型，决定使用的API |
 | `acceptTypes` | `string[]` | `[]` | - | 允许的文件格式（如：['pdf', 'doc', 'docx']） |
+| `fileSource` | `number` | `0` | - | 文件来源（0=业务文件，1=个人文件） |
 | `fileSize` | `number` | `10` | - | 文件大小限制（MB） |
 | `directory` | `string` | `'files'` | - | 上传目录路径 |
 | `accept` | `string` | `''` | - | HTML accept属性值 |
@@ -150,24 +154,24 @@ const form = reactive({
 
 #### 事件
 
-| 事件名 | 参数 | 描述 |
-|--------|------|------|
+| 事件名            | 参数       | 描述               |
+| ----------------- | ---------- | ------------------ |
 | `update:fileList` | `number[]` | 文件列表更新时触发 |
-| `delete` | `number` | 文件被删除时触发 |
-| `upload-success` | `object` | 文件上传成功时触发 |
-| `upload-error` | `Error` | 文件上传失败时触发 |
-| `upload-progress` | `object` | 上传进度更新时触发 |
+| `delete`          | `number`   | 文件被删除时触发   |
+| `upload-success`  | `object`   | 文件上传成功时触发 |
+| `upload-error`    | `Error`    | 文件上传失败时触发 |
+| `upload-progress` | `object`   | 上传进度更新时触发 |
 
 #### 方法
 
-| 方法名 | 返回值 | 描述 |
-|--------|--------|------|
-| `getFileList()` | `number[]` | 获取当前文件ID列表 |
-| `getFileDetails()` | `object[]` | 获取文件详细信息 |
-| `validateFiles()` | `{valid: boolean, message?: string}` | 验证文件是否符合要求 |
-| `clearUnsavedFiles()` | `Promise<void>` | 清理未保存的文件 |
-| `resetComponent()` | `void` | 重置组件状态 |
-| `markFilesAsSaved()` | `void` | 标记文件为已保存 |
+| 方法名                | 返回值                               | 描述                 |
+| --------------------- | ------------------------------------ | -------------------- |
+| `getFileList()`       | `number[]`                           | 获取当前文件ID列表   |
+| `getFileDetails()`    | `object[]`                           | 获取文件详细信息     |
+| `validateFiles()`     | `{valid: boolean, message?: string}` | 验证文件是否符合要求 |
+| `clearUnsavedFiles()` | `Promise<void>`                      | 清理未保存的文件     |
+| `resetComponent()`    | `void`                               | 重置组件状态         |
+| `markFilesAsSaved()`  | `void`                               | 标记文件为已保存     |
 
 ---
 
@@ -179,7 +183,7 @@ const form = reactive({
 
 ```vue
 <template>
-  <BatchFileUpload 
+  <BatchFileUpload
     ref="batchUploadRef"
     v-model:fileList="form.fileList"
     mode="create"
@@ -209,13 +213,13 @@ const batchUploadRef = ref()
     <el-form-item label="商品名称" prop="productName">
       <el-input v-model="productForm.productName" />
     </el-form-item>
-    
+
     <el-form-item label="序列编码" prop="sequenceCode">
       <el-input v-model="productForm.sequenceCode" readonly />
     </el-form-item>
-    
+
     <el-form-item label="商品文件清单" prop="fileList">
-      <BatchFileUpload 
+      <BatchFileUpload
         ref="batchUploadRef"
         v-model:fileList="productForm.fileList"
         :sequence-code="productForm.sequenceCode"
@@ -252,10 +256,10 @@ const productRules = {
 
 #### Props 扩展
 
-| 参数 | 类型 | 默认值 | 描述 |
-|------|------|--------|------|
-| `maxFiles` | `number` | `5` | 最大文件数量限制 |
-| 其他属性 | - | - | 继承自UploadFile的所有属性 |
+| 参数       | 类型     | 默认值 | 描述                       |
+| ---------- | -------- | ------ | -------------------------- |
+| `maxFiles` | `number` | `5`    | 最大文件数量限制           |
+| 其他属性   | -        | -      | 继承自UploadFile的所有属性 |
 
 ---
 
@@ -267,7 +271,7 @@ const productRules = {
 
 ```vue
 <template>
-  <StaticFileUpload 
+  <StaticFileUpload
     ref="staticUploadRef"
     v-model:fileList="form.fileList"
     mode="create"
@@ -305,7 +309,7 @@ const staticUploadRef = ref()
 
 ```vue
 <template>
-  <StaticImgUpload 
+  <StaticImgUpload
     ref="staticImgRef"
     v-model:fileList="form.avatarList"
     mode="create"
@@ -335,7 +339,7 @@ const staticImgRef = ref()
     <el-form-item label="图片标题" prop="title">
       <el-input v-model="imageForm.title" />
     </el-form-item>
-    
+
     <el-form-item label="图片分类" prop="category">
       <el-select v-model="imageForm.category">
         <el-option label="产品图片" value="product" />
@@ -343,9 +347,9 @@ const staticImgRef = ref()
         <el-option label="头像图片" value="avatar" />
       </el-select>
     </el-form-item>
-    
+
     <el-form-item label="图片文件" prop="fileList">
-      <StaticImgUpload 
+      <StaticImgUpload
         ref="imageUploadRef"
         v-model:fileList="imageForm.fileList"
         mode="create"
@@ -386,27 +390,33 @@ const imageRules = {
 ## 🔄 组件模式详解
 
 ### create 模式（创建模式）
+
 ```vue
 <UploadFile mode="create" />
 ```
+
 - **功能**：显示空的文件框，允许选择和上传文件
 - **交互**：支持拖拽和点击选择
 - **编辑**：支持实时编辑文件名
 - **使用场景**：新建表单、数据录入
 
 ### view 模式（查看模式）
+
 ```vue
 <UploadFile mode="view" />
 ```
+
 - **功能**：只读模式，显示已上传的文件
 - **限制**：不允许添加、删除或编辑
 - **交互**：支持预览和下载功能
 - **使用场景**：数据查看、详情页面
 
 ### edit 模式（编辑模式）
+
 ```vue
 <UploadFile mode="edit" />
 ```
+
 - **功能**：显示已有文件，允许添加新文件
 - **操作**：支持删除现有文件
 - **替换**：支持文件替换（先删除再上传）
@@ -438,7 +448,7 @@ CREATE TABLE infra_file_business_sequence (
 );
 
 -- 示例数据：商品清单序列
-INSERT INTO infra_file_business_sequence 
+INSERT INTO infra_file_business_sequence
 (sequence_code, sequence_business, sequence_file, sequence_value) VALUES
 ('SPQD1-20250817', '商品清单', '商品清单1', 1),
 ('SPQD1-20250817', '商品清单', '商品清单2', 2),
@@ -461,21 +471,19 @@ INSERT INTO infra_file_business_sequence
 <template>
   <div class="sequence-upload-demo">
     <h3>商品资料上传 - 序列模式演示</h3>
-    
+
     <el-form :model="form" :rules="rules" ref="formRef">
       <el-form-item label="商品名称" prop="productName">
         <el-input v-model="form.productName" />
       </el-form-item>
-      
+
       <el-form-item label="序列编码" prop="sequenceCode">
         <el-input v-model="form.sequenceCode" readonly />
-        <div class="form-tip">
-          * 序列编码对应后端配置的文件上传要求
-        </div>
+        <div class="form-tip"> * 序列编码对应后端配置的文件上传要求 </div>
       </el-form-item>
-      
+
       <el-form-item label="商品文件" prop="fileList">
-        <BatchFileUpload 
+        <BatchFileUpload
           ref="sequenceUploadRef"
           v-model:fileList="form.fileList"
           :sequence-code="form.sequenceCode"
@@ -485,7 +493,7 @@ INSERT INTO infra_file_business_sequence
           tip="请按序列要求上传对应的文件"
         />
       </el-form-item>
-      
+
       <el-form-item>
         <el-button type="primary" @click="handleSubmit">提交</el-button>
         <el-button @click="handleReset">重置</el-button>
@@ -510,14 +518,14 @@ const handleSubmit = async () => {
   // 验证表单
   const formValid = await formRef.value?.validate()
   if (!formValid) return
-  
+
   // 验证序列文件
   const fileValidation = sequenceUploadRef.value?.validateFiles()
   if (!fileValidation?.valid) {
     ElMessage.error(fileValidation.message)
     return
   }
-  
+
   // 提交数据...
   ElMessage.success('商品资料提交成功！')
 }
@@ -537,10 +545,10 @@ const handleSubmit = async () => {
     <el-form-item label="标题" prop="title">
       <el-input v-model="form.title" />
     </el-form-item>
-    
+
     <!-- 文件上传 -->
     <el-form-item label="附件" prop="fileList">
-      <UploadFile 
+      <UploadFile
         ref="uploadRef"
         v-model:fileList="form.fileList"
         mode="create"
@@ -549,12 +557,10 @@ const handleSubmit = async () => {
         tip="支持多种格式，单个文件不超过20MB"
       />
     </el-form-item>
-    
+
     <!-- 提交按钮 -->
     <el-form-item>
-      <el-button type="primary" @click="handleSubmit" :loading="submitting">
-        提交
-      </el-button>
+      <el-button type="primary" @click="handleSubmit" :loading="submitting"> 提交 </el-button>
       <el-button @click="handleReset">重置</el-button>
     </el-form-item>
   </el-form>
@@ -576,40 +582,39 @@ const submitting = ref(false)
 const handleSubmit = async () => {
   try {
     submitting.value = true
-    
+
     // 1. 验证表单
     const formValid = await formRef.value?.validate()
     if (!formValid) {
       ElMessage.error('请填写完整信息')
       return
     }
-    
+
     // 2. 验证文件
     const fileValidation = uploadRef.value?.validateFiles()
     if (!fileValidation?.valid) {
       ElMessage.error(fileValidation.message)
       return
     }
-    
+
     // 3. 获取文件信息
     const fileList = uploadRef.value?.getFileList()
     const fileDetails = uploadRef.value?.getFileDetails()
-    
+
     // 4. 构造提交数据
     const submitData = {
       ...form,
       fileDetails, // 包含文件的详细信息
       submitTime: new Date().toISOString()
     }
-    
+
     // 5. 调用API提交
     await submitFormApi(submitData)
-    
+
     // 6. 标记文件为已保存
     uploadRef.value?.markFilesAsSaved()
-    
+
     ElMessage.success('提交成功！')
-    
   } catch (error) {
     console.error('提交失败:', error)
     ElMessage.error('提交失败，请重试')
@@ -623,17 +628,17 @@ const handleReset = async () => {
     await ElMessageBox.confirm('确定要重置表单吗？', '确认', {
       type: 'warning'
     })
-    
+
     // 清理未保存的文件
     await uploadRef.value?.clearUnsavedFiles()
-    
+
     // 重置表单
     formRef.value?.resetFields()
     form.fileList = []
-    
+
     // 重置上传组件
     uploadRef.value?.resetComponent()
-    
+
     ElMessage.success('表单重置成功')
   } catch (error) {
     // 用户取消操作
@@ -654,7 +659,7 @@ onBeforeUnmount(() => {
 // 错误处理函数
 const handleUploadError = (error: any, fileName: string) => {
   console.error(`文件 ${fileName} 上传失败:`, error)
-  
+
   // 根据错误类型给出不同提示
   if (error.code === 'FILE_TOO_LARGE') {
     ElMessage.error(`文件 ${fileName} 超过大小限制`)
@@ -687,20 +692,20 @@ const handleUploadProgress = (progress: any) => {
 <template>
   <div class="permission-controlled-upload">
     <!-- 根据权限显示不同模式 -->
-    <UploadFile 
+    <UploadFile
       :mode="uploadMode"
       v-model:fileList="form.fileList"
       :disabled="!canUpload"
       directory="sensitive"
     />
-    
+
     <!-- 权限提示 -->
     <div v-if="!canUpload" class="permission-tip">
-      <el-alert 
-        title="权限不足" 
-        description="您没有上传文件的权限，请联系管理员" 
-        type="warning" 
-        show-icon 
+      <el-alert
+        title="权限不足"
+        description="您没有上传文件的权限，请联系管理员"
+        type="warning"
+        show-icon
         :closable="false"
       />
     </div>
@@ -852,10 +857,10 @@ interface GetSequenceResponse {
 <script setup lang="ts">
 // 推荐的文件大小配置
 const fileSizeConfig = {
-  image: 5,      // 图片 5MB
-  document: 10,  // 文档 10MB
-  video: 100,    // 视频 100MB
-  archive: 50    // 压缩包 50MB
+  image: 5, // 图片 5MB
+  document: 10, // 文档 10MB
+  video: 100, // 视频 100MB
+  archive: 50 // 压缩包 50MB
 }
 
 // 推荐的文件格式配置
@@ -878,22 +883,22 @@ const errorHandlers = {
   FILE_TOO_LARGE: (fileName: string, maxSize: number) => {
     ElMessage.error(`文件 ${fileName} 超过 ${maxSize}MB 限制`)
   },
-  
+
   // 格式不支持
   INVALID_FILE_TYPE: (fileName: string, allowedTypes: string[]) => {
     ElMessage.error(`文件 ${fileName} 格式不支持，请上传 ${allowedTypes.join('/')} 格式`)
   },
-  
+
   // 网络错误
   NETWORK_ERROR: () => {
     ElMessage.error('网络连接失败，请检查网络后重试')
   },
-  
+
   // 服务器错误
   SERVER_ERROR: () => {
     ElMessage.error('服务器错误，请稍后重试')
   },
-  
+
   // 权限不足
   PERMISSION_DENIED: () => {
     ElMessage.error('权限不足，请联系管理员')
@@ -909,14 +914,9 @@ const errorHandlers = {
 // 内存管理最佳实践
 onBeforeUnmount(() => {
   // 清理所有上传组件的未保存文件
-  const uploadRefs = [
-    uploadFileRef,
-    batchUploadRef,
-    staticUploadRef,
-    staticImgRef
-  ]
-  
-  uploadRefs.forEach(ref => {
+  const uploadRefs = [uploadFileRef, batchUploadRef, staticUploadRef, staticImgRef]
+
+  uploadRefs.forEach((ref) => {
     ref.value?.clearUnsavedFiles()
   })
 })
@@ -927,7 +927,7 @@ const setupCleanupTimer = () => {
     // 清理超时的临时文件
     uploadFileRef.value?.cleanupExpiredFiles()
   }, 300000) // 5分钟清理一次
-  
+
   onBeforeUnmount(() => {
     clearInterval(cleanupTimer)
   })
@@ -940,6 +940,7 @@ const setupCleanupTimer = () => {
 ## 🚀 版本更新日志
 
 ### v2.1.0 (2025-08-17)
+
 - ✨ **新功能**：全新的文件全能框设计
 - ✨ **新功能**：实时别名编辑功能
 - ✨ **新功能**：智能进度显示（速度、剩余时间）
@@ -949,6 +950,7 @@ const setupCleanupTimer = () => {
 - 💄 **UI优化**：全新的视觉设计和交互体验
 
 ### v2.0.0 (2025-08-15)
+
 - 🔄 **重构**：完全重写组件架构
 - ✨ **新功能**：支持静态文件上传
 - ✨ **新功能**：支持图片专用上传
@@ -956,6 +958,7 @@ const setupCleanupTimer = () => {
 - 📖 **文档**：全新的使用手册
 
 ### v1.x.x
+
 - 基础文件上传功能
 - Element Plus 集成
 

@@ -75,6 +75,7 @@ interface FileItem {
     configId: number
     url: string
     dir?: string
+    fileSource?: number
 }
 
 interface FolderItem {

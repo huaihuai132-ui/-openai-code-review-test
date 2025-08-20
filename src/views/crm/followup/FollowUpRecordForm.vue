@@ -1,34 +1,19 @@
 <!-- 跟进记录的添加表单弹窗 -->
 <template>
   <Dialog v-model="dialogVisible" title="添加跟进记录" width="50%">
-    <el-form
-      ref="formRef"
-      v-loading="formLoading"
-      :model="formData"
-      :rules="formRules"
-      label-width="120px"
-    >
+    <el-form ref="formRef" v-loading="formLoading" :model="formData" :rules="formRules" label-width="120px">
       <el-row>
         <el-col :span="12">
           <el-form-item label="跟进类型" prop="type">
             <el-select v-model="formData.type" placeholder="请选择跟进类型">
-              <el-option
-                v-for="dict in getIntDictOptions(DICT_TYPE.CRM_FOLLOW_UP_TYPE)"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
+              <el-option v-for="dict in getIntDictOptions(DICT_TYPE.CRM_FOLLOW_UP_TYPE)" :key="dict.value"
+                :label="dict.label" :value="dict.value" />
             </el-select>
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="下次联系时间" prop="nextTime">
-            <el-date-picker
-              v-model="formData.nextTime"
-              placeholder="选择下次联系时间"
-              type="date"
-              value-format="x"
-            />
+            <el-date-picker v-model="formData.nextTime" placeholder="选择下次联系时间" type="date" value-format="x" />
           </el-form-item>
         </el-col>
         <el-col :span="24">
@@ -38,7 +23,7 @@
         </el-col>
         <el-col :span="12">
           <el-form-item label="图片" prop="picUrls">
-            <UploadImgs v-model="formData.picUrls" class="min-w-80px" />
+            <StaticImgUpload v-model:fileList="formData.picUrls" class="min-w-80px" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -73,16 +58,8 @@
   </Dialog>
 
   <!-- 弹窗 -->
-  <ContactListModal
-    ref="contactTableSelectRef"
-    :customer-id="formData.bizId"
-    @success="handleAddContact"
-  />
-  <BusinessListModal
-    ref="businessTableSelectRef"
-    :customer-id="formData.bizId"
-    @success="handleAddBusiness"
-  />
+  <ContactListModal ref="contactTableSelectRef" :customer-id="formData.bizId" @success="handleAddContact" />
+  <BusinessListModal ref="businessTableSelectRef" :customer-id="formData.bizId" @success="handleAddBusiness" />
 </template>
 <script lang="ts" setup>
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
@@ -94,6 +71,7 @@ import BusinessListModal from '@/views/crm/business/components/BusinessListModal
 import * as BusinessApi from '@/api/crm/business'
 import ContactListModal from '@/views/crm/contact/components/ContactListModal.vue'
 import * as ContactApi from '@/api/crm/contact'
+import { StaticImgUpload } from '@/components/UploadFile'
 
 defineOptions({ name: 'FollowUpRecordForm' })
 

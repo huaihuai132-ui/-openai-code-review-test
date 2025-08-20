@@ -4,7 +4,7 @@
       <h1>📁 文件上传组件综合测试</h1>
       <p>测试四个文件上传组件的完整功能展示</p>
     </div>
-    
+
     <!-- 测试组件卡片 -->
     <div class="test-cards">
       <template v-for="(testCase, index) in testCases" :key="testCase.id">
@@ -25,110 +25,66 @@
               </div>
             </div>
           </template>
-          
+
           <!-- 表单内容 -->
-          <el-form 
-            :model="testCase.form" 
-            :rules="testCase.rules" 
-            :ref="el => setFormRef(testCase.id, el)"
-            label-width="120px"
-            class="test-form"
-          >
+          <el-form :model="testCase.form" :rules="testCase.rules" :ref="el => setFormRef(testCase.id, el)"
+            label-width="120px" class="test-form">
             <!-- 动态表单字段 -->
             <template v-for="field in testCase.fields" :key="field.prop">
               <el-form-item :label="field.label" :prop="field.prop">
                 <!-- 文本输入 -->
-                <el-input 
-                  v-if="field.type === 'input'"
-                  v-model="testCase.form[field.prop]" 
-                  :placeholder="field.placeholder"
-                  :readonly="field.readonly"
-                />
-                
+                <el-input v-if="field.type === 'input'" v-model="testCase.form[field.prop]"
+                  :placeholder="field.placeholder" :readonly="field.readonly" />
+
                 <!-- 数字输入 -->
-                <el-input-number 
-                  v-else-if="field.type === 'number'"
-                  v-model="testCase.form[field.prop]" 
-                  :min="field.min || 0"
-                  :precision="field.precision || 2"
-                  :placeholder="field.placeholder"
-                  style="width: 100%;"
-                />
-                
+                <el-input-number v-else-if="field.type === 'number'" v-model="testCase.form[field.prop]"
+                  :min="field.min || 0" :precision="field.precision || 2" :placeholder="field.placeholder"
+                  style="width: 100%;" />
+
                 <!-- 文本域 -->
-                <el-input 
-                  v-else-if="field.type === 'textarea'"
-                  v-model="testCase.form[field.prop]" 
-                  type="textarea"
-                  :placeholder="field.placeholder"
-                  :rows="field.rows || 3"
-                />
-                
+                <el-input v-else-if="field.type === 'textarea'" v-model="testCase.form[field.prop]" type="textarea"
+                  :placeholder="field.placeholder" :rows="field.rows || 3" />
+
                 <!-- 选择器 -->
-                <el-select 
-                  v-else-if="field.type === 'select'"
-                  v-model="testCase.form[field.prop]" 
-                  :placeholder="field.placeholder"
-                  style="width: 100%;"
-                >
-                  <el-option 
-                    v-for="option in field.options" 
-                    :key="option.value"
-                    :label="option.label" 
-                    :value="option.value" 
-                  />
+                <el-select v-else-if="field.type === 'select'" v-model="testCase.form[field.prop]"
+                  :placeholder="field.placeholder" style="width: 100%;">
+                  <el-option v-for="option in field.options" :key="option.value" :label="option.label"
+                    :value="option.value" />
                 </el-select>
               </el-form-item>
             </template>
-            
+
             <!-- 文件上传组件 -->
             <el-form-item label="文件上传" prop="fileList">
               <!-- UploadFile 单文件上传 -->
-              <UploadFile 
-                v-if="testCase.componentName === 'UploadFile'"
-                :ref="el => setUploadRef(testCase.id, el)"
-                v-model:fileList="testCase.form.fileList"
-                :sequence-code="testCase.form.sequenceCode"
-                v-bind="testCase.uploadProps"
-              />
-              
+              <UploadFile v-if="testCase.componentName === 'UploadFile'" :ref="el => setUploadRef(testCase.id, el)"
+                v-model:fileList="testCase.form.fileList" :sequence-code="testCase.form.sequenceCode"
+                v-bind="testCase.uploadProps" />
+
               <!-- BatchFileUpload 批量文件上传 -->
-              <BatchFileUpload 
-                v-else-if="testCase.componentName === 'BatchFileUpload'"
-                :ref="el => setUploadRef(testCase.id, el)"
-                v-model:fileList="testCase.form.fileList"
-                :sequence-code="testCase.form.sequenceCode"
-                v-bind="testCase.uploadProps"
-              />
-              
+              <BatchFileUpload v-else-if="testCase.componentName === 'BatchFileUpload'"
+                :ref="el => setUploadRef(testCase.id, el)" v-model:fileList="testCase.form.fileList"
+                :sequence-code="testCase.form.sequenceCode" v-bind="testCase.uploadProps" />
+
               <!-- StaticFileUpload 静态文件上传 -->
-              <StaticFileUpload 
-                v-else-if="testCase.componentName === 'StaticFileUpload'"
-                :ref="el => setUploadRef(testCase.id, el)"
-                v-model:fileList="testCase.form.fileList"
-                :sequence-code="testCase.form.sequenceCode"
-                v-bind="testCase.uploadProps"
-              />
-              
+              <StaticFileUpload v-else-if="testCase.componentName === 'StaticFileUpload'"
+                :ref="el => setUploadRef(testCase.id, el)" v-model:fileList="testCase.form.fileList"
+                :sequence-code="testCase.form.sequenceCode" v-bind="testCase.uploadProps" />
+
               <!-- StaticImgUpload 静态图片上传 -->
-              <StaticImgUpload 
-                v-else-if="testCase.componentName === 'StaticImgUpload'"
-                :ref="el => setUploadRef(testCase.id, el)"
-                v-model:fileList="testCase.form.fileList"
-                :sequence-code="testCase.form.sequenceCode"
-                v-bind="testCase.uploadProps"
-              />
-              
+              <StaticImgUpload v-else-if="testCase.componentName === 'StaticImgUpload'"
+                :ref="el => setUploadRef(testCase.id, el)" v-model:fileList="testCase.form.fileList"
+                :sequence-code="testCase.form.sequenceCode" v-bind="testCase.uploadProps" />
+
+              <!-- UploadImg 头像上传 -->
+              <UploadImg v-else-if="testCase.componentName === 'UploadImg'" v-model="testCase.form.avatarUrl"
+                v-bind="testCase.uploadProps" />
 
             </el-form-item>
-            
+
             <!-- 操作按钮 -->
             <el-form-item class="action-buttons">
-              <el-button 
-                type="primary" 
-                @click="submitForm(testCase)"
-                :loading="testCase.submitting"
-              >
+              <el-button type="primary" @click="submitForm(testCase)" :loading="testCase.submitting">
                 提交表单
               </el-button>
               <el-button @click="resetForm(testCase)">重置表单</el-button>
@@ -160,6 +116,11 @@
       <el-button @click="togglePreview">{{ showPreview ? '隐藏' : '显示' }}预览</el-button>
       <el-button @click="toggleDev">{{ isDev ? '隐藏' : '显示' }}调试信息</el-button>
 
+      <!-- 自动重置开关 -->
+      <div class="auto-reset-control">
+        <el-switch v-model="autoResetAfterSubmit" active-text="提交后自动重置" inactive-text="手动重置"
+          style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949" />
+      </div>
     </div>
   </div>
 </template>
@@ -169,7 +130,7 @@ import { ref, reactive, onMounted, onBeforeUnmount, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 // TagProps type used in getTestCaseType function
 import type { TagProps } from 'element-plus'
-import { UploadFile, BatchFileUpload, StaticFileUpload, StaticImgUpload } from '@/components/UploadFile'
+import { UploadFile, BatchFileUpload, StaticFileUpload, StaticImgUpload, UploadImg } from '@/components/UploadFile'
 
 // ================= 类型定义 =================
 interface FormField {
@@ -187,7 +148,7 @@ interface FormField {
 interface TestCase {
   id: string
   title: string
-  componentName: 'UploadFile' | 'BatchFileUpload' | 'StaticFileUpload' | 'StaticImgUpload'
+  componentName: 'UploadFile' | 'BatchFileUpload' | 'StaticFileUpload' | 'StaticImgUpload' | 'UploadImg'
   description: string
   form: Record<string, any>
   rules: Record<string, any>
@@ -202,6 +163,7 @@ const uploadRefs = ref<Record<string, any>>({})
 const showPreview = ref(false)
 const previewData = ref({})
 const isDev = ref(false) // 默认关闭调试模式
+const autoResetAfterSubmit = ref(true) // 提交成功后自动重置表单
 
 // ================= 测试案例配置 =================
 const testCases = reactive<TestCase[]>([
@@ -428,11 +390,127 @@ const testCases = reactive<TestCase[]>([
       fileSize: 5,
       tip: '支持上传单张图片，文件大小不超过5MB，支持jpg/png/gif/webp格式'
     }
+  },
+  {
+    id: 'avatar-upload',
+    title: '头像上传测试 (UploadImg)',
+    componentName: 'UploadImg',
+    description: '测试圆形头像上传功能',
+    submitting: false,
+    form: {
+      userName: '',
+      userEmail: '',
+      avatarUrl: '' // 注意：这里是 avatarUrl，不是 fileList
+    },
+    rules: {
+      userName: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+      userEmail: [
+        { required: true, message: '请输入邮箱', trigger: 'blur' },
+        { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+      ],
+      avatarUrl: [{ required: true, message: '请上传头像', trigger: 'change' }]
+    },
+    fields: [
+      {
+        prop: 'userName',
+        label: '用户名',
+        type: 'input',
+        placeholder: '请输入用户名'
+      },
+      {
+        prop: 'userEmail',
+        label: '邮箱',
+        type: 'input',
+        placeholder: '请输入邮箱地址'
+      }
+    ],
+    uploadProps: {
+      size: 120,
+      fileSize: 5,
+      directory: 'avatars',
+      tip: '建议上传 1:1 比例的图片，文件大小不超过 5MB'
+    }
+  },
+  {
+    id: 'view-mode-test',
+    title: '查看模式测试 (UploadFile - View)',
+    componentName: 'UploadFile',
+    description: '测试查看模式，只读不可编辑',
+    submitting: false,
+    form: {
+      title: '示例文档',
+      description: '这是一个查看模式的测试用例',
+      fileList: [143] as number[] // 使用真实的文件ID
+    },
+    rules: {},
+    fields: [
+      {
+        prop: 'title',
+        label: '文档标题',
+        type: 'input',
+        readonly: true
+      },
+      {
+        prop: 'description',
+        label: '文档描述',
+        type: 'textarea',
+        readonly: true,
+        rows: 2
+      }
+    ],
+    uploadProps: {
+      key: 'view-upload',
+      fileType: 'common',
+      mode: 'view',
+      directory: 'view-test',
+      tip: '查看模式：只能预览和下载，不能上传或删除文件'
+    }
+  },
+  {
+    id: 'edit-mode-test',
+    title: '编辑模式测试 (UploadFile - Edit)',
+    componentName: 'UploadFile',
+    description: '测试编辑模式，可以修改已有文件',
+    submitting: false,
+    form: {
+      title: '可编辑文档',
+      description: '这是一个编辑模式的测试用例',
+      fileList: [143] as number[] // 使用真实的文件ID
+    },
+    rules: {
+      title: [{ required: true, message: '请输入文档标题', trigger: 'blur' }],
+      fileList: [{ required: true, message: '请确保有文件', trigger: 'change' }]
+    },
+    fields: [
+      {
+        prop: 'title',
+        label: '文档标题',
+        type: 'input',
+        placeholder: '请输入文档标题'
+      },
+      {
+        prop: 'description',
+        label: '文档描述',
+        type: 'textarea',
+        placeholder: '请输入文档描述',
+        rows: 2
+      }
+    ],
+    uploadProps: {
+      key: 'edit-upload',
+      fileType: 'common',
+      mode: 'edit',
+      directory: 'edit-test',
+      tip: '编辑模式：可以删除已有文件，上传新文件，未保存时只清理新文件'
+    }
   }
 ])
 
 // ================= 计算属性 =================
 const hasFiles = computed(() => (testCase: TestCase) => {
+  if (testCase.componentName === 'UploadImg') {
+    return testCase.form.avatarUrl && testCase.form.avatarUrl.length > 0
+  }
   return testCase.form.fileList && testCase.form.fileList.length > 0
 })
 
@@ -441,7 +519,8 @@ const getTestCaseType = computed(() => (testCase: TestCase): TagProps['type'] =>
     'UploadFile': 'primary',
     'BatchFileUpload': 'success',
     'StaticFileUpload': 'warning',
-    'StaticImgUpload': 'danger'
+    'StaticImgUpload': 'danger',
+    'UploadImg': 'info'
   }
   return typeMap[testCase.componentName] || 'info'
 })
@@ -463,7 +542,7 @@ const setUploadRef = (id: string, el: any) => {
 const submitForm = async (testCase: TestCase) => {
   try {
     testCase.submitting = true
-    
+
     // 1. 验证表单
     const formRef = formRefs.value[testCase.id]
     const formValid = await formRef?.validate()
@@ -471,19 +550,31 @@ const submitForm = async (testCase: TestCase) => {
       ElMessage.error(`请填写完整的${testCase.title}信息`)
       return
     }
-    
-    // 2. 验证文件上传
+
+    // 2. 验证文件上传（UploadImg 组件不需要验证）
     const uploadRef = uploadRefs.value[testCase.id]
-    const fileValidation = uploadRef?.validateFiles?.()
-    if (fileValidation && !fileValidation.valid) {
-      ElMessage.error(fileValidation.message)
-      return
+    if (testCase.componentName !== 'UploadImg') {
+      const fileValidation = uploadRef?.validateFiles?.()
+      if (fileValidation && !fileValidation.valid) {
+        ElMessage.error(fileValidation.message)
+        return
+      }
     }
-    
-    // 3. 获取文件信息
-    const fileList = uploadRef?.getFileList?.() || []
-    const fileDetails = uploadRef?.getFileDetails?.() || []
-    
+
+    // 3. 获取文件信息（UploadImg 组件直接使用 avatarUrl）
+    let fileList: any[] = []
+    let fileDetails: any[] = []
+
+    if (testCase.componentName === 'UploadImg') {
+      // UploadImg 组件直接返回 URL
+      fileList = testCase.form.avatarUrl ? [testCase.form.avatarUrl] : []
+      fileDetails = testCase.form.avatarUrl ? [{ url: testCase.form.avatarUrl, type: 'avatar' }] : []
+    } else {
+      // 其他组件使用原有逻辑
+      fileList = uploadRef?.getFileList?.() || []
+      fileDetails = uploadRef?.getFileDetails?.() || []
+    }
+
     // 4. 构造提交数据
     const submitData = {
       testCaseId: testCase.id,
@@ -494,22 +585,32 @@ const submitForm = async (testCase: TestCase) => {
       fileDetails,
       submitTime: new Date().toISOString()
     }
-    
+
     console.log(`=== ${testCase.title} 提交数据 ===`)
     console.log(JSON.stringify(submitData, null, 2))
-    
+
     // 5. 模拟提交延迟
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 6. 标记文件为已保存
-    uploadRef?.markFilesAsSaved?.()
-    
+
+    // 6. 标记文件为已保存（UploadImg 组件不需要）
+    if (testCase.componentName !== 'UploadImg') {
+      // 注意：markFilesAsSaved 方法已被移除，这里不再调用
+      // uploadRef?.markFilesAsSaved?.()
+    }
+
     // 7. 显示预览数据
     previewData.value = submitData
     showPreview.value = true
-    
+
     ElMessage.success(`${testCase.title} 提交成功！`)
-    
+
+    // 8. 提交成功后重置表单（避免重复提交相同文件）
+    if (autoResetAfterSubmit.value) {
+      setTimeout(() => {
+        resetFormAfterSubmit(testCase)
+      }, 1000) // 延迟1秒重置，让用户看到成功提示
+    }
+
   } catch (error) {
     console.error(`${testCase.title} 提交失败:`, error)
     ElMessage.error(`${testCase.title} 提交失败，请重试`)
@@ -518,28 +619,68 @@ const submitForm = async (testCase: TestCase) => {
   }
 }
 
+// 提交成功后重置表单
+const resetFormAfterSubmit = (testCase: TestCase) => {
+  console.log(`重置表单: ${testCase.title}`)
+
+  // 重置文件列表
+  if (testCase.componentName === 'UploadImg') {
+    testCase.form.avatarUrl = ''
+  } else {
+    testCase.form.fileList = []
+  }
+
+  // 重置文件上传组件
+  const uploadRef = uploadRefs.value[testCase.id]
+  uploadRef?.resetComponent?.()
+
+  // 重置表单字段（除了只读字段）
+  const formRef = formRefs.value[testCase.id]
+  if (formRef) {
+    // 只重置非只读字段
+    Object.keys(testCase.form).forEach(key => {
+      const field = testCase.fields.find(f => f.prop === key)
+      if (field && !field.readonly) {
+        if (key !== 'fileList' && key !== 'avatarUrl') { // 文件字段已经单独处理
+          if (typeof testCase.form[key] === 'string') {
+            testCase.form[key] = ''
+          } else if (typeof testCase.form[key] === 'number') {
+            testCase.form[key] = 0
+          }
+        }
+      }
+    })
+  }
+
+  ElMessage.info(`${testCase.title} 表单已重置，可以开始新的操作`)
+}
+
 const resetForm = async (testCase: TestCase) => {
   try {
     await ElMessageBox.confirm(
-      `确定要重置 ${testCase.title} 吗？这将清理已上传的文件。`, 
+      `确定要重置 ${testCase.title} 吗？这将清理已上传的文件。`,
       '确认重置',
       { type: 'warning' }
     )
-    
-    // 清理未保存的文件
+
+    // 清理未保存的文件（注意：clearUnsavedFiles 方法已被移除）
     const uploadRef = uploadRefs.value[testCase.id]
-    await uploadRef?.clearUnsavedFiles?.()
-    
+    // await uploadRef?.clearUnsavedFiles?.()
+
     // 重置表单数据
     const formRef = formRefs.value[testCase.id]
     formRef?.resetFields()
-    
+
     // 重置文件列表
-    testCase.form.fileList = []
-    
+    if (testCase.componentName === 'UploadImg') {
+      testCase.form.avatarUrl = ''
+    } else {
+      testCase.form.fileList = []
+    }
+
     // 重置文件上传组件
     uploadRef?.resetComponent?.()
-    
+
     ElMessage.success(`${testCase.title} 重置成功`)
   } catch (error) {
     if (error !== 'cancel') {
@@ -549,13 +690,25 @@ const resetForm = async (testCase: TestCase) => {
 }
 
 const validateFiles = (testCase: TestCase) => {
+  if (testCase.componentName === 'UploadImg') {
+    // UploadImg 组件验证
+    if (testCase.form.avatarUrl) {
+      ElMessage.success(`${testCase.title} 头像验证通过！`)
+      console.log(`${testCase.title} 头像URL:`, testCase.form.avatarUrl)
+    } else {
+      ElMessage.error(`${testCase.title} 请先上传头像`)
+    }
+    return
+  }
+
+  // 其他组件验证
   const uploadRef = uploadRefs.value[testCase.id]
   const validation = uploadRef?.validateFiles?.()
-  
+
   if (validation?.valid) {
     const fileList = uploadRef?.getFileList?.() || []
     const fileDetails = uploadRef?.getFileDetails?.() || []
-    
+
     ElMessage.success(`${testCase.title} 文件验证通过！已上传 ${fileList.length} 个文件`)
     console.log(`${testCase.title} 文件ID列表:`, fileList)
     console.log(`${testCase.title} 文件详细信息:`, fileDetails)
@@ -567,14 +720,26 @@ const validateFiles = (testCase: TestCase) => {
 const clearFiles = async (testCase: TestCase) => {
   try {
     await ElMessageBox.confirm(
-      `确定要清理 ${testCase.title} 中所有未保存的文件吗？`, 
+      `确定要清理 ${testCase.title} 中的文件吗？`,
       '确认清理',
       { type: 'warning' }
     )
-    
-    const uploadRef = uploadRefs.value[testCase.id]
-    await uploadRef?.clearUnsavedFiles?.()
-    ElMessage.success(`${testCase.title} 文件清理完成`)
+
+    if (testCase.componentName === 'UploadImg') {
+      // UploadImg 组件直接清空 URL
+      testCase.form.avatarUrl = ''
+      ElMessage.success(`${testCase.title} 头像清理完成`)
+    } else {
+      // 其他组件的清理方法已被移除，这里只重置表单
+      if (testCase.componentName === 'UploadFile') {
+        testCase.form.fileList = []
+      } else {
+        testCase.form.fileList = []
+      }
+      const uploadRef = uploadRefs.value[testCase.id]
+      uploadRef?.resetComponent?.()
+      ElMessage.success(`${testCase.title} 文件清理完成`)
+    }
   } catch (error) {
     if (error !== 'cancel') {
       console.error(`清理 ${testCase.title} 文件失败:`, error)
@@ -585,7 +750,7 @@ const clearFiles = async (testCase: TestCase) => {
 // ================= 全局操作方法 =================
 const submitAllForms = async () => {
   ElMessage.info('开始批量提交所有表单...')
-  
+
   for (const testCase of testCases) {
     if (hasFiles.value(testCase)) {
       await submitForm(testCase)
@@ -593,26 +758,26 @@ const submitAllForms = async () => {
       await new Promise(resolve => setTimeout(resolve, 500))
     }
   }
-  
+
   ElMessage.success('所有表单提交完成！')
 }
 
 const resetAllForms = async () => {
   try {
     await ElMessageBox.confirm(
-      '确定要重置所有表单吗？这将清理所有已上传的文件。', 
+      '确定要重置所有表单吗？这将清理所有已上传的文件。',
       '确认重置',
       { type: 'warning' }
     )
-    
+
     for (const testCase of testCases) {
       await resetForm(testCase)
     }
-    
+
     // 隐藏预览
     showPreview.value = false
     previewData.value = {}
-    
+
     ElMessage.success('所有表单重置完成')
   } catch (error) {
     if (error !== 'cancel') {
@@ -637,10 +802,11 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  // 清理所有未保存的文件
-  Object.values(uploadRefs.value).forEach(ref => {
-    ref?.clearUnsavedFiles?.()
-  })
+  // 清理所有未保存的文件（clearUnsavedFiles 方法已被移除）
+  // Object.values(uploadRefs.value).forEach(ref => {
+  //   ref?.clearUnsavedFiles?.()
+  // })
+  console.log('页面卸载，文件清理交由后端处理')
 })
 </script>
 
@@ -660,13 +826,13 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
   color: white;
-  
+
   h1 {
     margin: 0 0 8px 0;
     font-size: 28px;
     font-weight: 600;
   }
-  
+
   p {
     margin: 0;
     font-size: 16px;
@@ -685,27 +851,27 @@ onBeforeUnmount(() => {
   overflow: hidden;
   transition: all 0.3s ease;
   border: 2px solid transparent;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   }
-  
+
   &.has-files {
     border-color: #67c23a;
     background: linear-gradient(145deg, #f0f9ff 0%, #e0f2fe 100%);
   }
-  
+
   .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    
+
     .header-info {
       display: flex;
       align-items: center;
       gap: 12px;
-      
+
       h3 {
         margin: 0;
         font-size: 18px;
@@ -713,7 +879,7 @@ onBeforeUnmount(() => {
         color: #2c3e50;
       }
     }
-    
+
     .file-debug {
       font-size: 12px;
       font-family: 'Courier New', monospace;
@@ -731,13 +897,13 @@ onBeforeUnmount(() => {
 .test-form {
   .el-form-item {
     margin-bottom: 24px;
-    
+
     &.action-buttons {
       margin-top: 32px;
-      
+
       .el-button {
         margin-right: 12px;
-        
+
         &:last-child {
           margin-right: 0;
         }
@@ -749,7 +915,7 @@ onBeforeUnmount(() => {
 .preview-card {
   margin-bottom: 32px;
   border-radius: 12px;
-  
+
   .preview-content {
     pre {
       background: #2d3748;
@@ -761,22 +927,22 @@ onBeforeUnmount(() => {
       overflow: auto;
       max-height: 500px;
       margin: 0;
-      
+
       /* 滚动条样式 */
       &::-webkit-scrollbar {
         width: 8px;
         height: 8px;
       }
-      
+
       &::-webkit-scrollbar-track {
         background: #4a5568;
         border-radius: 4px;
       }
-      
+
       &::-webkit-scrollbar-thumb {
         background: #718096;
         border-radius: 4px;
-        
+
         &:hover {
           background: #a0aec0;
         }
@@ -788,25 +954,37 @@ onBeforeUnmount(() => {
 .global-actions {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 16px;
   padding: 24px;
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  
+
   .el-button {
     padding: 12px 24px;
     font-weight: 500;
     border-radius: 8px;
-    
+
     &.el-button--success {
       background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
       border: none;
     }
-    
+
     &.el-button--danger {
       background: linear-gradient(135deg, #f56c6c 0%, #f78989 100%);
       border: none;
+    }
+  }
+
+  .auto-reset-control {
+    margin-left: 20px;
+    padding-left: 20px;
+    border-left: 1px solid #e4e7ed;
+
+    .el-switch {
+      --el-switch-on-color: #13ce66;
+      --el-switch-off-color: #ff4949;
     }
   }
 }
@@ -816,19 +994,19 @@ onBeforeUnmount(() => {
   .upload-test-container {
     padding: 16px;
   }
-  
+
   .page-header {
     padding: 20px;
-    
+
     h1 {
       font-size: 24px;
     }
-    
+
     p {
       font-size: 14px;
     }
   }
-  
+
   .test-form {
     .el-form-item {
       &.action-buttons {
@@ -840,10 +1018,10 @@ onBeforeUnmount(() => {
       }
     }
   }
-  
+
   .global-actions {
     flex-direction: column;
-    
+
     .el-button {
       width: 100%;
     }

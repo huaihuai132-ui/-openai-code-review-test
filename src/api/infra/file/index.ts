@@ -7,6 +7,7 @@ export interface FileVO {
   url: string
   type: string
   size: number
+  fileSource?: number
   businessCode?: string
   dir?: string
   createTime: string
@@ -16,14 +17,12 @@ export interface FileVO {
 export interface FileShareVO {
   fileId: number
   userId: string
-  permission: number
   expiredTime?: string | null
 }
 
 export interface FileBatchShareVO {
   fileId: number
   userIds: string[]
-  permission: number
   expiredTime?: string | null
 }
 
@@ -39,7 +38,6 @@ export interface SharedFileVO {
   dir?: string
   createTime: string
   updateTime: string
-  permission: number
   expiredTime?: string | null
   sharerNickname: string
 }
@@ -62,7 +60,6 @@ export interface MySharedFileVO {
 export interface SharedToUser {
   userId: string
   nickname: string
-  permission: number
   expiredTime?: string | null
   shareTime: string
 }
@@ -89,6 +86,7 @@ export interface FileCreateReqVO {
   url: string
   type?: string
   size: number
+  fileSource?: number
   businessCode?: string
   dir?: string
 }
@@ -99,7 +97,7 @@ export const getFilePage = (params: any) => {
 }
 
 // 上传文件
-export const uploadFile = (file: File, directory?: string, businessCode?: string, dir?: string) => {
+export const uploadFile = (file: File, directory?: string, businessCode?: string, dir?: string, fileSource?: number) => {
   const formData = new FormData()
   formData.append('file', file)
   if (directory) {
@@ -110,6 +108,9 @@ export const uploadFile = (file: File, directory?: string, businessCode?: string
   }
   if (dir) {
     formData.append('dir', dir)
+  }
+  if (fileSource !== undefined) {
+    formData.append('fileSource', fileSource.toString())
   }
   return request.upload<string>({
     url: '/infra/file/upload',

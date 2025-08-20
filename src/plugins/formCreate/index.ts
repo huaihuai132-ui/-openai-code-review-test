@@ -63,7 +63,7 @@ import formCreate from '@form-create/element-ui'
 import install from '@form-create/element-ui/auto-import'
 
 //======================= 自定义组件 =======================
-import { UploadFile, UploadImg, UploadImgs } from '@/components/UploadFile'
+import { UploadFile, UploadImg, StaticImgUpload } from '@/components/UploadFile'
 import { useApiSelect } from '@/components/FormCreate'
 import { Editor } from '@/components/Editor'
 import DictSelect from '@/components/FormCreate/src/components/DictSelect.vue'
@@ -110,8 +110,8 @@ const components = [
   // ElFormItem,
   // ElOption,
   UploadImg,
-  UploadImgs,
   UploadFile,
+  StaticImgUpload,
   DictSelect,
   UserSelect,
   DeptSelect,

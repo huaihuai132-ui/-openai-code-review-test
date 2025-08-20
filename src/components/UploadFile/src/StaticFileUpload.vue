@@ -14,58 +14,20 @@
         <!-- 右上角删除按钮 -->
         <div v-if="fileBox.file && (mode === 'create' || mode === 'edit')" class="file-close-btn"
           @click.stop="deleteFile(index)">
-          <el-icon :size="14">
-            <Close />
-          </el-icon>
+          ❌
         </div>
 
         <!-- 空状态 -->
-        <div v-if="!fileBox.file" class="empty-state">
-          <el-icon class="plus-icon" :class="{ 'hover-blue': fileBox.isHover }">
-            <Plus />
-          </el-icon>
+        <div v-if="!fileBox.file && !fileBox.uploaded" class="empty-state">
+          <div class="plus-icon" :class="{ 'hover-blue': fileBox.isHover }">
+            ➕
+          </div>
           <div class="upload-text">
             {{ getEmptyStateText(index) }}
           </div>
         </div>
 
-        <!-- 已选择文件状态 -->
-        <div v-else-if="fileBox.file && !fileBox.uploading && !fileBox.uploaded" class="selected-state">
-          <!-- 文件图标 -->
-          <div class="file-icon">
-            <el-icon :size="48">
-              <Picture v-if="getFileIcon(fileBox.file) === 'Picture'" />
-              <VideoPlay v-else-if="getFileIcon(fileBox.file) === 'Video'" />
-              <Microphone v-else-if="getFileIcon(fileBox.file) === 'Audio'" />
-              <Folder v-else-if="getFileIcon(fileBox.file) === 'Folder'" />
-              <Document v-else />
-            </el-icon>
-          </div>
 
-          <!-- 文件名和编辑 -->
-          <div class="file-name-section">
-            <div v-if="!fileBox.editingName" class="file-name-display">
-              <div class="file-name-text" :title="fileBox.displayName">{{ fileBox.displayName }}</div>
-              <el-icon class="edit-icon" @click.stop="startEditName(index)">
-                <Edit />
-              </el-icon>
-            </div>
-            <div v-else class="file-name-edit">
-              <el-input v-model="fileBox.tempName" size="small" @keyup.enter="finishEditName(index)"
-                @keyup.esc="cancelEditName(index)" ref="nameInput" />
-              <el-icon class="confirm-icon" @click.stop="finishEditName(index)">
-                <Check />
-              </el-icon>
-            </div>
-          </div>
-
-          <!-- 上传按钮 -->
-          <div class="upload-button-section">
-            <el-button type="primary" size="small" @click.stop="uploadFile(index)">
-              上传文件
-            </el-button>
-          </div>
-        </div>
 
         <!-- 上传中状态 -->
         <div v-else-if="fileBox.uploading" class="uploading-state">
@@ -76,9 +38,7 @@
 
             <!-- 取消按钮 (悬停显示) -->
             <div v-if="fileBox.isHover" class="progress-cancel-btn" @click.stop="cancelUpload(index)">
-              <el-icon :size="16">
-                <Close />
-              </el-icon>
+              ❌
             </div>
 
             <!-- 进度信息 (非悬停显示) -->
@@ -91,27 +51,34 @@
 
         <!-- 上传完成状态 -->
         <div v-else-if="fileBox.uploaded" class="uploaded-state">
-          <div class="file-icon-container">
-            <div class="file-icon" @click="handlePreview(index)">
-              <el-icon :size="48">
-                <Picture v-if="getFileIcon(fileBox.file) === 'Picture'" />
-                <VideoPlay v-else-if="getFileIcon(fileBox.file) === 'Video'" />
-                <Microphone v-else-if="getFileIcon(fileBox.file) === 'Audio'" />
-                <Folder v-else-if="getFileIcon(fileBox.file) === 'Folder'" />
-                <Document v-else />
-              </el-icon>
+          <div class="file-icon-container" @click="handlePreview(index)">
+            <!-- 文件图标 -->
+            <div class="file-icon">
+              {{ getFileTypeIcon(fileBox.file?.name || fileBox.fileInfo?.name || '') }}
             </div>
-
-            <!-- 预览遮罩 -->
-            <div v-if="fileBox.isHover" class="preview-overlay" @click="handlePreview(index)">
-              <el-icon :size="24">
-                <View />
-              </el-icon>
-              <div class="preview-text">预览</div>
+            <!-- 预览悬浮层 -->
+            <div v-if="fileBox.isHover && mode !== 'view'" class="preview-overlay">
+              <div class="preview-icon">👁️</div>
+              <span class="preview-text">预览</span>
             </div>
           </div>
 
-          <div class="file-name">{{ fileBox.displayName }}</div>
+          <!-- 文件名和编辑 -->
+          <div class="file-name-section">
+            <div v-if="!fileBox.editingName || mode === 'view'" class="file-name-display">
+              <div class="file-name-text" :title="fileBox.displayName">{{ fileBox.displayName }}</div>
+              <div v-if="mode !== 'view'" class="edit-icon" @click.stop="startEditName(index)">
+                ✏️
+              </div>
+            </div>
+            <div v-else class="file-name-edit">
+              <el-input v-model="fileBox.tempName" size="small" @keyup.enter="finishEditName(index)"
+                @keyup.esc="cancelEditName(index)" ref="nameInput" />
+              <div class="confirm-icon" @click.stop="finishEditName(index)">
+                ✅
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 隐藏的文件输入框 -->
@@ -123,9 +90,9 @@
       <div v-if="fileBoxes.length < maxFiles && !sequenceCode" class="file-all-in-one-box add-more-box"
         @click="addNewFileBox">
         <div class="empty-state">
-          <el-icon class="plus-icon">
-            <Plus />
-          </el-icon>
+          <div class="plus-icon">
+            ➕
+          </div>
           <div class="upload-text">添加更多文件</div>
         </div>
       </div>
@@ -139,7 +106,6 @@
         </el-icon>
         {{ isUploading ? '上传中...' : `上传全部 (${selectedFilesCount})` }}
       </el-button>
-      <el-button @click="clearAllFiles">清空全部</el-button>
     </div>
 
     <!-- 提示信息 -->
@@ -158,21 +124,11 @@ import { ElMessage } from 'element-plus'
 import { useMessage } from '@/hooks/web/useMessage'
 import { useUserStore } from '@/store/modules/user'
 import axios from 'axios'
-import * as FileApi from '@/api/infra/file'
 import * as StaticFileApi from '@/api/infra/file/staticFile'
 import { FileBusinessSequenceApi } from '@/api/infra/file/fileBusinessSequence'
 import { base64Encode } from '@/utils'
+import { createImageViewer } from '@/components/ImageViewer'
 import {
-  Document,
-  Plus,
-  Picture,
-  Folder,
-  View,
-  Close,
-  VideoPlay,
-  Microphone,
-  Edit,
-  Check,
   Upload
 } from '@element-plus/icons-vue'
 
@@ -199,15 +155,14 @@ const props = withDefaults(defineProps<{
   directory?: string
   acceptTypes?: string[]
   fileSize?: number
-  accept?: string
   isShowTip?: boolean
   tip?: string
 }>(), {
   fileList: () => [],
   mode: 'create',
-  maxFiles: 5,
+  maxFiles: 999, // 不限制文件数量
   directory: 'static',
-  fileSize: 10,
+  fileSize: 0, // 不限制文件大小
   isShowTip: true
 })
 
@@ -320,7 +275,7 @@ const createEmptyFileBox = () => ({
 // 加载已有文件
 const loadExistingFiles = async () => {
   try {
-    const files = await FileApi.getFilesByIds(props.fileList as number[])
+    const files = await StaticFileApi.getStaticFilesByIds(props.fileList as number[])
     const fileData = files.data || files
 
     // 为每个已有文件创建文件框
@@ -350,7 +305,7 @@ const handleBoxClick = (index: number) => {
 }
 
 // 文件选择处理
-const handleFileSelect = (event: Event, index: number) => {
+const handleFileSelect = async (event: Event, index: number) => {
   const target = event.target as HTMLInputElement
   const files = target.files
   if (!files || files.length === 0) return
@@ -373,10 +328,13 @@ const handleFileSelect = (event: Event, index: number) => {
 
   // 清空input值，允许选择同一文件
   target.value = ''
+
+  // 自动上传
+  await uploadFile(index)
 }
 
 // 拖拽处理
-const handleDrop = (event: DragEvent, index: number) => {
+const handleDrop = async (event: DragEvent, index: number) => {
   event.preventDefault()
   const box = fileBoxes.value[index]
   if (props.mode === 'view' || box.uploaded) return
@@ -398,6 +356,9 @@ const handleDrop = (event: DragEvent, index: number) => {
   box.error = false
   box.progress = 0
   box.fileInfo = null
+
+  // 自动上传
+  await uploadFile(index)
 }
 
 // 开始编辑文件名
@@ -439,6 +400,81 @@ const getFileIcon = (file: File | null): string => {
   if (type.includes('zip') || type.includes('rar') || type.includes('7z')) return 'Folder'
 
   return 'Document'
+}
+
+// 获取文件类型图标（emoji）
+const getFileTypeIcon = (fileName: string): string => {
+  if (!fileName) return '📄'
+
+  const extension = fileName.toLowerCase().split('.').pop() || ''
+
+  // 图片文件
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tiff', 'tif'].includes(extension)) {
+    return '🖼️'
+  }
+
+  // PDF文件
+  if (extension === 'pdf') {
+    return '📕'
+  }
+
+  // Word文档
+  if (['doc', 'docx'].includes(extension)) {
+    return '📘'
+  }
+
+  // Excel文档
+  if (['xls', 'xlsx', 'xlsm', 'xlsb'].includes(extension)) {
+    return '📗'
+  }
+
+  // PowerPoint文档
+  if (['ppt', 'pptx', 'pps', 'ppsx'].includes(extension)) {
+    return '📙'
+  }
+
+  // 压缩文件
+  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(extension)) {
+    return '🗜️'
+  }
+
+  // 视频文件
+  if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', '3gp'].includes(extension)) {
+    return '🎬'
+  }
+
+  // 音频文件
+  if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma', 'm4a', 'opus'].includes(extension)) {
+    return '🎵'
+  }
+
+  // 代码文件
+  if (['js', 'jsx', 'ts', 'tsx', 'html', 'css', 'php', 'py', 'java', 'cpp', 'c', 'go', 'rs'].includes(extension)) {
+    return '💻'
+  }
+
+  // 文本文件
+  if (['txt', 'md', 'log', 'rtf'].includes(extension)) {
+    return '📝'
+  }
+
+  // 数据文件
+  if (['json', 'xml', 'csv', 'sql', 'yaml', 'yml'].includes(extension)) {
+    return '📊'
+  }
+
+  // 字体文件
+  if (['ttf', 'otf', 'woff', 'woff2', 'eot'].includes(extension)) {
+    return '🔤'
+  }
+
+  // 可执行文件
+  if (['exe', 'msi', 'dmg', 'deb', 'rpm', 'app'].includes(extension)) {
+    return '⚙️'
+  }
+
+  // 默认文档图标
+  return '📄'
 }
 
 // ========== 上传相关方法 ==========
@@ -589,7 +625,10 @@ const deleteFile = async (index: number) => {
   if (box.uploaded && box.fileInfo?.id) {
     // 删除已上传的文件
     try {
-      await message.delConfirm('确定要删除这个文件吗？')
+      const confirmMessage = props.mode === 'edit'
+        ? '确定要永久删除这个文件吗？删除后无法恢复！'
+        : '确定要删除这个文件吗？'
+      await message.delConfirm(confirmMessage)
 
       console.log('静态文件上传-删除文件 - fileInfo:', box.fileInfo)
       const fileId = box.fileInfo.id
@@ -635,40 +674,7 @@ const deleteFile = async (index: number) => {
   updateUploadedFileIds()
 }
 
-// 清空所有文件
-const clearAllFiles = async () => {
-  try {
-    await message.delConfirm('确定要清空所有文件吗？')
 
-    // 删除已上传的文件
-    for (const box of fileBoxes.value) {
-      if (box.uploaded && box.fileInfo?.id && !box.saved) {
-        try {
-          const fileId = box.fileInfo.id
-          await StaticFileApi.deleteStaticFile(fileId)
-        } catch (error) {
-          console.error('清理文件失败:', error)
-        }
-      }
-    }
-
-    // 重置文件框
-    if (props.sequenceCode) {
-      // 序列模式：重新初始化
-      initFileBoxes()
-    } else {
-      // 普通模式：保留一个空框
-      fileBoxes.value = [createEmptyFileBox()]
-    }
-
-    updateUploadedFileIds()
-    message.success('已清空所有文件')
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('清空文件失败:', error)
-    }
-  }
-}
 
 // 处理预览
 const handlePreview = async (index: number) => {
@@ -683,8 +689,12 @@ const handlePreview = async (index: number) => {
 
     // 静态文件预览
     if (fileInfo.type && fileInfo.type.includes('image')) {
-      // 静态图片文件：使用现有的图片预览功能
-      return
+      // 静态图片文件：使用图片查看器预览
+      console.log('预览静态图片:', fileInfo.url)
+      createImageViewer({
+        zIndex: 9999999,
+        urlList: [fileInfo.url]
+      })
     } else {
       // 静态非图片文件：拼接预览地址
       const staticFileUrl = `${fileInfo.url}` + `?nickname=${nickname}`
@@ -698,59 +708,12 @@ const handlePreview = async (index: number) => {
   }
 }
 
-// 清空所有未保存的文件
-const clearUnsavedFiles = async () => {
-  // 只清理已上传但未保存的文件
-  const unsavedFiles = fileBoxes.value.filter(box =>
-    box.uploaded && box.fileInfo?.id && !box.saved
-  )
 
-  console.log('静态文件上传-准备清理未保存的文件:', unsavedFiles.length, '个')
-
-  for (const box of unsavedFiles) {
-    try {
-      const fileId = box.fileInfo.id
-
-      // 确保fileId是有效的数字类型
-      if (!fileId || typeof fileId === 'object') {
-        console.error('清理文件时发现无效ID:', fileId)
-        continue
-      }
-
-      console.log('静态文件上传-清理文件:', fileId, box.fileInfo.name)
-
-      await StaticFileApi.deleteStaticFile(fileId)
-
-      console.log('静态文件上传-文件清理成功:', fileId)
-    } catch (error) {
-      console.error('清理文件失败:', error)
-    }
-  }
-}
 
 // ========== 工具方法 ==========
-// 验证文件
-const validateFile = (file: File): boolean => {
-  // 检查文件类型
-  if (props.acceptTypes && props.acceptTypes.length > 0) {
-    const fileExtension = getFileExtension(file.name).toLowerCase()
-    const isValidType = props.acceptTypes.some(type =>
-      type.toLowerCase() === fileExtension
-    )
-
-    if (!isValidType) {
-      message.error(`不支持的文件类型：${fileExtension}`)
-      return false
-    }
-  }
-
-  // 检查文件大小
-  const maxSize = props.fileSize * 1024 * 1024 // MB转字节
-  if (file.size > maxSize) {
-    message.error(`文件大小不能超过 ${props.fileSize}MB`)
-    return false
-  }
-
+// 验证文件（静态文件上传不限制类型和大小）
+const validateFile = (_file: File): boolean => {
+  // 静态文件上传不做任何限制
   return true
 }
 
@@ -869,26 +832,9 @@ const resetComponent = () => {
   initFileBoxes()
 }
 
-// 标记文件为已保存（表单提交成功后调用，避免被清理）
-const markFilesAsSaved = () => {
-  fileBoxes.value.forEach(box => {
-    if (box.uploaded && box.fileInfo) {
-      box.saved = true
-    }
-  })
-}
-
 // ========== 生命周期 ==========
 onMounted(() => {
   initFileBoxes()
-
-  // 监听页面刷新和关闭事件
-  window.addEventListener('beforeunload', clearUnsavedFiles)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('beforeunload', clearUnsavedFiles)
-  clearUnsavedFiles()
 })
 
 // ========== 监听器 ==========
@@ -910,12 +856,10 @@ watch(
 
 // 暴露方法给父组件
 defineExpose({
-  clearUnsavedFiles,
   getFileList,
   getFileDetails,
   validateFiles,
-  resetComponent,
-  markFilesAsSaved
+  resetComponent
 })
 </script>
 

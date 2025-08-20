@@ -4,7 +4,6 @@
     <div class="file-boxes-container">
       <div v-for="(fileBox, index) in fileBoxes" :key="index" class="file-all-in-one-box" :class="{
         'is-empty': !fileBox.file,
-        'is-selected': fileBox.file && !fileBox.uploading && !fileBox.uploaded,
         'is-uploading': fileBox.uploading,
         'is-uploaded': fileBox.uploaded,
         'is-error': fileBox.error,
@@ -20,50 +19,12 @@
         </div>
 
         <!-- 空状态 -->
-        <div v-if="!fileBox.file" class="empty-state">
-          <el-icon class="plus-icon" :class="{ 'hover-blue': fileBox.isHover }">
-            <Plus />
-          </el-icon>
+        <div v-if="!fileBox.file && !fileBox.uploaded" class="empty-state">
+          <div class="plus-icon" :class="{ 'hover-blue': fileBox.isHover }">
+            ➕
+          </div>
           <div class="upload-text">
             {{ getEmptyStateText(index) }}
-          </div>
-        </div>
-
-        <!-- 已选择文件状态 -->
-        <div v-else-if="fileBox.file && !fileBox.uploading && !fileBox.uploaded" class="selected-state">
-          <!-- 文件图标 -->
-          <div class="file-icon">
-            <el-icon :size="48">
-              <Picture v-if="getFileIcon(fileBox.file) === 'Picture'" />
-              <VideoPlay v-else-if="getFileIcon(fileBox.file) === 'Video'" />
-              <Microphone v-else-if="getFileIcon(fileBox.file) === 'Audio'" />
-              <Folder v-else-if="getFileIcon(fileBox.file) === 'Folder'" />
-              <Document v-else />
-            </el-icon>
-          </div>
-
-          <!-- 文件名和编辑 -->
-          <div class="file-name-section">
-            <div v-if="!fileBox.editingName" class="file-name-display">
-              <div class="file-name-text" :title="fileBox.displayName">{{ fileBox.displayName }}</div>
-              <el-icon class="edit-icon" @click.stop="startEditName(index)">
-                <Edit />
-              </el-icon>
-            </div>
-            <div v-else class="file-name-edit">
-              <el-input v-model="fileBox.tempName" size="small" @keyup.enter="finishEditName(index)"
-                @keyup.esc="cancelEditName(index)" ref="nameInput" />
-              <el-icon class="confirm-icon" @click.stop="finishEditName(index)">
-                <Check />
-              </el-icon>
-            </div>
-          </div>
-
-          <!-- 上传按钮 -->
-          <div class="upload-button-section">
-            <el-button type="primary" size="small" @click.stop="uploadFile(index)">
-              上传文件
-            </el-button>
           </div>
         </div>
 
@@ -92,27 +53,40 @@
           <div class="file-icon-container" @click.stop="handlePreview(index)">
             <!-- 文件图标 -->
             <div class="file-icon">
-              <el-icon :size="48">
-                <Picture v-if="getFileIcon(fileBox.file) === 'Picture'" />
-                <VideoPlay v-else-if="getFileIcon(fileBox.file) === 'Video'" />
-                <Microphone v-else-if="getFileIcon(fileBox.file) === 'Audio'" />
-                <Folder v-else-if="getFileIcon(fileBox.file) === 'Folder'" />
-                <Document v-else />
-              </el-icon>
+              {{ getFileTypeIcon(fileBox.file?.name || fileBox.fileInfo?.name || '') }}
             </div>
             <!-- 预览悬浮层 -->
             <div v-if="fileBox.isHover && mode !== 'view'" class="preview-overlay">
-              <el-icon :size="20">
-                <View />
-              </el-icon>
+              <div class="preview-icon">👁️</div>
               <span class="preview-text">预览</span>
             </div>
           </div>
 
-          <!-- 文件名 -->
-          <div class="file-name">
-            {{ fileBox.displayName }}
+          <!-- 文件名和编辑 -->
+          <div class="file-name-section">
+            <div v-if="!fileBox.editingName || mode === 'view'" class="file-name-display">
+              <div class="file-name-text" :title="fileBox.displayName">{{ fileBox.displayName }}</div>
+              <div v-if="mode !== 'view'" class="edit-icon" @click.stop="startEditName(index)">
+                ✏️
+              </div>
+            </div>
+            <div v-else class="file-name-edit">
+              <el-input v-model="fileBox.tempName" size="small" @keyup.enter="finishEditName(index)"
+                @keyup.esc="cancelEditName(index)" ref="nameInput" />
+              <div class="confirm-icon" @click.stop="finishEditName(index)">
+                ✅
+              </div>
+            </div>
           </div>
+        </div>
+
+        <!-- 错误状态 -->
+        <div v-else-if="fileBox.error" class="error-state">
+          <div class="error-icon">❌</div>
+          <div class="error-text">上传失败</div>
+          <el-button size="small" type="primary" @click.stop="retryUpload(index)">
+            重试
+          </el-button>
         </div>
 
         <!-- 隐藏的文件输入 -->
@@ -142,21 +116,11 @@ const instanceId = Math.random().toString(36).substring(2, 15)
 import { propTypes } from '@/utils/propTypes'
 // import { useUpload } from '@/components/UploadFile/src/useUpload'
 import * as FileApi from '@/api/infra/file'
-import * as StaticFileApi from '@/api/infra/file/staticFile'
 import { FileBusinessSequenceApi } from '@/api/infra/file/fileBusinessSequence'
 import { base64Encode } from '@/utils'
 import { useUserStore } from '@/store/modules/user'
 import {
-  Document,
-  Plus,
-  Picture,
-  Folder,
-  View,
-  Close,
-  VideoPlay,
-  Microphone,
-  Edit,
-  Check
+  Close
 } from '@element-plus/icons-vue'
 
 defineOptions({ name: 'UploadFile' })
@@ -184,14 +148,12 @@ const props = defineProps({
   mode: propTypes.string.def('create'),
   // 序列编码，用于业务文件序列
   sequenceCode: propTypes.string.def(''),
-  // 文件类型：common(普通文件) 或 static(静态文件)
-  fileType: propTypes.string.def('common'),
-  // 文件格式限制
+  // 文件格式限制（已移除限制）
   acceptTypes: propTypes.array.def([]),
-  // 文件大小限制(MB)
-  fileSize: propTypes.number.def(10),
+  // 文件大小限制（已移除限制）
+  fileSize: propTypes.number.def(0),
   // 是否显示提示
-  isShowTip: propTypes.bool.def(true),
+  isShowTip: propTypes.bool.def(false),
   // 上传目录
   directory: propTypes.string.def(''),
   // 虚拟目录
@@ -201,7 +163,9 @@ const props = defineProps({
   // 提示文字
   tip: propTypes.string.def(''),
   // 最大文件数量（用于多文件模式）
-  maxFiles: propTypes.number.def(1)
+  maxFiles: propTypes.number.def(1),
+  // 文件来源（0=业务文件，1=个人文件）
+  fileSource: propTypes.number.def(0)
 })
 
 // ========== 响应式数据 ==========
@@ -232,8 +196,6 @@ const sequenceInfo = ref<Array<{
 // 已上传的文件ID列表
 const uploadedFileIds = ref<number[]>([])
 
-// const { uploadUrl, httpRequest: originalHttpRequest } = useUpload(props.directory)
-
 // ========== 初始化方法 ==========
 // 初始化文件框
 const initFileBoxes = async () => {
@@ -241,10 +203,7 @@ const initFileBoxes = async () => {
     // 序列模式：根据序列编码获取序列信息
     try {
       const response = await FileBusinessSequenceApi.getFileBusinessSequenceGroupListByCode(props.sequenceCode)
-      console.log('序列API返回结果:', response)
-
       const data = response.data || response
-      console.log('解析后的data:', data)
 
       // 数据结构是 [[ { sequenceFile: "商品清单1", sequenceValue: 1 } ]]
       // 需要展平嵌套数组
@@ -255,14 +214,10 @@ const initFileBoxes = async () => {
         sequences = data
       }
 
-      console.log('处理后的sequences:', sequences)
-
       sequenceInfo.value = sequences.map((item: any) => ({
         sequenceFile: item.sequenceFile,
         sequenceValue: item.sequenceValue
       }))
-
-      console.log('最终sequenceInfo:', sequenceInfo.value)
 
       // 根据序列长度创建文件框
       fileBoxes.value = sequences.map(() => createEmptyFileBox())
@@ -312,7 +267,8 @@ const loadExistingFiles = async () => {
           ...createEmptyFileBox(),
           uploaded: true,
           displayName: fileInfo.name,
-          fileInfo: fileInfo
+          fileInfo: fileInfo,
+          saved: true // 已有文件标记为已保存
         }
       }
     })
@@ -336,7 +292,7 @@ const handleBoxClick = (index: number) => {
 }
 
 // 处理文件选择
-const handleFileSelect = (event: Event, index: number) => {
+const handleFileSelect = async (event: Event, index: number) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
 
@@ -351,11 +307,14 @@ const handleFileSelect = (event: Event, index: number) => {
 
     // 清空输入框，允许重新选择相同文件
     target.value = ''
+
+    // 自动上传
+    await uploadFile(index)
   }
 }
 
 // 处理拖拽文件
-const handleDrop = (event: DragEvent, index: number) => {
+const handleDrop = async (event: DragEvent, index: number) => {
   if (props.mode === 'view') return
 
   event.preventDefault()
@@ -370,6 +329,9 @@ const handleDrop = (event: DragEvent, index: number) => {
     box.uploaded = false
     box.uploading = false
     box.error = false
+
+    // 自动上传
+    await uploadFile(index)
   }
 }
 
@@ -421,13 +383,8 @@ const uploadFile = async (index: number) => {
     const axios = (await import('axios')).default
     box.cancelTokenSource = axios.CancelToken.source()
 
-    // 根据文件类型选择上传方式
-    let uploadResult
-    if (props.fileType === 'static') {
-      uploadResult = await uploadStaticFile(box)
-    } else {
-      uploadResult = await uploadCommonFile(box)
-    }
+    // 上传普通文件
+    const uploadResult = await uploadCommonFile(box)
 
     // 上传成功
     box.uploading = false
@@ -455,6 +412,15 @@ const uploadFile = async (index: number) => {
       console.error('文件上传失败:', error)
     }
   }
+}
+
+// 重试上传
+const retryUpload = async (index: number) => {
+  const box = fileBoxes.value[index]
+  if (!box.file) return
+
+  box.error = false
+  await uploadFile(index)
 }
 
 // 上传普通文件
@@ -495,11 +461,11 @@ const uploadCommonFile = async (box: any) => {
     url: presignedData.url,
     type: box.file.type,
     size: box.file.size,
-    dir: props.dir
+    dir: props.dir,
+    fileSource: props.fileSource
   }
 
   const response = await FileApi.createFile(createFileData) as any
-  console.log('FileApi.createFile 返回结果:', response)
 
   // 应该直接使用 response.data
   if (response && response.data) {
@@ -510,59 +476,7 @@ const uploadCommonFile = async (box: any) => {
   return response
 }
 
-// 上传静态文件
-const uploadStaticFile = async (box: any) => {
-  // 1. 获取静态文件预签名URL
-  const presignedData = await StaticFileApi.getStaticFilePresignedUrl(box.file.name, props.directory)
 
-  // 2. 直接上传到 MinIO static 桶
-  const axios = (await import('axios')).default
-  const startTime = Date.now()
-
-  await axios.put(presignedData.uploadUrl, box.file, {
-    headers: {
-      'Content-Type': box.file.type
-    },
-    cancelToken: box.cancelTokenSource.token,
-    onUploadProgress: (progressEvent: any) => {
-      if (progressEvent.lengthComputable) {
-        const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-        const currentTime = Date.now()
-        const timeElapsed = (currentTime - startTime) / 1000
-        const speed = timeElapsed > 0 ? progressEvent.loaded / timeElapsed : 0
-        const remainingBytes = progressEvent.total - progressEvent.loaded
-        const remainingTime = speed > 0 ? remainingBytes / speed : 0
-
-        box.progress = percentage
-        box.speed = speed
-        box.remainingTime = remainingTime
-      }
-    }
-  })
-
-  // 3. 创建静态文件记录
-  const createFileData = {
-    configId: presignedData.configId,
-    name: box.displayName + getFileExtension(box.file.name),
-    path: presignedData.path,
-    url: presignedData.url,
-    type: box.file.type,
-    size: box.file.size,
-    dir: props.directory
-  }
-
-  const response = await StaticFileApi.createStaticFile(createFileData) as any
-  console.log('StaticFileApi.createStaticFile 返回结果:', response)
-
-  // 根据用户描述，后端返回格式：{code: 0, data: {id: 80, configId: 0, ...}, msg: ""}
-  // 应该直接使用 response.data
-  if (response && response.data) {
-    return response.data
-  }
-
-  // 兜底：如果没有data字段，直接返回response
-  return response
-}
 
 // 取消上传
 const cancelUpload = (index: number) => {
@@ -583,11 +497,12 @@ const deleteFile = async (index: number) => {
   if (box.uploaded && box.fileInfo?.id) {
     // 删除已上传的文件
     try {
-      await message.delConfirm('确定要删除这个文件吗？')
+      const confirmMessage = props.mode === 'edit'
+        ? '确定要永久删除这个文件吗？删除后无法恢复！'
+        : '确定要删除这个文件吗？'
+      await message.delConfirm(confirmMessage)
 
-      console.log('删除文件 - fileInfo:', box.fileInfo)
       const fileId = box.fileInfo.id
-      console.log('删除文件 - fileId:', fileId, 'type:', typeof fileId)
 
       // 确保fileId是数字类型
       if (!fileId || typeof fileId === 'object') {
@@ -596,21 +511,9 @@ const deleteFile = async (index: number) => {
         return
       }
 
-      // 查找要删除的文件信息（参考index.vue的handleDelete方法）
-      const fileToDelete = box.fileInfo
-
-      // 判断是否为静态文件（通过configId是否为0来判断）
-      const isStaticFile = fileToDelete && fileToDelete.configId === 0
-
-      if (isStaticFile) {
-        // 删除静态文件
-        await StaticFileApi.deleteStaticFile(fileId)
-        message.success('静态文件删除成功')
-      } else {
-        // 删除普通文件
-        await FileApi.deleteFile(fileId)
-        message.success('文件删除成功')
-      }
+      // 删除普通文件
+      await FileApi.deleteFile(fileId)
+      message.success('文件删除成功')
 
       // 触发删除事件
       emit('delete', fileId)
@@ -641,27 +544,9 @@ const deleteFile = async (index: number) => {
 }
 
 // ========== 工具方法 ==========
-// 验证文件
-const validateFile = (file: File): boolean => {
-  // 检查文件类型
-  if (props.acceptTypes.length > 0) {
-    const fileExtension = getFileExtension(file.name).toLowerCase()
-    const isValidType = props.acceptTypes.some((type: string) => {
-      return file.type.includes(type) || fileExtension.includes(type.replace('.', ''))
-    })
-    if (!isValidType) {
-      message.error(`文件格式不正确，请上传 ${props.acceptTypes.join('/')} 格式的文件`)
-      return false
-    }
-  }
-
-  // 检查文件大小
-  const isValidSize = file.size <= props.fileSize * 1024 * 1024
-  if (!isValidSize) {
-    message.error(`文件大小不能超过 ${props.fileSize}MB`)
-    return false
-  }
-
+// 验证文件（普通文件不限制类型和大小）
+const validateFile = (_file: File): boolean => {
+  // 普通文件上传不做任何限制
   return true
 }
 
@@ -677,51 +562,81 @@ const getFileNameWithoutExtension = (fileName: string): string => {
   return lastDotIndex > -1 ? fileName.slice(0, lastDotIndex) : fileName
 }
 
-// 根据文件类型获取图标
-const getFileIcon = (file: File | any): string => {
-  const fileName = file.name || ''
-  const fileType = file.type || ''
 
-  // 根据 MIME 类型判断
-  if (fileType.includes('image/')) return 'Picture'
-  if (fileType.includes('video/')) return 'Video'
-  if (fileType.includes('audio/')) return 'Audio'
-  if (fileType.includes('zip') || fileType.includes('rar') || fileType.includes('7z')) return 'Folder'
 
-  // 根据文件扩展名判断
-  const extension = fileName.toLowerCase().split('.').pop()
-  switch (extension) {
-    case 'jpg':
-    case 'jpeg':
-    case 'png':
-    case 'gif':
-    case 'webp':
-    case 'svg':
-    case 'bmp':
-      return 'Picture'
-    case 'mp4':
-    case 'avi':
-    case 'mov':
-    case 'wmv':
-    case 'flv':
-    case 'mkv':
-      return 'Video'
-    case 'mp3':
-    case 'wav':
-    case 'flac':
-    case 'aac':
-    case 'ogg':
-    case 'm4a':
-      return 'Audio'
-    case 'zip':
-    case 'rar':
-    case '7z':
-    case 'tar':
-    case 'gz':
-      return 'Folder'
-    default:
-      return 'Document'
+// 获取文件类型图标（emoji）
+const getFileTypeIcon = (fileName: string): string => {
+  if (!fileName) return '📄'
+
+  const extension = fileName.toLowerCase().split('.').pop() || ''
+
+  // 图片文件
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tiff', 'tif'].includes(extension)) {
+    return '🖼️'
   }
+
+  // PDF文件
+  if (extension === 'pdf') {
+    return '📕'
+  }
+
+  // Word文档
+  if (['doc', 'docx'].includes(extension)) {
+    return '📘'
+  }
+
+  // Excel文档
+  if (['xls', 'xlsx', 'xlsm', 'xlsb'].includes(extension)) {
+    return '📗'
+  }
+
+  // PowerPoint文档
+  if (['ppt', 'pptx', 'pps', 'ppsx'].includes(extension)) {
+    return '📙'
+  }
+
+  // 压缩文件
+  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(extension)) {
+    return '🗜️'
+  }
+
+  // 视频文件
+  if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', '3gp'].includes(extension)) {
+    return '🎬'
+  }
+
+  // 音频文件
+  if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma', 'm4a', 'opus'].includes(extension)) {
+    return '🎵'
+  }
+
+  // 代码文件
+  if (['js', 'jsx', 'ts', 'tsx', 'html', 'css', 'php', 'py', 'java', 'cpp', 'c', 'go', 'rs'].includes(extension)) {
+    return '💻'
+  }
+
+  // 文本文件
+  if (['txt', 'md', 'log', 'rtf'].includes(extension)) {
+    return '📝'
+  }
+
+  // 数据文件
+  if (['json', 'xml', 'csv', 'sql', 'yaml', 'yml'].includes(extension)) {
+    return '📊'
+  }
+
+  // 字体文件
+  if (['ttf', 'otf', 'woff', 'woff2', 'eot'].includes(extension)) {
+    return '🔤'
+  }
+
+  // 可执行文件
+  if (['exe', 'msi', 'dmg', 'deb', 'rpm', 'app'].includes(extension)) {
+    return '⚙️'
+  }
+
+  // 默认文档图标
+  return '📄'
 }
 
 // 格式化文件大小
@@ -755,15 +670,8 @@ const formatRemainingTime = (seconds: number): string => {
 
 // 获取空状态文本
 const getEmptyStateText = (index: number): string => {
-  console.log('getEmptyStateText - index:', index)
-  console.log('getEmptyStateText - sequenceCode:', props.sequenceCode)
-  console.log('getEmptyStateText - sequenceInfo:', sequenceInfo.value)
-  console.log('getEmptyStateText - sequenceInfo[index]:', sequenceInfo.value[index])
-
   if (props.sequenceCode && sequenceInfo.value[index]) {
-    const text = `请上传 ${sequenceInfo.value[index].sequenceFile}`
-    console.log('getEmptyStateText - 返回文本:', text)
-    return text
+    return `请上传 ${sequenceInfo.value[index].sequenceFile}`
   }
   return '拖动或点击选择文件'
 }
@@ -784,96 +692,40 @@ const handlePreview = async (index: number) => {
   if (!box.uploaded || !box.fileInfo) return
 
   try {
-    console.log('预览文件 - fileInfo:', box.fileInfo)
     // 添加用户昵称参数
     const nickname = userStore.getUser?.nickname || ''
     const fileInfo = box.fileInfo
 
-    // 判断是否为静态文件
-    if (fileInfo.configId === 0) {
-      // 静态文件预览
-      if (fileInfo.type && fileInfo.type.includes('image')) {
-        // 静态图片文件：使用现有的图片预览功能
-        return
-      } else {
-        // 静态非图片文件：拼接预览地址
-        const staticFileUrl = `${fileInfo.url}` + `?nickname=${nickname}`
-        const encodedUrl = encodeURIComponent(base64Encode(staticFileUrl))
-        const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
-        window.open(previewUrl, '_blank')
-      }
-    } else {
-      // 普通文件预览 - 不能修改签名URL的查询参数，否则会破坏签名
-      const signedUrl = await FileApi.getDownloadUrl(fileInfo.id)
-      // 构建文件访问URL，保持签名完整性
-      const fileUrl = signedUrl + `&nickname=${nickname}`
+    // 普通文件预览 - 不能修改签名URL的查询参数，否则会破坏签名
+    const signedUrl = await FileApi.getDownloadUrl(fileInfo.id)
+    // 构建文件访问URL，保持签名完整性
+    const fileUrl = signedUrl + `&nickname=${nickname}`
 
-      // 构建预览URL
-      const encodedUrl = encodeURIComponent(base64Encode(fileUrl))
-      let previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
-      window.open(previewUrl, '_blank')
-    }
+    // 构建预览URL
+    const encodedUrl = encodeURIComponent(base64Encode(fileUrl))
+    let previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
+    window.open(previewUrl, '_blank')
   } catch (error) {
     console.error('预览文件失败:', error)
     message.error('预览文件失败')
   }
 }
 
-// 清空所有未保存的文件
-const clearUnsavedFiles = async () => {
-  // 只清理已上传但未保存的文件
-  const unsavedFiles = fileBoxes.value.filter(box =>
-    box.uploaded && box.fileInfo?.id && !box.saved
-  )
 
-  console.log('准备清理未保存的文件:', unsavedFiles.length, '个')
-
-  for (const box of unsavedFiles) {
-    try {
-      const fileId = box.fileInfo.id
-
-      // 确保fileId是有效的数字类型
-      if (!fileId || typeof fileId === 'object') {
-        console.error('清理文件时发现无效ID:', fileId)
-        continue
-      }
-
-      console.log('清理文件:', fileId, box.fileInfo.name)
-
-      // 判断是否为静态文件（通过configId是否为0来判断）
-      const isStaticFile = box.fileInfo.configId === 0
-
-      if (isStaticFile) {
-        await StaticFileApi.deleteStaticFile(fileId)
-      } else {
-        await FileApi.deleteFile(fileId)
-      }
-
-      console.log('文件清理成功:', fileId)
-    } catch (error) {
-      console.error('清理文件失败:', error)
-    }
-  }
-}
 
 // ========== 生命周期 ==========
 onMounted(() => {
   initFileBoxes()
-
-  // 监听页面刷新和关闭事件
-  window.addEventListener('beforeunload', clearUnsavedFiles)
-})
-
-onBeforeUnmount(() => {
-  // 清理事件监听
-  window.removeEventListener('beforeunload', clearUnsavedFiles)
 })
 
 // 监听 fileList 变化
 watch(
   () => props.fileList,
-  () => {
-    if (props.mode === 'view' || props.mode === 'edit') {
+  (newFileList, oldFileList) => {
+    // 避免死循环：只有当fileList真正改变且不是由组件内部更新时才重新加载
+    if (newFileList !== oldFileList &&
+      (props.mode === 'view' || props.mode === 'edit') &&
+      JSON.stringify(newFileList) !== JSON.stringify(uploadedFileIds.value)) {
       loadExistingFiles()
     }
   },
@@ -883,8 +735,11 @@ watch(
 // 监听 sequenceCode 变化
 watch(
   () => props.sequenceCode,
-  () => {
-    initFileBoxes()
+  (newCode, oldCode) => {
+    // 避免死循环：只有当sequenceCode真正改变时才重新初始化
+    if (newCode !== oldCode) {
+      initFileBoxes()
+    }
   }
 )
 
@@ -939,23 +794,13 @@ const resetComponent = () => {
   initFileBoxes()
 }
 
-// 标记文件为已保存（表单提交成功后调用，避免被清理）
-const markFilesAsSaved = () => {
-  fileBoxes.value.forEach(box => {
-    if (box.uploaded && box.fileInfo) {
-      box.saved = true
-    }
-  })
-}
-
 // 暴露方法给父组件
 defineExpose({
-  clearUnsavedFiles,
   getFileList,
   getFileDetails,
+  // 检查上传文件数量
   validateFiles,
-  resetComponent,
-  markFilesAsSaved
+  resetComponent
 })
 </script>
 
@@ -966,26 +811,53 @@ defineExpose({
 
 .file-boxes-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 16px;
   margin-bottom: 16px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+  }
 }
 
 .file-all-in-one-box {
   position: relative;
-  width: 200px;
-  height: 200px;
-  border: 2px dashed #d9d9d9;
-  border-radius: 12px;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  padding: 16px 12px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #fff;
+  overflow: hidden;
+  aspect-ratio: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: #fafbfc;
+  justify-content: space-between;
+
+  &:hover {
+    border-color: #409eff;
+    box-shadow: 0 4px 20px rgba(64, 158, 255, 0.15);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    transition: transform 0.1s;
+  }
 
   &.is-empty {
+    border: 2px dashed #d9d9d9;
 
     &:hover,
     &.is-hover {
@@ -994,23 +866,14 @@ defineExpose({
     }
   }
 
-  &.is-selected {
-    border-color: #409eff;
-    border-style: solid;
-    background: #fff;
-    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
-  }
-
   &.is-uploading {
     border-color: #409eff;
-    border-style: solid;
     background: #f0f9ff;
     box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
   }
 
   &.is-uploaded {
     border-color: #67c23a;
-    border-style: solid;
     background: #fff;
     box-shadow: 0 2px 8px rgba(103, 194, 58, 0.1);
 
@@ -1023,7 +886,6 @@ defineExpose({
 
   &.is-error {
     border-color: #f56c6c;
-    border-style: solid;
     background: #fef0f0;
     box-shadow: 0 2px 8px rgba(245, 108, 108, 0.1);
   }
@@ -1062,111 +924,27 @@ defineExpose({
     height: 100%;
 
     .plus-icon {
-      font-size: 32px;
+      font-size: 48px;
       color: #8c939d;
       margin-bottom: 12px;
-      transition: color 0.3s ease;
+      transition: all 0.3s ease;
 
       &.hover-blue {
         color: #409eff;
+        transform: scale(1.1);
       }
     }
 
     .upload-text {
       color: #606266;
-      font-size: 14px;
+      font-size: 13px;
       text-align: center;
       line-height: 1.4;
-      padding: 0 16px;
+      padding: 0 8px;
     }
   }
 
-  // 已选择文件状态
-  .selected-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    height: 100%;
-    padding: 16px;
 
-    .file-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 64px;
-      height: 64px;
-      color: #409eff;
-      background: #ecf5ff;
-      border-radius: 12px;
-      margin-bottom: 12px;
-    }
-
-    .file-name-section {
-      flex: 1;
-      width: 100%;
-      margin-bottom: 12px;
-
-      .file-name-display {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-
-        .file-name-text {
-          font-size: 14px;
-          color: #333;
-          text-align: center;
-          word-break: break-all;
-          line-height: 1.4;
-          max-width: 160px;
-          min-height: 20px;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .edit-icon {
-          font-size: 16px;
-          color: #409eff;
-          cursor: pointer;
-          flex-shrink: 0;
-
-          &:hover {
-            color: #66b1ff;
-          }
-        }
-      }
-
-      .file-name-edit {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: 100%;
-
-        .el-input {
-          flex: 1;
-        }
-
-        .confirm-icon {
-          font-size: 16px;
-          color: #67c23a;
-          cursor: pointer;
-          flex-shrink: 0;
-
-          &:hover {
-            color: #85ce61;
-          }
-        }
-      }
-    }
-
-    .upload-button-section {
-      width: 100%;
-    }
-  }
 
   // 上传中状态
   .uploading-state {
@@ -1224,29 +1002,46 @@ defineExpose({
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     height: 100%;
-    padding: 16px;
+    padding: 16px 12px;
 
     .file-icon-container {
       position: relative;
-      margin-bottom: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+      margin-bottom: 8px;
+
+      .file-thumbnail-container {
+        .file-thumbnail {
+          width: 80px;
+          height: 80px;
+          border-radius: 8px;
+          object-fit: cover;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          transition: all 0.2s ease;
+
+          &:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
+        }
+      }
 
       .file-icon {
-        display: flex;
+        font-size: 88px !important;
+        transition: transform 0.2s ease;
+        color: #409eff !important;
+        min-height: 88px;
+        display: flex !important;
         align-items: center;
         justify-content: center;
-        width: 64px;
-        height: 64px;
-        color: #67c23a;
-        background: #f0f9f0;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-
-        &:hover {
-          transform: scale(1.05);
-          box-shadow: 0 4px 8px rgba(103, 194, 58, 0.2);
-        }
+        line-height: 1;
+        width: 88px;
+        opacity: 1 !important;
+        visibility: visible !important;
       }
 
       .preview-overlay {
@@ -1256,7 +1051,7 @@ defineExpose({
         right: 0;
         bottom: 0;
         background: rgba(0, 0, 0, 0.7);
-        border-radius: 12px;
+        border-radius: 8px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -1264,26 +1059,94 @@ defineExpose({
         color: white;
         transition: all 0.3s ease;
 
+        .preview-icon {
+          font-size: 20px;
+          margin-bottom: 4px;
+        }
+
         .preview-text {
           font-size: 12px;
-          margin-top: 4px;
         }
       }
     }
 
-    .file-name {
-      font-size: 14px;
-      color: #333;
+    &:hover .file-icon {
+      transform: scale(1.1);
+    }
+
+    .file-name-section {
+      width: 100%;
       text-align: center;
-      padding: 0 8px;
-      max-width: 100%;
-      word-break: break-all;
-      line-height: 1.4;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      text-overflow: ellipsis;
+
+      .file-name-display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+
+        .file-name-text {
+          font-size: 13px;
+          font-weight: 500;
+          color: #303133;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          line-height: 1.3;
+          min-height: 17px;
+          flex: 1;
+        }
+
+        .edit-icon {
+          font-size: 14px;
+          cursor: pointer;
+          flex-shrink: 0;
+          opacity: 0.7;
+          transition: opacity 0.2s ease;
+
+          &:hover {
+            opacity: 1;
+          }
+        }
+      }
+
+      .file-name-edit {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+
+        .el-input {
+          flex: 1;
+        }
+
+        .confirm-icon {
+          font-size: 14px;
+          cursor: pointer;
+          flex-shrink: 0;
+        }
+      }
+    }
+  }
+
+  // 错误状态
+  .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 16px;
+
+    .error-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .error-text {
+      font-size: 14px;
+      color: #f56c6c;
+      margin-bottom: 12px;
+      text-align: center;
     }
   }
 }

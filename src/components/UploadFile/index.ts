@@ -6,9 +6,8 @@ import BatchFileUpload from './src/BatchFileUpload.vue'
 import StaticFileUpload from './src/StaticFileUpload.vue'
 import StaticImgUpload from './src/StaticImgUpload.vue'
 
-// 保留的原有组件
+// 头像上传组件
 import UploadImg from './src/UploadImg.vue'
-import UploadImgs from './src/UploadImgs.vue'
 
 export {
   // 普通文件上传
@@ -19,7 +18,6 @@ export {
   StaticFileUpload,
   StaticImgUpload,
 
-  // 原有组件（保持兼容性）
-  UploadImg,
-  UploadImgs
+  // 头像上传组件
+  UploadImg
 }

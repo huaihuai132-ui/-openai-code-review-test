@@ -81,7 +81,6 @@ const userSelectFormRef = ref()
 const form = reactive({
     fileId: 0,
     userId: '',
-    permission: 1,
     expiredTime: ''
 })
 
@@ -131,7 +130,6 @@ const confirmShare = async () => {
         const shareData = {
             fileId: form.fileId,
             userIds: userIds,
-            permission: form.permission,
             expiredTime: expiredTime
         }
 
@@ -152,7 +150,6 @@ const handleClosed = () => {
     selectedUsers.value = []
     form.fileId = 0
     form.userId = ''
-    form.permission = 1
     form.expiredTime = ''
 }
 </script>

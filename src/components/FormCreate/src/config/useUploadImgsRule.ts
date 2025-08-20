@@ -3,7 +3,7 @@ import { localeProps, makeRequiredRule } from '@/components/FormCreate/src/utils
 
 export const useUploadImgsRule = () => {
   const label = '多图上传'
-  const name = 'UploadImgs'
+  const name = 'StaticImgUpload' // 使用 StaticImgUpload 替代 UploadImgs
   return {
     icon: 'icon-upload',
     label,
