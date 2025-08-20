@@ -102,6 +102,7 @@
           <el-button
             link
             type="primary"
+            v-if="isShowEdit(scope.row)"
             @click="openForm('update', scope.row.id)"
             v-hasPermi="['business:finance-application:update']"
           >
@@ -109,7 +110,17 @@
           </el-button>
           <el-button
             link
+            type="info"
+            v-if="isShowDetail(scope.row)"
+            @click="openForm('detail', scope.row.id)"
+            v-hasPermi="['business:finance-application:query']"
+          >
+            详情
+          </el-button>
+          <el-button
+            link
             type="primary"
+            v-if="isShowEdit(scope.row)"
             @click="sendApprove(scope.row.id)"
             v-hasPermi="['business:finance-application:sendApprove']"
           >
@@ -118,6 +129,7 @@
           <el-button
             link
             type="danger"
+            v-if="isShowEdit(scope.row)"
             @click="handleDelete(scope.row.id)"
             v-hasPermi="['business:finance-application:delete']"
           >
@@ -149,6 +161,7 @@ import {FinanceLeaseApi} from "@/api/business/financelease";
 import {FinanceManageVO} from "@/api/business/financemanage";
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
 import * as UserApi from "@/api/system/user";
+import {isShowEdit, isShowDetail} from "@/api/bpm/task";
 
 /** 融资租赁立项 列表 */
 defineOptions({ name: 'FinanceApplication' })
@@ -190,6 +203,9 @@ const handleSelectionChange = (rows: FinanceApplicationVO[]) => {
   selectedIds.value = rows.map((row) => row.id)
   selectedRows.value = rows.map((row) => row)
 }
+
+
+
 /** 查询列表 */
 const getList = async () => {
   loading.value = true

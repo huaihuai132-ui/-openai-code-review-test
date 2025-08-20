@@ -41,6 +41,18 @@ export enum TaskStatusEnum {
   APPROVING = 7
 }
 
+/** 用于有审批流的列表页是否显示编辑、送审、删除 */
+export const isShowEdit = (row: any) => {
+  return row.status == TaskStatusEnum.NOT_START || row.status == TaskStatusEnum.REJECT
+    || row.status == TaskStatusEnum.CANCEL || row.status == TaskStatusEnum.RETURN;
+}
+
+/** 用于有审批流的列表页是否显示详情 */
+export const isShowDetail = (row: any) => {
+  return row.status == TaskStatusEnum.WAIT || row.status == TaskStatusEnum.RUNNING
+    || row.status == TaskStatusEnum.APPROVE || row.status == TaskStatusEnum.APPROVING;
+}
+
 export const getTaskTodoPage = async (params: any) => {
   return await request.get({ url: '/bpm/task/todo-page', params })
 }
