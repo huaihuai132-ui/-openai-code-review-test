@@ -11,6 +11,9 @@
       <div class="form-section">
         <h3 class="section-title">基本信息</h3>
         <div class="form-row">
+          <el-form-item label="立项编号" prop="applicationId">
+            <el-input v-model="formData.applicationId" placeholder="请输入立项编号" />
+          </el-form-item>
           <el-form-item label="企业" prop="companyId">
             <el-select v-model="formData.companyId" placeholder="请选择企业">
               <el-option
@@ -24,25 +27,25 @@
           <el-form-item label="项目申请编码" prop="leasedCode">
             <el-input v-model="formData.leasedCode" placeholder="请输入项目申请编码" />
           </el-form-item>
+        </div>
+        <div class="form-row">
           <el-form-item label="标的名称" prop="leasedProperty">
             <el-input v-model="formData.leasedProperty" placeholder="请输入融资标的物名称" />
           </el-form-item>
-        </div>
-        <div class="form-row">
           <el-form-item label="标的数量" prop="leasedPropertyNum">
             <el-input v-model="formData.leasedPropertyNum" placeholder="请输入融资标的物数量" />
           </el-form-item>
           <el-form-item label="标的净值" prop="leasedPropertyValue">
             <el-input v-model="formData.leasedPropertyValue" placeholder="请输入拟融资标的物净值" />
           </el-form-item>
+        </div>
+        <div class="form-row">
           <el-form-item label="租赁模式" prop="leaseMode">
             <el-select v-model="formData.leaseMode" placeholder="请选择租赁模式">
               <el-option label="融资租赁" value="1" />
               <el-option label="经营租赁" value="2" />
             </el-select>
           </el-form-item>
-        </div>
-        <div class="form-row">
           <el-form-item label="担保方式" prop="lienMode">
             <el-select v-model="formData.lienMode" placeholder="请选择担保方式">
               <el-option label="抵押担保" value="1" />
@@ -53,6 +56,8 @@
           <el-form-item label="申请额度" prop="leaseAmount">
             <el-input v-model="formData.leaseAmount" placeholder="请输入申请额度" />
           </el-form-item>
+        </div>
+        <div class="form-row">
           <el-form-item label="承租时间" prop="leaseDate">
             <el-date-picker
               v-model="formData.leaseDate"
@@ -61,15 +66,15 @@
               placeholder="选择承租时间"
             />
           </el-form-item>
-        </div>
-        <div class="form-row">
           <el-form-item label="承租租期" prop="leaseTerm">
             <el-input v-model="formData.leaseTerm" placeholder="请输入承租租期" />
           </el-form-item>
           <el-form-item label="利率" prop="interestRate">
             <el-input v-model="formData.interestRate" placeholder="请输入利率" />
           </el-form-item>
-                    <el-form-item label="申请人编码" prop="userId">
+        </div>
+        <div class="form-row">
+          <el-form-item label="申请人编码" prop="userId">
             <el-input v-model="formData.userId" placeholder="请输入申请人编码" readonly :disabled="true"/>
           </el-form-item>
         </div>
