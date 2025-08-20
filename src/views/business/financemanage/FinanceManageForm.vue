@@ -35,7 +35,7 @@
           <el-form-item label="租赁余额" prop="leaseAmountSurplus">
             <el-input v-model="formData.leaseAmountSurplus" placeholder="请输入租赁余额" />
           </el-form-item>
-            <el-form-item label="申请人的用户编号" prop="userId">
+            <el-form-item label="申请人编码" prop="userId">
             <el-input v-model="formData.userId" placeholder="请输入申请人编码" readonly :disabled="true"/>
           </el-form-item>
         </div>
