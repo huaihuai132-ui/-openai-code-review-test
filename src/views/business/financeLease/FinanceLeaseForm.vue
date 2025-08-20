@@ -74,9 +74,10 @@
           </el-form-item>
         </div>
         <div class="form-row">
-          <el-form-item label="申请人编码" prop="userId">
+          <el-form-item label="申请人编码" prop="userId" style="flex:1/3">
             <el-input v-model="formData.userId" placeholder="请输入申请人编码" readonly :disabled="true"/>
           </el-form-item>
+
         </div>
       </div>
 
