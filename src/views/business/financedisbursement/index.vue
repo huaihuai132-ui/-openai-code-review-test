@@ -10,7 +10,7 @@
     >
       <!-- 第一行：三个字段 -->
       <div class="form-row">
-        <el-form-item label="融资租赁单编号" prop="leaseId">
+        <el-form-item  label-width="120px"  label="融资租赁单编号" prop="leaseId" >
           <el-input
             v-model="queryParams.leaseId"
             placeholder="请输入融资租赁单编号"
@@ -20,7 +20,7 @@
           />
         </el-form-item>
 
-      <el-form-item label="企业名称" prop="companyId">
+      <el-form-item  label-width="120px"  label="企业名称" prop="companyId"  >
         <el-select
           v-model="queryParams.companyId"
           placeholder="请选择企业"
@@ -36,7 +36,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="放款申请编码" prop="disbursementCode">
+      <el-form-item  label-width="120px"  label="放款申请编码" prop="disbursementCode" >
         <el-input
           v-model="queryParams.disbursementCode"
           placeholder="请输入放款申请编码"
@@ -45,7 +45,11 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="项目名称" prop="projectName">
+      </div>
+
+      <!-- 第二行：三个字段 -->
+      <div class="form-row">
+      <el-form-item  label-width="120px"  label="项目名称" prop="projectName" >
         <el-input
           v-model="queryParams.projectName"
           placeholder="请输入项目名称"
@@ -54,7 +58,7 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="单据状态" prop="status">
+      <el-form-item  label-width="120px"  label="单据状态" prop="status">
         <el-select
           v-model="queryParams.status"
           placeholder="请选择单据状态"
@@ -69,11 +73,7 @@
           />
         </el-select>
       </el-form-item>
-      </div>
-
-      <!-- 第二行：三个字段 -->
-      <div class="form-row">
-        <el-form-item label="租赁模式" prop="leaseMode">
+        <el-form-item  label-width="120px"  label="租赁模式" prop="leaseMode">
           <el-select
             v-model="queryParams.leaseMode"
             placeholder="请选择租赁模式"
@@ -88,8 +88,11 @@
             />
           </el-select>
         </el-form-item>
+      </div>
 
-        <el-form-item label="主要租赁物名称" prop="propertyMain">
+      <!-- 第三行：操作按钮 -->
+      <div class="form-row">
+        <el-form-item  label-width="120px"  label="主要租赁物名称" prop="propertyMain" >
           <el-input
             v-model="queryParams.propertyMain"
             placeholder="请输入主要租赁物名称"
@@ -99,7 +102,7 @@
           />
         </el-form-item>
 
-        <el-form-item label="承租租期" prop="leaseTerm">
+        <el-form-item  label-width="170px"  label="承租租期" prop="leaseTerm">
           <el-input
             v-model="queryParams.leaseTerm"
             placeholder="请输入承租租期"
@@ -108,11 +111,7 @@
             class="!w-240px"
           />
         </el-form-item>
-      </div>
-
-      <!-- 第三行：操作按钮 -->
-      <div class="form-row">
-        <el-form-item>
+        <el-form-item label-width="120px">
           <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
           <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
           <el-button
@@ -141,7 +140,7 @@
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
 <!--      <el-table-column label="融资租赁放款表单主键" align="center" prop="id" />-->
-      <el-table-column label="融资租赁单编号" align="center" prop="leaseId" />
+      <el-table-column label="融资租赁单编号" align="center" prop="leaseId"  />
       <el-table-column label="企业名称" align="center" prop="companyId" width="180">
         <template #default="scope">
           <span>{{ companyList.find((item) => item.id === scope.row.companyId)?.enterpriseName }}</span>
@@ -154,7 +153,7 @@
           <dict-tag :type="DICT_TYPE.LEASE_MODE" :value="scope.row.leaseMode" />
         </template>
       </el-table-column>
-      <el-table-column label="主要租赁物名称" align="center" prop="propertyMain" />
+      <el-table-column label="主要租赁物名称" align="center" prop="propertyMain"  />
       <el-table-column label="承租租期" align="center" prop="leaseTerm" />
       <el-table-column label="本次金额" align="center" prop="thistimeAmount" />
       <el-table-column label="累计金额" align="center" prop="accruedAmount" />
