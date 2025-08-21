@@ -1,5 +1,8 @@
 // 会议表单相关类型定义
 
+import { OaMeetingAttendeeVO } from '@/api/business/oameetingattendee'
+import { OaMeetingIssueVO } from '@/api/business/oameetingissue'
+
 export interface MeetingFormData {
   id?: number
   userId?: number
@@ -14,26 +17,12 @@ export interface MeetingFormData {
   status?: number
   fileList: number[]
   sequenceCode?: string
-  attendeeList: Attendee[]
-  issueList: Issue[]
+  attendeeList: AttendeeWithUserInfo[]
+  issueList: OaMeetingIssueVO[]
 }
 
-export interface Attendee {
-  id: number
-  nickname: string
-  deptName: string
-  [key: string]: any
-}
-
-export interface Issue {
-  id: number
-  topicCode: string
-  topicTitle: string
-  topicType: string
-  meetingType: string
-  topicSummary: string
-  attachments?: Attachment[]
-  [key: string]: any
+export interface AttendeeWithUserInfo extends OaMeetingAttendeeVO {
+  userInfo: { id: number; nickname: string; deptName: string }
 }
 
 export interface Attachment {

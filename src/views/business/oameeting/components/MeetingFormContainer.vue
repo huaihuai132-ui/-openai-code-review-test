@@ -8,10 +8,7 @@
       v-loading="formLoading"
     >
       <!-- 基础信息表单 -->
-      <BasicMeetingForm
-        v-model:form-data="formData"
-        :meeting-rooms="meetingRooms"
-      />
+      <BasicMeetingForm v-model:form-data="formData" :meeting-rooms="meetingRooms" />
 
       <!-- 标签页 -->
       <el-tabs v-model="activeTab" class="form-tabs">
@@ -26,7 +23,7 @@
         </el-tab-pane>
       </el-tabs>
     </el-form>
-    
+
     <template #footer>
       <el-button @click="submitForm" type="primary" :disabled="formLoading">确 定</el-button>
       <el-button @click="submitForApproval" type="warning" :disabled="formLoading">送 审</el-button>
@@ -37,7 +34,7 @@
 
 <script setup lang="ts">
 import { OaMeetingApi, OaMeetingVO } from '@/api/business/oameeting'
-import { OaMeetingRoomApi } from 'src/api/business/oameetingroom'
+import { OaMeetingRoomApi } from '@/api/business/oameetingroom'
 import BasicMeetingForm from './BasicMeetingForm.vue'
 import AttendeeManager from './AttendeeManager.vue'
 import IssueManager from './IssueManager.vue'
@@ -111,10 +108,10 @@ const getMeetingRooms = async () => {
 const open = async (type: string, id?: number) => {
   formType.value = type
   dialogTitle.value = t('action.' + type)
-  
+
   await resetForm()
   await getMeetingRooms()
-  
+
   dialogVisible.value = true
 
   if (id) {
@@ -150,6 +147,8 @@ const emit = defineEmits(['success'])
 const submitForm = async () => {
   await formRef.value.validate()
 
+  console.log('formData', formData.value)
+
   // 验证文件上传
   const hasFiles = formData.value.fileList && formData.value.fileList.length > 0
   if (hasFiles && attachmentManagerRef.value) {
@@ -162,8 +161,11 @@ const submitForm = async () => {
 
   formLoading.value = true
   try {
-    const data = { ...formData.value } as unknown as OaMeetingVO
-    
+    const data = {
+      ...formData.value,
+      attendeeList: formData.value.attendeeList.map((v) => ({ userId: v.id }))
+    } as unknown as OaMeetingVO
+
     // 处理文件列表
     if (data.fileList && Array.isArray(data.fileList) && data.fileList.length > 0) {
       data.fileList = JSON.stringify(data.fileList) as any
@@ -194,15 +196,11 @@ const submitForm = async () => {
 /** 送审表单 */
 const submitForApproval = async () => {
   try {
-    await ElMessageBox.confirm(
-      '确定要送审该会议吗？送审后将进入审批流程。', 
-      '确认送审', 
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
+    await ElMessageBox.confirm('确定要送审该会议吗？送审后将进入审批流程。', '确认送审', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
 
     await formRef.value.validate()
 
@@ -260,7 +258,7 @@ const resetForm = async () => {
   }
 
   activeTab.value = 'file'
-  
+
   if (attachmentManagerRef.value) {
     await attachmentManagerRef.value.clearUnsavedFiles?.()
     attachmentManagerRef.value.resetComponent?.()

@@ -2,14 +2,14 @@ import request from '@/config/axios'
 
 // 会议参会人员 VO
 export interface OaMeetingAttendeeVO {
-  id: number // id
-  meetingId: number // 会议ID
+  id?: number // id
+  meetingId?: number // 会议ID
   userId: number // 参会用户ID
-  confirmStatus: number // 确认状态
-  confirmTime: Date // 确认时间
-  confirmReason: string // 拒绝/取消理由
-  notifyStatus: number // 通知状态
-  notifyTime: Date // 通知时间
+  confirmStatus?: number // 确认状态
+  confirmTime?: Date // 确认时间
+  confirmReason?: string // 拒绝/取消理由
+  notifyStatus?: number // 通知状态
+  notifyTime?: Date // 通知时间
 }
 
 // 会议参会人员 API
@@ -43,4 +43,4 @@ export const OaMeetingAttendeeApi = {
   exportOaMeetingAttendee: async (params) => {
     return await request.download({ url: `/business/oa-meeting-attendee/export-excel`, params })
   },
-}
+}

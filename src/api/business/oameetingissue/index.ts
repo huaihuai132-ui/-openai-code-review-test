@@ -20,9 +20,11 @@ export interface OaMeetingIssueVO {
   issueTitle: string // 议题标题
   issueType: number // 议题类型
   meetingType: number // 上会类型
+  meetingOrder: string | null // 议题排序
   issueContent: string // 议题详细内容
+  issueStatus: number | null // 议题状态
   description: string // 议题概述
-  issueAttachment: FileAttachmentVO[] // 议题附件对象列表
+  fileList: string // 议题附件对象列表
 }
 
 // 会议议题 API
@@ -60,5 +62,5 @@ export const OaMeetingIssueApi = {
   // 议题送审
   sendApprove: async (id: number) => {
     return await request.post({ url: `/business/oa-meeting-issue/sendApprove?id=` + id })
-  },
+  }
 }

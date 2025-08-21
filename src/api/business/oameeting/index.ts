@@ -1,4 +1,6 @@
 import request from '@/config/axios'
+import { OaMeetingAttendeeVO } from '../oameetingattendee'
+import { OaMeetingIssueVO } from '../oameetingissue'
 
 // 会议 VO
 export interface OaMeetingVO {
@@ -15,8 +17,8 @@ export interface OaMeetingVO {
   status: number // 会议状态
   fileList: string // 文件id列表
   sequenceCode: string // 文件序列编码
-  attendeeList?: {id: string, meetingId: string, userId: string, confirmStatus: number, confirmTime: string, confirmReason: string, notifyStatus: number, notifyTime: string, userMeetingOrder: string}[] // 参会人员列表
-  issueList?: {id: string, mettingId: string, mettingOrder: string}[] // 会议议题列表
+  attendeeList?: OaMeetingAttendeeVO[] // 参会人员列表
+  issueList?: OaMeetingIssueVO[] // 会议议题列表
 }
 
 // 会议 API
@@ -49,5 +51,5 @@ export const OaMeetingApi = {
   // 导出会议 Excel
   exportOaMeeting: async (params) => {
     return await request.download({ url: `/business/oa-meeting/export-excel`, params })
-  },
+  }
 }

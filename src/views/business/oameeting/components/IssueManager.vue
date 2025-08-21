@@ -1,23 +1,18 @@
 <template>
-  <div class="agenda-manager">
-    <div class="tab-header">
+  <div class="py-4">
+    <div class="mb-4">
       <el-button type="primary" @click="openIssueSelectDialog">
         <Icon icon="ep:plus" />
         添加会议议题
       </el-button>
     </div>
     <el-table :data="issues" border style="width: 100%" empty-text="暂无会议议题">
-      <el-table-column prop="topicCode" label="议题编号" width="120" />
-      <el-table-column prop="topicTitle" label="议题标题" min-width="200" />
-      <el-table-column prop="topicType" label="议题类型" width="100" />
+      <el-table-column prop="issueNo" label="议题编号" width="180" />
+      <el-table-column prop="issueTitle" label="议题标题" min-width="200" />
+      <el-table-column prop="issueType" label="议题类型" width="100" />
       <el-table-column prop="meetingType" label="上会类型" width="100" />
-      <el-table-column
-        prop="topicSummary"
-        label="议题概述"
-        min-width="300"
-        show-overflow-tooltip
-      />
-      <el-table-column label="操作" width="120" fixed="right">
+      <el-table-column prop="description" label="议题概述" min-width="300" show-overflow-tooltip />
+      <el-table-column label="操作" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" link @click="previewAgendaAttachments(row)">
             <Icon icon="ep:view" />
@@ -32,43 +27,49 @@
     </el-table>
 
     <!-- 议题选择弹窗 -->
-    <Dialog v-model="agendaDialogVisible" title="选择会议议题" width="800">
-      <div v-loading="agendaLoading" class="agenda-select-dialog">
-        <el-table :data="availableAgendaTopics" border style="width: 100%" empty-text="暂无可用议题">
-          <el-table-column prop="topicCode" label="议题编号" width="120" />
-          <el-table-column prop="topicTitle" label="议题标题" min-width="200" />
-          <el-table-column prop="topicType" label="议题类型" width="100" />
+    <Dialog v-model="issueDialogVisible" title="选择会议议题" width="800">
+      <div v-loading="issueLoading" class="px-4">
+        <el-table :data="availableIssues" border style="width: 100%" empty-text="暂无可用议题">
+          <el-table-column prop="issueNo" label="议题编号" width="120" />
+          <el-table-column prop="issueTitle" label="议题标题" min-width="200" />
+          <el-table-column prop="issueType" label="议题类型" width="100" />
           <el-table-column prop="meetingType" label="上会类型" width="100" />
           <el-table-column
-            prop="topicSummary"
+            prop="description"
             label="议题概述"
             min-width="300"
             show-overflow-tooltip
           />
           <el-table-column label="操作" width="100" fixed="right">
             <template #default="{ row }">
-              <el-button type="primary" link @click="selectAgendaTopic(row)">
+              <el-button
+                type="primary"
+                link
+                @click="selectAgendaTopic(row)"
+                :disabled="isIssueSelected(row.id)"
+              >
                 <Icon icon="ep:plus" />
-                选择
+                {{ isIssueSelected(row.id) ? '已选择' : '选择' }}
               </el-button>
             </template>
           </el-table-column>
         </el-table>
       </div>
       <template #footer>
-        <el-button @click="agendaDialogVisible = false">取 消</el-button>
+        <el-button @click="issueDialogVisible = false">取 消</el-button>
       </template>
     </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { Issue } from './types'
+import type { OaMeetingIssueVO } from '@/api/business/oameetingissue'
 import { computed, ref } from 'vue'
 import { useMessage } from '@/hooks/web/useMessage'
+import { OaMeetingIssueApi } from '@/api/business/oameetingissue'
 
 interface Props {
-  issues: Issue[]
+  issues: OaMeetingIssueVO[]
 }
 
 const props = defineProps<Props>()
@@ -81,64 +82,50 @@ const issues = computed({
   set: (value) => emit('update:issues', value)
 })
 
-const agendaDialogVisible = ref(false)
-const agendaLoading = ref(false)
-const availableAgendaTopics = ref<Issue[]>([])
+const issueDialogVisible = ref(false)
+const issueLoading = ref(false)
+const availableIssues = ref<OaMeetingIssueVO[]>([])
 
 /** 打开议题选择弹窗 */
 const openIssueSelectDialog = async () => {
-  agendaDialogVisible.value = true
+  issueDialogVisible.value = true
   await loadAvailableAgendaTopics()
 }
 
 /** 加载可用的议题列表 */
 const loadAvailableAgendaTopics = async () => {
-  agendaLoading.value = true
+  issueLoading.value = true
   try {
-    // 这里需要根据实际情况调用API获取未关联会议的已审核议题
-    // 模拟数据，实际项目中应调用真实API
-    const mockTopics: Issue[] = [
-      {
-        id: 1,
-        topicCode: 'TOPIC-2024-001',
-        topicTitle: '年度预算审议',
-        topicType: '财务类',
-        meetingType: '董事会',
-        topicSummary: '审议公司2024年度预算方案，包括收入、支出、投资等各项预算指标',
-        attachments: [
-          { id: 1, name: '2024年度预算报告.pdf', url: '/files/budget-2024.pdf' },
-          { id: 2, name: '预算明细表.xlsx', url: '/files/budget-details.xlsx' }
-        ]
-      },
-      {
-        id: 2,
-        topicCode: 'TOPIC-2024-002',
-        topicTitle: '新产品研发计划',
-        topicType: '技术类',
-        meetingType: '技术委员会',
-        topicSummary: '讨论2024年新产品研发方向和技术路线，包括AI产品线扩展计划',
-        attachments: [{ id: 3, name: '产品路线图.pdf', url: '/files/product-roadmap.pdf' }]
-      }
-    ]
-    availableAgendaTopics.value = mockTopics
+    // 调用API获取未关联会议的已审核议题
+    const response = await OaMeetingIssueApi.getOaMeetingIssuePage({
+      pageNo: 1,
+      pageSize: 100,
+      status: 2 // 已审核状态
+    })
+    availableIssues.value = response.list || []
   } catch (error) {
     console.error('加载议题列表失败:', error)
     message.error('加载议题列表失败')
   } finally {
-    agendaLoading.value = false
+    issueLoading.value = false
   }
+}
+
+/** 检查议题是否已选择 */
+const isIssueSelected = (issueId: string | number) => {
+  return issues.value.some((item) => item.id === issueId)
 }
 
 /** 选择议题 */
-const selectAgendaTopic = (topic: Issue) => {
-  if (!issues.value.find((item) => item.id === topic.id)) {
+const selectAgendaTopic = (topic: OaMeetingIssueVO) => {
+  if (!isIssueSelected(topic.id)) {
     issues.value.push({ ...topic })
   }
-  agendaDialogVisible.value = false
+  issueDialogVisible.value = false
 }
 
 /** 移除会议议题 */
-const removeAgenda = (row: Issue) => {
+const removeAgenda = (row: OaMeetingIssueVO) => {
   const index = issues.value.findIndex((item) => item.id === row.id)
   if (index > -1) {
     issues.value.splice(index, 1)
@@ -146,25 +133,12 @@ const removeAgenda = (row: Issue) => {
 }
 
 /** 预览议题附件 */
-const previewAgendaAttachments = (row: Issue) => {
-  if (row.attachments && row.attachments.length > 0) {
-    message.info(`议题 "${row.topicTitle}" 共有 ${row.attachments.length} 个附件`)
+const previewAgendaAttachments = (row: OaMeetingIssueVO) => {
+  const fileList = JSON.parse(row.fileList)
+  if (fileList && fileList.length > 0) {
+    message.info(`议题 "${row.issueTitle}" 共有 ${row.fileList.length} 个附件`)
   } else {
     message.info('该议题暂无附件')
   }
 }
 </script>
-
-<style scoped>
-.agenda-manager {
-  padding: 16px 0;
-}
-
-.tab-header {
-  margin-bottom: 16px;
-}
-
-.agenda-select-dialog {
-  padding: 0 16px;
-}
-</style>
