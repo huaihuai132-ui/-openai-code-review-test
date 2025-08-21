@@ -83,9 +83,21 @@ const props = defineProps({
     type: String,
     default: 'avatars'
   },
+  dir: {
+    type: String,
+    default: '/'
+  },
+  accept: {
+    type: String,
+    default: 'image/*'
+  },
   tip: {
     type: String,
     default: ''
+  },
+  maxFileSize: {
+    type: Number,
+    default: 5 // MB
   }
 })
 // 组件事件

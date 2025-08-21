@@ -1,17 +1,24 @@
 # 📁 文件上传组件使用手册
 
-本文档详细介绍了新一代文件上传组件库的完整使用方法。该组件库提供了四个核心组件，采用文件全能框设计，支持拖拽、实时编辑、进度显示等现代化交互功能。
+本文档详细介绍了新一代文件上传组件库的完整使用方法。该组件库提供了五个核心组件，采用文件全能框设计，支持拖拽、**选择即上传**、实时编辑、进度显示等现代化交互功能。
 
 ## 📋 组件概览
 
 | 组件 | 功能定位 | 适用场景 | 存储位置 | 特色功能 |
 | --- | --- | --- | --- | --- |
-| `UploadFile` | 普通文件上传 | 表单中需要上传普通文件 | MinIO oafile 桶 | 文件全能框、实时别名编辑 |
-| `BatchFileUpload` | 批量文件上传 | 需要上传多个文件 | MinIO oafile 桶 | 动态文件框、序列模式 |
-| `StaticFileUpload` | 静态文件上传 | 公共资源、静态文件 | MinIO static 桶 | 匿名访问、公共存储 |
-| `StaticImgUpload` | 静态图片上传 | 头像、产品图片等 | MinIO static 桶 | 图片预览、格式限制 |
+| `UploadFile` | 单文件上传 | 表单中需要上传单个文件 | MinIO oafile 桶 | 选择即上传、实时别名编辑 |
+| `UploadImg` | 单图片上传 | 头像、单张图片等 | MinIO oafile 桶 | 图片预览、选择即上传 |
+| `BatchFileUpload` | 多文件上传 | 需要上传多个文件 | MinIO oafile 桶 | 动态文件框、序列模式、选择即上传 |
+| `StaticFileUpload` | 静态文件上传 | 公共资源、静态文件 | MinIO static 桶 | 匿名访问、公共存储、选择即上传 |
+| `StaticImgUpload` | 静态图片上传 | 公共图片、产品图片等 | MinIO static 桶 | 图片预览、格式限制、选择即上传 |
 
 ## ✨ 核心特性
+
+### 🚀 选择即上传体验
+
+- **现代化交互**：选择文件后立即开始上传，无需额外操作
+- **实时反馈**：上传进度实时显示，用户体验流畅
+- **简化流程**：移除批量上传按钮，减少用户操作步骤
 
 ### 🎯 文件全能框设计
 
@@ -43,6 +50,12 @@
 - **生命周期管理**：页面离开时自动清理未保存文件
 - **内存优化**：及时释放未使用的文件资源
 - **状态跟踪**：区分已保存和未保存的文件
+
+### 🔧 统一参数支持
+
+- **标准化配置**：所有组件支持统一的参数配置
+- **灵活目录**：支持 `directory` 和 `dir` 参数自定义存储路径
+- **格式控制**：支持 `accept` 和 `maxFileSize` 参数控制文件类型和大小
 
 ## 📖 详细使用指南
 
@@ -144,11 +157,13 @@ const form = reactive({
 | `fileList` | `number[]` | `[]` | ✓ | 文件ID列表，支持v-model双向绑定 |
 | `mode` | `'create' \| 'view' \| 'edit'` | `'create'` | - | 组件运行模式 |
 | `sequenceCode` | `string` | `''` | - | 业务序列编码，启用序列模式 |
+| `directory` | `string` | `'business'` | - | 上传目录路径 |
+| `dir` | `string` | `'/'` | - | 子目录路径 |
+| `accept` | `string` | `''` | - | 接受的文件类型（如：'image/\*', '.pdf,.doc'） |
 | `acceptTypes` | `string[]` | `[]` | - | 允许的文件格式（如：['pdf', 'doc', 'docx']） |
+| `fileSize` | `number` | `10` | - | 文件大小限制（MB，兼容旧参数） |
+| `maxFileSize` | `number` | `10` | - | 最大文件大小限制（MB） |
 | `fileSource` | `number` | `0` | - | 文件来源（0=业务文件，1=个人文件） |
-| `fileSize` | `number` | `10` | - | 文件大小限制（MB） |
-| `directory` | `string` | `'files'` | - | 上传目录路径 |
-| `accept` | `string` | `''` | - | HTML accept属性值 |
 | `tip` | `string` | `''` | - | 提示文字 |
 | `isShowTip` | `boolean` | `true` | - | 是否显示提示信息 |
 
@@ -175,9 +190,9 @@ const form = reactive({
 
 ---
 
-### 2. BatchFileUpload - 批量文件上传组件
+### 2. BatchFileUpload - 多文件上传组件
 
-**适用场景**：需要上传多个文件，如文档资料、附件清单、材料汇总等。
+**适用场景**：需要上传多个文件，如文档资料、附件清单、材料汇总等。支持选择即上传，无需批量操作。
 
 #### 基础用法
 
@@ -251,21 +266,61 @@ const productRules = {
 
 - **动态文件框**：根据maxFiles自动生成文件框
 - **添加更多**：点击"添加更多文件"按钮增加文件框
-- **批量操作**：支持"上传全部"和"清空全部"操作
+- **选择即上传**：选择文件后立即开始上传，无需额外操作
 - **智能删除**：删除文件时自动移除对应的文件框
+- **序列模式**：支持按业务序列要求上传特定文件
 
 #### Props 扩展
 
-| 参数       | 类型     | 默认值 | 描述                       |
-| ---------- | -------- | ------ | -------------------------- |
-| `maxFiles` | `number` | `5`    | 最大文件数量限制           |
-| 其他属性   | -        | -      | 继承自UploadFile的所有属性 |
+| 参数       | 类型     | 默认值 | 描述                                                      |
+| ---------- | -------- | ------ | --------------------------------------------------------- |
+| `maxFiles` | `number` | `999`  | 最大文件数量限制                                          |
+| 其他属性   | -        | -      | 继承所有统一参数（directory, dir, accept, maxFileSize等） |
 
 ---
 
-### 3. StaticFileUpload - 静态文件上传组件
+### 3. UploadImg - 单图片上传组件
 
-**适用场景**：上传公共资源、静态文件，需要支持匿名访问的文件。
+**适用场景**：上传单张图片，如头像、证件照、产品图片等。
+
+#### 基础用法
+
+```vue
+<template>
+  <UploadImg
+    ref="uploadImgRef"
+    v-model="form.imageId"
+    directory="images"
+    dir="/avatars/"
+    accept="image/*"
+    :maxFileSize="5"
+    tip="支持jpg、png格式，大小不超过5MB"
+  />
+</template>
+
+<script setup lang="ts">
+import { UploadImg } from '@/components/UploadFile'
+
+const form = reactive({
+  imageId: null as number | null
+})
+
+const uploadImgRef = ref()
+</script>
+```
+
+#### 特色功能
+
+- **单图片模式**：专为单张图片上传设计
+- **图片预览**：直接显示图片缩略图
+- **格式限制**：默认只允许图片格式
+- **选择即上传**：选择图片后立即开始上传
+
+---
+
+### 4. StaticFileUpload - 静态文件上传组件
+
+**适用场景**：上传公共资源、静态文件，需要支持匿名访问的文件。支持选择即上传。
 
 #### 基础用法
 
@@ -301,9 +356,9 @@ const staticUploadRef = ref()
 
 ---
 
-### 4. StaticImgUpload - 静态图片上传组件
+### 5. StaticImgUpload - 静态图片上传组件
 
-**适用场景**：上传头像、产品图片、宣传图等单张图片。
+**适用场景**：上传公共图片、产品图片、宣传图等单张图片，支持匿名访问。
 
 #### 基础用法
 
@@ -382,8 +437,75 @@ const imageRules = {
 - **单图片模式**：只支持上传一张图片
 - **图片预览**：直接显示图片而不是文件图标
 - **格式限制**：只允许图片格式文件
+- **选择即上传**：选择图片后立即开始上传
+- **匿名访问**：存储在static桶，支持公开访问
 - **尺寸建议**：可以配置推荐的图片尺寸
-- **质量压缩**：支持前端图片质量压缩（可选）
+
+---
+
+## 🔧 统一参数配置
+
+所有文件上传组件现在都支持以下统一参数：
+
+### 基础参数
+
+```typescript
+interface CommonUploadProps {
+  // 存储配置
+  directory?: string // 上传目录（如：'business', 'images', 'avatars'）
+  dir?: string // 子目录路径（如：'/', '/documents/', '/2024/'）
+
+  // 文件限制
+  accept?: string // 接受的文件类型（如：'image/*', '.pdf,.doc,.docx'）
+  maxFileSize?: number // 最大文件大小（MB）
+  fileSize?: number // 兼容旧参数名（MB）
+  acceptTypes?: string[] // 允许的文件格式数组（如：['pdf', 'doc', 'docx']）
+
+  // 显示控制
+  tip?: string // 提示文本
+  isShowTip?: boolean // 是否显示提示
+
+  // 组件模式
+  mode?: 'create' | 'view' | 'edit' // 组件运行模式
+}
+```
+
+### 使用示例
+
+```vue
+<template>
+  <!-- 用章申请文件上传 -->
+  <BatchFileUpload
+    v-model:fileList="chapterFiles"
+    directory="chapter"
+    dir="/2024/applications/"
+    accept=".pdf,.doc,.docx,.jpg,.png"
+    :maxFileSize="10"
+    mode="create"
+    tip="请上传用章相关文件，支持PDF、Word、图片格式"
+  />
+
+  <!-- 头像上传 -->
+  <UploadImg
+    v-model="userAvatar"
+    directory="avatars"
+    dir="/users/"
+    accept="image/*"
+    :maxFileSize="2"
+    tip="支持jpg、png格式，大小不超过2MB"
+  />
+
+  <!-- 静态资源上传 -->
+  <StaticFileUpload
+    v-model:fileList="publicFiles"
+    directory="static"
+    dir="/resources/"
+    :maxFiles="5"
+    :maxFileSize="20"
+    tip="上传公共资源文件"
+  />
+</template>
+```
 
 ---
 
@@ -939,6 +1061,16 @@ const setupCleanupTimer = () => {
 
 ## 🚀 版本更新日志
 
+### v2.2.0 (2025-08-21)
+
+- 🔥 **重大变更**：移除批量上传逻辑，改为选择即上传体验
+- ✨ **新功能**：统一参数支持（directory, dir, accept, maxFileSize）
+- ✨ **新功能**：新增 UploadImg 单图片上传组件
+- 🐛 **修复**：文件ID精度丢失问题（支持大整数ID）
+- 💄 **UI优化**：文件卡片大小调整，更紧凑的显示效果
+- 🔧 **代码优化**：清理不必要的批量上传代码，减少约150行代码
+- 📖 **文档更新**：完整更新使用手册，反映最新变更
+
 ### v2.1.0 (2025-08-17)
 
 - ✨ **新功能**：全新的文件全能框设计
@@ -982,6 +1114,40 @@ const setupCleanupTimer = () => {
 
 ---
 
-**最后更新时间**：2025年8月17日  
-**文档版本**：v2.1.0  
-**组件版本**：v2.1.0
+**最后更新时间**：2025年8月21日 **文档版本**：v2.2.0 **组件版本**：v2.2.0
+
+## 🔥 重要变更说明
+
+### 选择即上传体验
+
+从 v2.2.0 开始，所有文件上传组件都采用**选择即上传**的现代化体验：
+
+- ✅ **用户选择文件** → **立即开始上传** → **显示进度** → **上传完成**
+- ❌ ~~用户选择文件 → 点击批量上传按钮 → 开始上传~~
+
+### 统一参数支持
+
+所有组件现在都支持统一的参数配置，提供更好的开发体验：
+
+```vue
+<!-- 所有组件都支持这些参数 -->
+<AnyUploadComponent
+  directory="your-directory"
+  dir="/sub-path/"
+  accept=".pdf,.doc"
+  :maxFileSize="10"
+  tip="提示文字"
+/>
+```
+
+### 文件ID精度问题
+
+修复了JavaScript大整数精度丢失问题，现在支持任意长度的文件ID：
+
+```javascript
+// 修复前：精度丢失
+"1958085490950467585" → 1958085490950467600 ❌
+
+// 修复后：精度保持
+"1958085490950467585" → "1958085490950467585" ✅
+```

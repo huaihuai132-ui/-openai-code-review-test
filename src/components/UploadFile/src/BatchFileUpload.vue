@@ -2,14 +2,16 @@
   <div class="batch-upload-file-container">
     <!-- 文件全能框列表 -->
     <div class="file-boxes-container">
-      <div v-for="(fileBox, index) in fileBoxes" :key="index" class="file-all-in-one-box" :class="{
-        'is-empty': !fileBox.file,
-        'is-selected': fileBox.file && !fileBox.uploading && !fileBox.uploaded,
-        'is-uploading': fileBox.uploading,
-        'is-uploaded': fileBox.uploaded,
-        'is-error': fileBox.error,
-        'is-hover': fileBox.isHover && !fileBox.uploading
-      }" @mouseenter="fileBox.isHover = true" @mouseleave="fileBox.isHover = false" @click="handleBoxClick(index)"
+      <div v-for="(fileBox, index) in fileBoxes" :key="index"
+        v-show="mode !== 'view' || fileBox.uploaded || fileBox.file" class="file-all-in-one-box" :class="{
+          'is-empty': !fileBox.file,
+          'is-selected': fileBox.file && !fileBox.uploading && !fileBox.uploaded,
+          'is-uploading': fileBox.uploading,
+          'is-uploaded': fileBox.uploaded,
+          'is-error': fileBox.error,
+          'is-hover': fileBox.isHover && !fileBox.uploading,
+          'view-mode': mode === 'view'
+        }" @mouseenter="fileBox.isHover = true" @mouseleave="fileBox.isHover = false" @click="handleBoxClick(index)"
         @drop="handleDrop($event, index)" @dragover.prevent @dragenter.prevent>
         <!-- 右上角删除按钮 -->
         <div v-if="fileBox.file && (mode === 'create' || mode === 'edit')" class="file-close-btn"
@@ -86,9 +88,11 @@
           style="display: none" @change="handleFileSelect($event, index)" />
       </div>
 
-      <!-- 添加更多文件按钮 (批量模式) -->
-      <div v-if="fileBoxes.length < maxFiles && !sequenceCode" class="file-all-in-one-box add-more-box"
-        @click="addNewFileBox">
+      <!-- 添加更多文件按钮 (批量模式，仅在创建和编辑模式下显示) -->
+      <div v-if="fileBoxes.length < maxFiles && !sequenceCode && (mode === 'create' || mode === 'edit')"
+        class="file-all-in-one-box add-more-box" :class="{
+          'view-mode': mode === 'view'
+        }" @click="addNewFileBox">
         <div class="empty-state">
           <div class="plus-icon">
             ➕
@@ -98,15 +102,7 @@
       </div>
     </div>
 
-    <!-- 批量操作按钮 -->
-    <div v-if="hasSelectedFiles" class="batch-actions">
-      <el-button type="primary" @click="uploadAllFiles" :disabled="isUploading">
-        <el-icon>
-          <Upload />
-        </el-icon>
-        {{ isUploading ? '上传中...' : `上传全部 (${selectedFilesCount})` }}
-      </el-button>
-    </div>
+
 
     <!-- 提示信息 -->
     <div v-if="isShowTip && tip" class="upload-tip">
@@ -116,20 +112,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 
 // 生成唯一实例ID
 const instanceId = Math.random().toString(36).substring(2, 15)
-import { ElMessage } from 'element-plus'
 import { useMessage } from '@/hooks/web/useMessage'
 import { useUserStore } from '@/store/modules/user'
 import axios from 'axios'
 import * as FileApi from '@/api/infra/file'
 import { FileBusinessSequenceApi } from '@/api/infra/file/fileBusinessSequence'
 import { base64Encode } from '@/utils'
-import {
-  Upload
-} from '@element-plus/icons-vue'
+
 
 defineOptions({ name: 'BatchFileUpload' })
 
@@ -138,6 +131,7 @@ const userStore = useUserStore() // 用户信息
 
 // 固定域名配置
 const FIXED_DOMAIN = 'http://182.109.52.126:49090'
+// const FIXED_DOMAIN = `${window.location.protocol}//${window.location.host}`
 
 // 组件事件
 const emit = defineEmits([
@@ -147,13 +141,16 @@ const emit = defineEmits([
 
 // 组件属性
 const props = withDefaults(defineProps<{
-  fileList: number[]
+  fileList: (number | string)[] // 支持数字或字符串ID
   mode?: 'create' | 'view' | 'edit'
   sequenceCode?: string
   maxFiles?: number
   directory?: string
+  dir?: string
   acceptTypes?: string[]
+  accept?: string
   fileSize?: number
+  maxFileSize?: number
   isShowTip?: boolean
   tip?: string
   fileSource?: number
@@ -161,9 +158,13 @@ const props = withDefaults(defineProps<{
   fileList: () => [],
   mode: 'create',
   maxFiles: 999, // 不限制文件数量
-  directory: 'temp',
+  directory: 'business',
+  dir: '/',
+  accept: '',
   fileSize: 0, // 不限制文件大小
+  maxFileSize: 0, // 不限制文件大小
   isShowTip: true,
+  tip: '',
   fileSource: 0
 })
 
@@ -195,14 +196,6 @@ const sequenceInfo = ref<Array<{
 const uploadedFileIds = ref<number[]>([])
 
 // ========== 计算属性 ==========
-const hasSelectedFiles = computed(() => {
-  return fileBoxes.value.some(box => box.file && !box.uploaded)
-})
-
-const selectedFilesCount = computed(() => {
-  return fileBoxes.value.filter(box => box.file && !box.uploaded).length
-})
-
 const isUploading = computed(() => {
   return fileBoxes.value.some(box => box.uploading)
 })
@@ -268,9 +261,23 @@ const createEmptyFileBox = () => ({
 // 加载已有文件
 const loadExistingFiles = async () => {
   try {
-    const files = await FileApi.getFilesByIds(props.fileList as number[])
+    // 将文件ID转换为合适的格式传递给后端
+    const fileIds = props.fileList.map(id => {
+      if (typeof id === 'string') {
+        // 对于字符串ID，直接传递给后端
+        return id
+      }
+      return id
+    })
+
+    const files = await FileApi.getFilesByIds(fileIds as any)
 
     const fileData = files.data || files
+
+    // 确保有足够的文件框来显示所有文件
+    while (fileBoxes.value.length < fileData.length) {
+      fileBoxes.value.push(createEmptyFileBox())
+    }
 
     // 为每个已有文件创建文件框
     fileData.forEach((file: any, index: number) => {
@@ -477,29 +484,7 @@ const uploadCommonFile = async (box: any) => {
 
 
 
-// 批量上传所有文件
-const uploadAllFiles = async () => {
-  const filesToUpload = fileBoxes.value.filter(box => box.file && !box.uploaded && !box.uploading)
 
-  if (filesToUpload.length === 0) {
-    message.warning('没有需要上传的文件')
-    return
-  }
-
-  // 并发上传，限制并发数为3
-  const concurrency = 3
-  const chunks = []
-  for (let i = 0; i < filesToUpload.length; i += concurrency) {
-    chunks.push(filesToUpload.slice(i, i + concurrency))
-  }
-
-  for (const chunk of chunks) {
-    await Promise.all(chunk.map(box => {
-      const index = fileBoxes.value.indexOf(box)
-      return uploadFile(index)
-    }))
-  }
-}
 
 // 取消上传
 const cancelUpload = (index: number) => {
@@ -535,9 +520,7 @@ const deleteFile = async (index: number) => {
         : '确定要删除这个文件吗？'
       await message.delConfirm(confirmMessage)
 
-      console.log('批量上传-删除文件 - fileInfo:', box.fileInfo)
       const fileId = box.fileInfo.id
-      console.log('批量上传-删除文件 - fileId:', fileId, 'type:', typeof fileId)
 
       // 确保fileId是数字类型
       if (!fileId || typeof fileId === 'object') {
@@ -545,9 +528,6 @@ const deleteFile = async (index: number) => {
         message.error('文件ID无效，无法删除')
         return
       }
-
-      // 查找要删除的文件信息
-      const fileToDelete = box.fileInfo
 
       // 删除普通文件
       await FileApi.deleteFile(fileId)
@@ -590,7 +570,7 @@ const handlePreview = async (index: number) => {
   if (!box.uploaded || !box.fileInfo) return
 
   try {
-    console.log('批量上传-预览文件 - fileInfo:', box.fileInfo)
+
     // 添加用户昵称参数
     const nickname = userStore.getUser?.nickname || ''
     const fileInfo = box.fileInfo
@@ -630,18 +610,7 @@ const getFileNameWithoutExtension = (filename: string): string => {
   return lastDotIndex > 0 ? filename.substring(0, lastDotIndex) : filename
 }
 
-// 获取文件图标类型
-const getFileIcon = (file: File | null): string => {
-  if (!file) return 'Document'
 
-  const type = file.type
-  if (type.startsWith('image/')) return 'Picture'
-  if (type.startsWith('video/')) return 'Video'
-  if (type.startsWith('audio/')) return 'Audio'
-  if (type.includes('zip') || type.includes('rar') || type.includes('7z')) return 'Folder'
-
-  return 'Document'
-}
 
 // 获取文件类型图标（emoji）
 const getFileTypeIcon = (fileName: string): string => {
@@ -748,15 +717,8 @@ const formatRemainingTime = (seconds: number): string => {
 
 // 获取空状态文本
 const getEmptyStateText = (index: number): string => {
-  console.log('批量上传-getEmptyStateText - index:', index)
-  console.log('批量上传-getEmptyStateText - sequenceCode:', props.sequenceCode)
-  console.log('批量上传-getEmptyStateText - sequenceInfo:', sequenceInfo.value)
-  console.log('批量上传-getEmptyStateText - sequenceInfo[index]:', sequenceInfo.value[index])
-
   if (props.sequenceCode && sequenceInfo.value[index]) {
-    const text = `请上传 ${sequenceInfo.value[index].sequenceFile}`
-    console.log('批量上传-getEmptyStateText - 返回文本:', text)
-    return text
+    return `请上传 ${sequenceInfo.value[index].sequenceFile}`
   }
   return '拖动或点击选择文件'
 }
@@ -779,7 +741,6 @@ const getFileList = (): number[] => {
 
 // 获取文件详细信息列表
 const getFileDetails = () => {
-  console.log('批量上传-------------', fileBoxes.value)
   return fileBoxes.value
     .filter(box => box.uploaded && box.fileInfo)
     .map(box => box.fileInfo)
@@ -860,7 +821,8 @@ defineExpose({
 
   .file-boxes-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    /* 调整最小宽度适应缩放 */
     gap: 16px;
     margin-bottom: 16px;
   }
@@ -878,6 +840,15 @@ defineExpose({
     cursor: pointer;
     transition: all 0.3s ease;
     background: #fafafa;
+    transform-origin: center;
+
+    /* 默认缩小15% */
+    transform: scale(0.85);
+
+    /* view模式下缩小30% */
+    &.view-mode {
+      transform: scale(0.7);
+    }
 
     &.is-hover:not(.is-uploading) {
       border-color: #409eff;
@@ -1170,15 +1141,7 @@ defineExpose({
     }
   }
 
-  // 批量操作按钮
-  .batch-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    padding: 16px 0;
-    border-top: 1px solid #ebeef5;
-    margin-top: 16px;
-  }
+
 
   // 提示信息
   .upload-tip {

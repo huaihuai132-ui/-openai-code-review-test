@@ -111,7 +111,7 @@
       </div>
     </div>
 
-    <!-- 单图片模式不显示批量操作按钮 -->
+
 
     <!-- 提示信息 -->
     <div v-if="tip" class="upload-tip">
@@ -121,7 +121,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, nextTick, onBeforeUnmount, watch, type PropType } from 'vue'
+import { ref, onMounted, nextTick, watch, type PropType } from 'vue'
 
 // 生成唯一实例ID
 const instanceId = Math.random().toString(36).substring(2, 15)
@@ -156,13 +156,25 @@ const props = defineProps({
     type: String,
     default: 'images'
   },
+  dir: {
+    type: String,
+    default: '/'
+  },
   fileSize: {
+    type: Number,
+    default: 5 // MB
+  },
+  maxFileSize: {
     type: Number,
     default: 5 // MB
   },
   fileType: {
     type: Array as PropType<string[]>,
     default: () => ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+  },
+  accept: {
+    type: String,
+    default: 'image/*'
   },
   tip: {
     type: String,
@@ -198,7 +210,7 @@ const sequenceInfo = ref<any[]>([])
 
 
 
-// 静态图片上传是单图片模式，不需要批量操作的计算属性
+
 
 // 创建空的文件框
 const createEmptyFileBox = (): FileBox => ({
@@ -593,7 +605,7 @@ const getImagePreviewUrl = (file: File) => {
   return URL.createObjectURL(file)
 }
 
-// 静态图片上传是单图片模式，不需要批量操作方法
+
 
 // 更新fileList
 const updateFileList = () => {
@@ -1026,13 +1038,7 @@ watch(() => props.fileList, () => {
     }
   }
 
-  // 批量操作按钮
-  .batch-actions {
-    margin-top: 16px;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
+
 
   // 提示信息
   .upload-tip {

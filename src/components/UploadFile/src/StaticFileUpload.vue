@@ -98,15 +98,7 @@
       </div>
     </div>
 
-    <!-- 批量操作按钮 -->
-    <div v-if="hasSelectedFiles" class="batch-actions">
-      <el-button type="primary" @click="uploadAllFiles" :disabled="isUploading">
-        <el-icon>
-          <Upload />
-        </el-icon>
-        {{ isUploading ? '上传中...' : `上传全部 (${selectedFilesCount})` }}
-      </el-button>
-    </div>
+
 
     <!-- 提示信息 -->
     <div v-if="isShowTip && tip" class="upload-tip">
@@ -116,11 +108,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 
 // 生成唯一实例ID
 const instanceId = Math.random().toString(36).substring(2, 15)
-import { ElMessage } from 'element-plus'
 import { useMessage } from '@/hooks/web/useMessage'
 import { useUserStore } from '@/store/modules/user'
 import axios from 'axios'
@@ -128,9 +119,7 @@ import * as StaticFileApi from '@/api/infra/file/staticFile'
 import { FileBusinessSequenceApi } from '@/api/infra/file/fileBusinessSequence'
 import { base64Encode } from '@/utils'
 import { createImageViewer } from '@/components/ImageViewer'
-import {
-  Upload
-} from '@element-plus/icons-vue'
+
 
 defineOptions({ name: 'StaticFileUpload' })
 
@@ -153,8 +142,11 @@ const props = withDefaults(defineProps<{
   sequenceCode?: string
   maxFiles?: number
   directory?: string
+  dir?: string
   acceptTypes?: string[]
+  accept?: string
   fileSize?: number
+  maxFileSize?: number
   isShowTip?: boolean
   tip?: string
 }>(), {
@@ -162,8 +154,12 @@ const props = withDefaults(defineProps<{
   mode: 'create',
   maxFiles: 999, // 不限制文件数量
   directory: 'static',
+  dir: '/',
+  accept: '',
   fileSize: 0, // 不限制文件大小
-  isShowTip: true
+  maxFileSize: 0, // 不限制文件大小
+  isShowTip: true,
+  tip: ''
 })
 
 // ========== 响应式数据 ==========
@@ -195,14 +191,6 @@ const sequenceInfo = ref<Array<{
 const uploadedFileIds = ref<number[]>([])
 
 // ========== 计算属性 ==========
-const hasSelectedFiles = computed(() => {
-  return fileBoxes.value.some(box => box.file && !box.uploaded)
-})
-
-const selectedFilesCount = computed(() => {
-  return fileBoxes.value.filter(box => box.file && !box.uploaded).length
-})
-
 const isUploading = computed(() => {
   return fileBoxes.value.some(box => box.uploading)
 })
@@ -572,29 +560,7 @@ const uploadStaticFile = async (box: any) => {
   return response
 }
 
-// 批量上传所有文件
-const uploadAllFiles = async () => {
-  const filesToUpload = fileBoxes.value.filter(box => box.file && !box.uploaded && !box.uploading)
 
-  if (filesToUpload.length === 0) {
-    message.warning('没有需要上传的文件')
-    return
-  }
-
-  // 并发上传，限制并发数为3
-  const concurrency = 3
-  const chunks = []
-  for (let i = 0; i < filesToUpload.length; i += concurrency) {
-    chunks.push(filesToUpload.slice(i, i + concurrency))
-  }
-
-  for (const chunk of chunks) {
-    await Promise.all(chunk.map(box => {
-      const index = fileBoxes.value.indexOf(box)
-      return uploadFile(index)
-    }))
-  }
-}
 
 // 取消上传
 const cancelUpload = (index: number) => {
@@ -1179,15 +1145,7 @@ defineExpose({
     }
   }
 
-  // 批量操作按钮
-  .batch-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    padding: 16px 0;
-    border-top: 1px solid #ebeef5;
-    margin-top: 16px;
-  }
+
 
   // 提示信息
   .upload-tip {

@@ -109,12 +109,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, defineProps, defineEmits, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, watch, defineProps, defineEmits, onMounted, nextTick } from 'vue'
 
 // 生成唯一实例ID
 const instanceId = Math.random().toString(36).substring(2, 15)
 import { propTypes } from '@/utils/propTypes'
-// import { useUpload } from '@/components/UploadFile/src/useUpload'
 import * as FileApi from '@/api/infra/file'
 import { FileBusinessSequenceApi } from '@/api/infra/file/fileBusinessSequence'
 import { base64Encode } from '@/utils'
@@ -155,9 +154,9 @@ const props = defineProps({
   // 是否显示提示
   isShowTip: propTypes.bool.def(false),
   // 上传目录
-  directory: propTypes.string.def(''),
+  directory: propTypes.string.def('business'),
   // 虚拟目录
-  dir: propTypes.string.def(''),
+  dir: propTypes.string.def('/'),
   // 接受的文件类型
   accept: propTypes.string.def(''),
   // 提示文字
