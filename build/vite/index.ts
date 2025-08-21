@@ -34,7 +34,9 @@ export function createVitePlugins() {
     ElementPlus({}),
     // Vue DevTools - 仅在开发环境启用
     VueDevTools({
-      launchEditor: 'cursor' // 指定使用 Cursor 编辑器
+      // launchEditor: 'cursor' // 指定使用 Cursor 编辑器
+      launchEditor: 'code' // 指定使用 vs code 编辑器
+      // launchEditor: 'idea' // 指定使用 idea 编辑器
     }),
     AutoImport({
       include: [
