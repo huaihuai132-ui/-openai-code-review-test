@@ -5,8 +5,6 @@
       class="-mb-15px"
       :model="queryParams"
       ref="queryFormRef"
-      :inline="true"
-      label-width="128px"
       :inline="false"
       label-width="68px"
     >
@@ -71,70 +69,19 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item>
-        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
-        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
-        <el-button
-          type="primary"
-          plain
-          @click="openForm('create')"
-          v-hasPermi="['business:finance-disbursement:create']"
-        >
-          <Icon icon="ep:plus" class="mr-5px" /> 新增
-        </el-button>
-        <el-button
-          type="success"
-          plain
-          @click="handleExport"
-          :loading="exportLoading"
-          v-hasPermi="['business:finance-disbursement:export']"
-        >
-          <Icon icon="ep:download" class="mr-5px" /> 导出
-        </el-button>
-      </el-form-item>
-        <el-form-item label="企业" prop="companyId">
-          <el-select v-model="queryParams.companyId" placeholder="请选择企业">
-            <el-option
-              v-for="item in companyList"
-              :key="item.id"
-              :label="item.enterpriseName"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="放款申请编码" prop="disbursementCode">
-          <el-input
-            v-model="queryParams.disbursementCode"
-            placeholder="请输入放款申请编码"
-            clearable
-            @keyup.enter="handleQuery"
-            class="!w-240px"
-          />
-        </el-form-item>
       </div>
 
       <!-- 第二行：三个字段 -->
       <div class="form-row">
-        <el-form-item label="项目名称" prop="projectName">
-          <el-input
-            v-model="queryParams.projectName"
-            placeholder="请输入项目名称"
-            clearable
-            @keyup.enter="handleQuery"
-            class="!w-240px"
-          />
-        </el-form-item>
-
-        <el-form-item label="单据状态" prop="status">
+        <el-form-item label="租赁模式" prop="leaseMode">
           <el-select
-            v-model="queryParams.status"
-            placeholder="请选择单据状态"
+            v-model="queryParams.leaseMode"
+            placeholder="请选择租赁模式"
             clearable
             class="!w-240px"
           >
             <el-option
-              v-for="dict in getIntDictOptions(DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS)"
+              v-for="dict in getIntDictOptions(DICT_TYPE.LEASE_MODE)"
               :key="dict.value"
               :label="dict.label"
               :value="dict.value"
@@ -142,8 +89,24 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="" prop="">
-          <div></div>
+        <el-form-item label="主要租赁物名称" prop="propertyMain">
+          <el-input
+            v-model="queryParams.propertyMain"
+            placeholder="请输入主要租赁物名称"
+            clearable
+            @keyup.enter="handleQuery"
+            class="!w-240px"
+          />
+        </el-form-item>
+
+        <el-form-item label="承租租期" prop="leaseTerm">
+          <el-input
+            v-model="queryParams.leaseTerm"
+            placeholder="请输入承租租期"
+            clearable
+            @keyup.enter="handleQuery"
+            class="!w-240px"
+          />
         </el-form-item>
       </div>
 
