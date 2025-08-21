@@ -7,14 +7,16 @@ export interface OaMeetingVO {
   meetName: string // 会议名称
   meetType: string // 会议类型
   meetDate: Date // 会议日期
-  startTime: localtime // 开始时间
-  endTime: localtime // 结束时间
+  startTime: string // 开始时间
+  endTime: string // 结束时间
   meetRoomId: number // 会议室ID
   reason: string // 会议事由
   description: string // 会议概述
   status: number // 会议状态
   fileList: string // 文件id列表
   sequenceCode: string // 文件序列编码
+  attendeeList?: {id: string, meetingId: string, userId: string, confirmStatus: number, confirmTime: string, confirmReason: string, notifyStatus: number, notifyTime: string, userMeetingOrder: string}[] // 参会人员列表
+  issueList?: {id: string, mettingId: string, mettingOrder: string}[] // 会议议题列表
 }
 
 // 会议 API
