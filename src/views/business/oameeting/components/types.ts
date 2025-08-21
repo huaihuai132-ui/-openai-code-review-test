@@ -22,7 +22,9 @@ export interface MeetingFormData {
 }
 
 export interface AttendeeWithUserInfo extends OaMeetingAttendeeVO {
-  userInfo: { id: number; nickname: string; deptName: string }
+  userName: string
+  userDepartmentId: number
+  userDepartmentName: string
 }
 
 export interface Attachment {

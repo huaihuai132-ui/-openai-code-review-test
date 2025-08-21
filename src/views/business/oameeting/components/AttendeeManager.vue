@@ -7,8 +7,8 @@
       </el-button>
     </div>
     <el-table :data="attendees" border style="width: 100%" empty-text="暂无参会人员">
-      <el-table-column prop="userInfo.nickname" label="用户名称" width="180" />
-      <el-table-column prop="userInfo.deptName" label="部门" sortable />
+      <el-table-column prop="userName" label="用户名称" width="180" />
+      <el-table-column prop="userDepartmentName" label="部门" sortable />
       <el-table-column label="操作" width="100" fixed="right">
         <template #default="{ row }">
           <el-button type="danger" link @click="removeParticipant(row)">
@@ -46,18 +46,16 @@ const userSelectFormRef = ref()
 
 /** 打开用户选择弹窗 */
 const openUserSelectDialog = () => {
-  userSelectFormRef.value?.open(0, attendees.value)
+  userSelectFormRef.value?.open(0, attendees.value.map((v) => ({ id: v.userId })))
 }
 
 /** 处理用户选择确认 */
 const handleUserSelected = (_id: any, userList: any[]) => {
   attendees.value = userList.map((item) => ({
     userId: item.id,
-    userInfo: {
-      id: item.id,
-      nickname: item.nickname,
-      deptName: item.deptName
-    }
+    userName: item.nickname,
+    userDepartmentId: item.deptId,
+    userDepartmentName: item.deptName,
   }))
 }
 

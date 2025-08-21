@@ -109,7 +109,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, defineProps, defineEmits, onMounted, nextTick } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 
 // 生成唯一实例ID
 const instanceId = Math.random().toString(36).substring(2, 15)

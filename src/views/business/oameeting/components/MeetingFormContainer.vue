@@ -163,7 +163,7 @@ const submitForm = async () => {
   try {
     const data = {
       ...formData.value,
-      attendeeList: formData.value.attendeeList.map((v) => ({ userId: v.id }))
+      attendeeList: formData.value.attendeeList.map((v) => ({ ...v, id: undefined })),
     } as unknown as OaMeetingVO
 
     // 处理文件列表
@@ -270,6 +270,7 @@ const resetForm = async () => {
 defineExpose({ open })
 
 import { ElMessageBox } from 'element-plus'
+import { getIntDictOptions } from '@/utils/dict'
 </script>
 
 <style scoped>
