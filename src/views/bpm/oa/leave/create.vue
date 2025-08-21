@@ -54,7 +54,7 @@ defineOptions({ name: 'BpmOALeaveCreate' })
 
 const message = useMessage() // 消息弹窗
 const { delView } = useTagsViewStore() // 视图操作
-const { push, currentRoute } = useRouter() // 路由
+const { currentRoute } = useRouter() // 路由
 
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formData = ref({
@@ -165,8 +165,8 @@ const daysDifference = () => {
   return Math.floor(diffTime / oneDay)
 }
 
-/** 初始化 */
-onMounted(async () => {
+/** 初始化流程定义 */
+const initProcessDefinition = async () => {
   // TODO @小北：这里可以简化，统一通过 getApprovalDetail 处理么？
   const processDefinitionDetail = await DefinitionApi.getProcessDefinition(
     undefined,
@@ -182,6 +182,11 @@ onMounted(async () => {
 
   // 审批相关：加载最新的审批详情，主要用于节点预测
   await getApprovalDetail()
+}
+
+// 在组件挂载后初始化流程定义
+onMounted(async () => {
+  await initProcessDefinition()
 })
 
 /** 审批相关：预测流程节点会因为输入的参数值而产生新的预测结果值，所以需重新预测一次, formData.value可改成实际业务中的特定字段 */

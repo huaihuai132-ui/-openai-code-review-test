@@ -7,14 +7,16 @@
     <div class="detail-panel">
       <div class="detail-header">
         <span class="detail-title">{{ title }}</span>
-        <el-button type="text" @click="handleClose">
+        <el-button link @click="handleClose">
           <el-icon>
             <Close />
           </el-icon>
         </el-button>
       </div>
       <div class="detail-content">
-        <slot></slot>
+        <el-config-provider :z-index="10000" namespace="el">
+          <slot></slot>
+        </el-config-provider>
       </div>
     </div>
   </div>
@@ -109,6 +111,11 @@ const handleClose = () => {
   padding: 24px;
   overflow: auto;
   background: #fff;
+}
+
+/* 确保Element Plus下拉组件在蒙层中正确显示 */
+:deep(.el-popper) {
+  z-index: 10000 !important;
 }
 
 /* 响应式设计 */
