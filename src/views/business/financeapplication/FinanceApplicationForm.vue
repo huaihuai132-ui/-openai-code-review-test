@@ -11,7 +11,7 @@
       <div class="form-section">
         <h3 class="section-title">基本信息</h3>
         <div class="form-row">
-          <el-form-item label="企业" prop="companyId">
+          <el-form-item label="企业名称" prop="companyId">
             <el-select v-model="formData.companyId" placeholder="请选择企业">
               <el-option
                 v-for="item in companyList"
@@ -30,13 +30,17 @@
         </div>
         <div class="form-row">
           <el-form-item label="标的数量" prop="leasedPropertyNum">
-            <el-input v-model="formData.leasedPropertyNum" placeholder="请输入标的数量" />
+            <el-input v-model="formData.leasedPropertyNum" placeholder="请输入标的数量"  type="number"/>
           </el-form-item>
           <el-form-item label="拟标的净值" prop="leasedPropertyValue">
-            <el-input v-model="formData.leasedPropertyValue" placeholder="请输入拟标的净值" />
+            <el-input v-model="formData.leasedPropertyValue" placeholder="请输入拟标的净值"  type="number" >
+              <template #append>元</template>
+            </el-input>
           </el-form-item>
           <el-form-item label="申请额度" prop="leaseAmount">
-            <el-input v-model="formData.leaseAmount" placeholder="请输入申请额度" />
+            <el-input v-model="formData.leaseAmount" placeholder="请输入申请额度"  type="number" >
+              <template #append>元</template>
+            </el-input>
           </el-form-item>
         </div>
         <div class="form-row">

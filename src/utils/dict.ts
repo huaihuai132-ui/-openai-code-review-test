@@ -248,7 +248,8 @@ export enum DICT_TYPE {
   IOT_DATA_BRIDGE_TYPE_ENUM = 'iot_data_bridge_type_enum', // 桥梁类型
   LEASE_MODE = 'lease_mode', // 租赁模式
   LIEN_MODE = 'lien_mode', // 担保方式
-
+  REPAYMENT_MODE = 'repayment_mode', // 融资租赁还租方式
+  REPAYMENT_STATUS = 'repayment_status', // 融资租赁还租方式
   // ========== Meet - 会议模块  ==========
   MEET_ISSUE_TYPE = 'meet_issue_type',
   MEET_TYPE = 'meet_type',

@@ -14,7 +14,7 @@
           <el-form-item label="立项编号" prop="applicationId">
             <el-input v-model="formData.applicationId" placeholder="请输入立项编号" />
           </el-form-item>
-          <el-form-item label="企业" prop="companyId">
+          <el-form-item label="企业名称" prop="companyId">
             <el-select v-model="formData.companyId" placeholder="请选择企业">
               <el-option
                 v-for="item in companyList"
@@ -33,10 +33,12 @@
             <el-input v-model="formData.leasedProperty" placeholder="请输入融资标的物名称" />
           </el-form-item>
           <el-form-item label="标的数量" prop="leasedPropertyNum">
-            <el-input v-model="formData.leasedPropertyNum" placeholder="请输入融资标的物数量" />
+            <el-input v-model="formData.leasedPropertyNum" placeholder="请输入融资标的物数量"  type="number"/>
           </el-form-item>
           <el-form-item label="标的净值" prop="leasedPropertyValue">
-            <el-input v-model="formData.leasedPropertyValue" placeholder="请输入拟融资标的物净值" />
+            <el-input v-model="formData.leasedPropertyValue" placeholder="请输入拟融资标的物净值"  type="number" >
+              <template #append>元</template>
+            </el-input>
           </el-form-item>
         </div>
         <div class="form-row">
@@ -54,7 +56,9 @@
             </el-select>
           </el-form-item>
           <el-form-item label="申请额度" prop="leaseAmount">
-            <el-input v-model="formData.leaseAmount" placeholder="请输入申请额度" />
+            <el-input v-model="formData.leaseAmount" placeholder="请输入申请额度"  type="number" >
+              <template #append>元</template>
+            </el-input>
           </el-form-item>
         </div>
         <div class="form-row">
@@ -67,10 +71,14 @@
             />
           </el-form-item>
           <el-form-item label="承租租期" prop="leaseTerm">
-            <el-input v-model="formData.leaseTerm" placeholder="请输入承租租期" />
+            <el-input v-model="formData.leaseTerm" placeholder="请输入承租租期"  type="number" >
+              <template #append>月</template>
+            </el-input>
           </el-form-item>
           <el-form-item label="利率" prop="interestRate">
-            <el-input v-model="formData.interestRate" placeholder="请输入利率" />
+            <el-input v-model="formData.interestRate" placeholder="请输入利率"  type="number" >
+              <template #append>%</template>
+            </el-input>
           </el-form-item>
         </div>
         <div class="form-row">

@@ -17,7 +17,7 @@
           <el-form-item label="租后管理编码" prop="manageCode">
             <el-input v-model="formData.manageCode" placeholder="请输入租后管理编码" />
           </el-form-item>
-          <el-form-item label="企业" prop="companyId">
+          <el-form-item label="企业名称" prop="companyId">
             <el-select v-model="formData.companyId" placeholder="请选择企业">
               <el-option
                 v-for="item in companyList"

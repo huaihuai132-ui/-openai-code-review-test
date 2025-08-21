@@ -6,7 +6,7 @@
       :model="queryParams"
       ref="queryFormRef"
       :inline="true"
-      label-width="68px"
+      label-width="128px"
     >
       <el-form-item label="融资租赁放款表编号" prop="disbursementId">
         <el-input
@@ -242,7 +242,7 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
+onMounted(async () => {
   getList()
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
   companyList.value = response.data

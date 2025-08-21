@@ -10,8 +10,15 @@
       <el-form-item label="融资租赁放款表编号" prop="disbursementId">
         <el-input v-model="formData.disbursementId" placeholder="请输入融资租赁放款表编号" />
       </el-form-item>
-      <el-form-item label="企业id" prop="companyId">
-        <el-input v-model="formData.companyId" placeholder="请输入企业id" />
+      <el-form-item label="企业名称" prop="companyId">
+        <el-select v-model="formData.companyId" placeholder="请选择企业">
+          <el-option
+            v-for="item in companyList"
+            :key="item.id"
+            :label="item.enterpriseName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="还款时间" prop="repaymentDate">
         <el-date-picker
@@ -22,37 +29,34 @@
         />
       </el-form-item>
       <el-form-item label="租金" prop="rent">
-        <el-input v-model="formData.rent" placeholder="请输入租金" />
+        <el-input v-model="formData.rent" placeholder="请输入租金"  type="number" >
+          <template #append>元</template>
+        </el-input>
       </el-form-item>
       <el-form-item label="利率" prop="interestRate">
-        <el-input v-model="formData.interestRate" placeholder="请输入利率" />
+        <el-input v-model="formData.interestRate" placeholder="请输入利率"  type="number" >
+          <template #append>%</template>
+        </el-input>
       </el-form-item>
       <el-form-item label="还款本金" prop="capital">
-        <el-date-picker
-          v-model="formData.capital"
-          type="date"
-          value-format="x"
-          placeholder="选择还款本金"
-        />
+        <el-input v-model="formData.capital" placeholder="请输入还款本金"  type="number" >
+          <template #append>元</template>
+        </el-input>
       </el-form-item>
       <el-form-item label="还款利息" prop="interest">
-        <el-date-picker
-          v-model="formData.interest"
-          type="date"
-          value-format="x"
-          placeholder="选择还款利息"
-        />
+        <el-input v-model="formData.interest" placeholder="请输入还款利息"  type="number" >
+        <template #append>元</template>
+      </el-input>
       </el-form-item>
       <el-form-item label="还款状态" prop="repaymentStatus">
         <el-select v-model="formData.repaymentStatus" placeholder="请选择还款状态">
-          <el-option label="请选择字典生成" value="" />
+          <el-option
+            v-for="dict in getStrDictOptions(DICT_TYPE.REPAYMENT_STATUS)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
         </el-select>
-      </el-form-item>
-      <el-form-item label="还款凭证文件路径" prop="filePath">
-        <el-input v-model="formData.filePath" placeholder="请输入还款凭证文件路径" />
-      </el-form-item>
-      <el-form-item label="部门id" prop="deptId">
-        <el-input v-model="formData.deptId" placeholder="请输入部门id" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -63,6 +67,8 @@
 </template>
 <script setup lang="ts">
 import { FinanceRepaymentApi, FinanceRepaymentVO } from '@/api/business/financerepayment'
+import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
+import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 
 /** 融资租赁放款 表单 */
 defineOptions({ name: 'FinanceRepaymentForm' })
@@ -98,6 +104,7 @@ const formRules = reactive({
   repaymentStatus: [{ required: true, message: '还款状态不能为空', trigger: 'change' }],
 })
 const formRef = ref() // 表单 Ref
+const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
 
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
@@ -114,6 +121,8 @@ const open = async (type: string, id?: number) => {
       formLoading.value = false
     }
   }
+  const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
+  companyList.value = response.data
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 
