@@ -150,6 +150,7 @@ export enum DICT_TYPE {
   BPM_PROCESS_INSTANCE_STATUS = 'bpm_process_instance_status',
   BPM_TASK_STATUS = 'bpm_task_status',
   BPM_OA_LEAVE_TYPE = 'bpm_oa_leave_type',
+  BPM_OA_OUT_TYPE = 'bpm_oa_out_type',
   BPM_PROCESS_LISTENER_TYPE = 'bpm_process_listener_type',
   BPM_PROCESS_LISTENER_VALUE_TYPE = 'bpm_process_listener_value_type',
 

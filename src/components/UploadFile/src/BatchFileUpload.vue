@@ -90,9 +90,7 @@
 
       <!-- 添加更多文件按钮 (批量模式，仅在创建和编辑模式下显示) -->
       <div v-if="fileBoxes.length < maxFiles && !sequenceCode && (mode === 'create' || mode === 'edit')"
-        class="file-all-in-one-box add-more-box" :class="{
-          'view-mode': mode === 'view'
-        }" @click="addNewFileBox">
+        class="file-all-in-one-box add-more-box" @click="addNewFileBox">
         <div class="empty-state">
           <div class="plus-icon">
             ➕
