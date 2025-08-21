@@ -122,11 +122,23 @@ const selectUserConfirm = (userList: any[], node: ApprovalNodeInfo) => {
 /** 获得审批详情 */
 const getApprovalDetail = async () => {
   try {
-    const result = await ProcessInstanceApi.getApprovalSteps({
+    const data = await ProcessInstanceApi.getApprovalDetail({
       processDefinitionId: processDefinitionId.value,
-      activityId: NodeId.START_EVENT_NODE
+      activityId: NodeId.START_USER_NODE_ID,
+      processVariablesStr: JSON.stringify({}) // 外出申请暂时不需要特殊变量
     })
-    activityNodes.value = result
+
+    if (!data) {
+      message.error('查询不到审批详情信息！')
+      return
+    }
+    // 获取审批节点，显示 Timeline 的数据
+    activityNodes.value = data.activityNodes
+
+    // 获取发起人自选的任务
+    startUserSelectTasks.value = data.activityNodes?.filter(
+      (item: any) => item.candidateStrategy === CandidateStrategy.START_USER_SELECT
+    )
   } catch (error) {
     console.error(error)
   }
