@@ -92,6 +92,13 @@
       <!-- 下部分：Tab组件 -->
       <div class="form-section">
         <el-tabs v-model="activeTab" class="form-tabs">
+          <!-- 设备管理 tab -->
+          <el-tab-pane label="设备" name="equipment">
+            <div class="equipment-content">
+              <EquipmentList v-model="formData.deviceList" />
+            </div>
+          </el-tab-pane>
+          
           <!-- 附件上传 tab -->
           <el-tab-pane label="附件上传" name="upload">
             <div class="upload-content">
@@ -122,6 +129,7 @@ import { FinanceLeaseApi, FinanceLeaseVO } from '@/api/business/financelease'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
 import { UploadFile } from '@/components/UploadFile'
 import { useUserStore } from '@/store/modules/user'
+import EquipmentList from './components/EquipmentList.vue'
 
 const userStore = useUserStore()
 
@@ -152,6 +160,7 @@ const formData = ref({
   leaseTerm: undefined,
   interestRate: undefined,
   filePath: undefined,
+  deviceList: [],
   status: undefined,
   processInstanceId: undefined,
   deptId: undefined,
@@ -170,7 +179,7 @@ const formRules = reactive({
 
 const formRef = ref() // 表单 Ref
 const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
-const activeTab = ref('upload') // 当前激活的tab
+const activeTab = ref('equipment') // 当前激活的tab
 
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
@@ -236,6 +245,7 @@ const resetForm = () => {
     leaseTerm: undefined,
     interestRate: undefined,
     filePath: undefined,
+    deviceList: [],
     status: undefined,
     processInstanceId: undefined,
     deptId: undefined,

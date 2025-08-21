@@ -7,16 +7,20 @@
       ref="queryFormRef"
       :inline="true"
       label-width="128px"
+      :inline="false"
+      label-width="68px"
     >
-      <el-form-item label="融资租赁单编号" prop="leaseId">
-        <el-input
-          v-model="queryParams.leaseId"
-          placeholder="请输入融资租赁单编号"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
+      <!-- 第一行：三个字段 -->
+      <div class="form-row">
+        <el-form-item label="融资租赁单编号" prop="leaseId">
+          <el-input
+            v-model="queryParams.leaseId"
+            placeholder="请输入融资租赁单编号"
+            clearable
+            @keyup.enter="handleQuery"
+            class="!w-240px"
+          />
+        </el-form-item>
 
       <el-form-item label="企业名称" prop="companyId">
         <el-select
@@ -88,6 +92,85 @@
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
       </el-form-item>
+        <el-form-item label="企业" prop="companyId">
+          <el-select v-model="queryParams.companyId" placeholder="请选择企业">
+            <el-option
+              v-for="item in companyList"
+              :key="item.id"
+              :label="item.enterpriseName"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="放款申请编码" prop="disbursementCode">
+          <el-input
+            v-model="queryParams.disbursementCode"
+            placeholder="请输入放款申请编码"
+            clearable
+            @keyup.enter="handleQuery"
+            class="!w-240px"
+          />
+        </el-form-item>
+      </div>
+
+      <!-- 第二行：三个字段 -->
+      <div class="form-row">
+        <el-form-item label="项目名称" prop="projectName">
+          <el-input
+            v-model="queryParams.projectName"
+            placeholder="请输入项目名称"
+            clearable
+            @keyup.enter="handleQuery"
+            class="!w-240px"
+          />
+        </el-form-item>
+
+        <el-form-item label="单据状态" prop="status">
+          <el-select
+            v-model="queryParams.status"
+            placeholder="请选择单据状态"
+            clearable
+            class="!w-240px"
+          >
+            <el-option
+              v-for="dict in getIntDictOptions(DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS)"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value"
+            />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="" prop="">
+          <div></div>
+        </el-form-item>
+      </div>
+
+      <!-- 第三行：操作按钮 -->
+      <div class="form-row">
+        <el-form-item>
+          <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
+          <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
+          <el-button
+            type="primary"
+            plain
+            @click="openForm('create')"
+            v-hasPermi="['business:finance-disbursement:create']"
+          >
+            <Icon icon="ep:plus" class="mr-5px" /> 新增
+          </el-button>
+          <el-button
+            type="success"
+            plain
+            @click="handleExport"
+            :loading="exportLoading"
+            v-hasPermi="['business:finance-disbursement:export']"
+          >
+            <Icon icon="ep:download" class="mr-5px" /> 导出
+          </el-button>
+        </el-form-item>
+      </div>
     </el-form>
   </ContentWrap>
 
@@ -152,7 +235,7 @@
 </template>
 
 <script setup lang="ts">
-import { getBoolDictOptions, DICT_TYPE, getIntDictOptions } from '@/utils/dict'
+import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import download from '@/utils/download'
 import { FinanceDisbursementApi, FinanceDisbursementVO } from '@/api/business/financedisbursement'
 import FinanceDisbursementForm from './FinanceDisbursementForm.vue'
@@ -268,3 +351,32 @@ onMounted(async () => {
   companyList.value = response.data
 })
 </script>
+
+<style scoped>
+/* 表单行样式 */
+.form-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.form-row .el-form-item {
+  flex: 1;
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+/* 第三行按钮组样式 */
+.form-row:last-child .el-form-item {
+  flex: none;
+}
+
+.form-row:last-child .el-form-item .el-button {
+  margin-right: 10px;
+}
+
+.form-row:last-child .el-form-item .el-button:last-child {
+  margin-right: 0;
+}
+</style>

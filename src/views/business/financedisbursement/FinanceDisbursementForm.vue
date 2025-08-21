@@ -7,6 +7,97 @@
       label-width="128px"
       v-loading="formLoading"
     >
+      <el-form-item label="融资租赁单编号" prop="leaseId">
+        <el-input v-model="formData.leaseId" placeholder="请输入融资租赁单编号" />
+      </el-form-item>
+      <el-form-item label="申请人的用户编号" prop="userId">
+        <el-input v-model="formData.userId" placeholder="请输入申请人的用户编号" />
+      </el-form-item>
+      <el-form-item label="企业id" prop="companyId">
+        <el-select v-model="formData.companyId" placeholder="请选择企业id">
+          <el-option label="请选择字典生成" value="" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="放款申请编码" prop="disbursementCode">
+        <el-input v-model="formData.disbursementCode" placeholder="请输入放款申请编码" />
+      </el-form-item>
+      <el-form-item label="项目名称" prop="projectName">
+        <el-input v-model="formData.projectName" placeholder="请输入项目名称" />
+      </el-form-item>
+      <el-form-item label="租赁模式" prop="leaseMode">
+        <el-select v-model="formData.leaseMode" placeholder="请选择租赁模式">
+          <el-option
+            v-for="dict in getStrDictOptions(DICT_TYPE.LEASE_MODE)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="主要租赁物名称" prop="propertyMain">
+        <el-input v-model="formData.propertyMain" placeholder="请输入主要租赁物名称" />
+      </el-form-item>
+      <el-form-item label="标的物原值" prop="propertyOriginalValue">
+        <el-input v-model="formData.propertyOriginalValue" placeholder="请输入标的物原值" />
+      </el-form-item>
+      <el-form-item label="标的物估值" prop="propertyAssessmentValue">
+        <el-input v-model="formData.propertyAssessmentValue" placeholder="请输入标的物估值" />
+      </el-form-item>
+      <el-form-item label="平均使用年限" prop="usefulLife">
+        <el-input v-model="formData.usefulLife" placeholder="请输入平均使用年限" />
+      </el-form-item>
+      <el-form-item label="租赁本金" prop="leaseAmount">
+        <el-input v-model="formData.leaseAmount" placeholder="请输入租赁本金" />
+      </el-form-item>
+      <el-form-item label="承租租期" prop="leaseTerm">
+        <el-input v-model="formData.leaseTerm" placeholder="请输入承租租期" />
+      </el-form-item>
+      <el-form-item label="保证金" prop="depositAmount">
+        <el-input v-model="formData.depositAmount" placeholder="请输入保证金" />
+      </el-form-item>
+      <el-form-item label="投放期数" prop="putNumbers">
+        <el-input v-model="formData.putNumbers" placeholder="请输入投放期数" />
+      </el-form-item>
+      <el-form-item label="年租息率" prop="interestRate">
+        <el-input v-model="formData.interestRate" placeholder="请输入年租息率" />
+      </el-form-item>
+      <el-form-item label="服务费比率" prop="serveRate">
+        <el-input v-model="formData.serveRate" placeholder="请输入服务费比率" />
+      </el-form-item>
+      <el-form-item label="还租方式" prop="repaymentMode">
+        <el-select v-model="formData.repaymentMode" placeholder="请选择还租方式">
+          <el-option label="请选择字典生成" value="" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="本次金额" prop="thistimeAmount">
+        <el-input v-model="formData.thistimeAmount" placeholder="请输入本次金额" />
+      </el-form-item>
+      <el-form-item label="累计金额" prop="accruedAmount">
+        <el-input v-model="formData.accruedAmount" placeholder="请输入累计金额" />
+      </el-form-item>
+      <el-form-item label="收款单位账户名称" prop="beneficiaryName">
+        <el-input v-model="formData.beneficiaryName" placeholder="请输入收款单位账户名称" />
+      </el-form-item>
+      <el-form-item label="收款单位账开户行" prop="beneficiaryBanklocation">
+        <el-input v-model="formData.beneficiaryBanklocation" placeholder="请输入收款单位账开户行" />
+      </el-form-item>
+      <el-form-item label="收款单位账号" prop="beneficiaryAccount">
+        <el-input v-model="formData.beneficiaryAccount" placeholder="请输入收款单位账号" />
+      </el-form-item>
+      <el-form-item label="文件路径" prop="filePath">
+        <UploadFile v-model="formData.filePath" />
+      </el-form-item>
+      <el-form-item label="单据状态" prop="status">
+        <el-radio-group v-model="formData.status">
+          <el-radio value="1">请选择字典生成</el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="流程实例的编号" prop="processInstanceId">
+        <el-input v-model="formData.processInstanceId" placeholder="请输入流程实例的编号" />
+      </el-form-item>
+      <el-form-item label="部门id" prop="deptId">
+        <el-input v-model="formData.deptId" placeholder="请输入部门id" />
+      </el-form-item>
       <!-- 上部分：输入框以一行三列形式排列 -->
       <div class="form-section">
         <h3 class="section-title">基本信息</h3>
