@@ -98,7 +98,7 @@
                                     <template v-if="item.tasks.length === 1">
                                         <span>
                                             <span class="approver-name">{{ item.tasks[0].assigneeUser?.nickname
-                                            }}</span>
+                                                }}</span>
                                             ({{ item.tasks[0].name }}) 审批中
                                         </span>
                                     </template>
@@ -106,7 +106,7 @@
                                     <template v-else>
                                         <span>
                                             <span class="approver-name">{{ item.tasks[0].assigneeUser?.nickname
-                                            }}</span>
+                                                }}</span>
                                             等 {{ item.tasks.length }} 人 ({{ item.tasks[0].name }})审批中
                                         </span>
                                     </template>
@@ -162,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { formatDate } from '@/utils/formatTime';
 import { getLastReadTime, updateLastReadTime } from '@/utils/cache';
 import { getDictLabel } from '@/utils/dict';
@@ -231,8 +231,8 @@ const toggleCategoryFilter = (value: string) => {
     } else {
         // 如果当前标签未选中，则设置为唯一选中的标签
         queryParams.categoryFilter = [value];
-        // 当选择分类时，更新该分类的最后读取时间，清除角标
-        updateLastReadTime(`approval_${props.category}_${value}_last_read`);
+        // 注意：这里不立即更新最后读取时间，角标应该保持显示
+        // 只有用户真正浏览了该分类的内容后才清除角标
     }
     handleQuery();
 };
@@ -491,8 +491,9 @@ const getCategoryNewCount = (categoryCode) => {
     // 获取该分类的最后读取时间
     const lastReadTime = getLastReadTime(`approval_${props.category}_${categoryCode}_last_read`);
 
-    // 筛选出该分类的新数据
-    const categoryItems = filteredData.value.filter(item => {
+    // ✅ 关键修改：使用原始数据而不是筛选后的数据来计算角标
+    // 这样确保即使用户筛选了其他分类，所有分类的角标都能正确显示
+    const categoryItems = (props.data || []).filter(item => {
         let itemCategoryCode;
 
         // 根据不同的分类获取categoryCode
@@ -523,6 +524,33 @@ const getCategoryNewCount = (categoryCode) => {
         }
     }).length;
 };
+
+// 清除指定分类的角标（当用户真正查看了内容后调用）
+const clearCategoryBadge = (categoryCode) => {
+    if (categoryCode) {
+        updateLastReadTime(`approval_${props.category}_${categoryCode}_last_read`);
+    }
+};
+
+// 监听分类筛选变化，延迟清除角标
+let clearBadgeTimer: NodeJS.Timeout | null = null;
+
+watch(() => queryParams.categoryFilter, (newFilter, oldFilter) => {
+    // 清除之前的定时器
+    if (clearBadgeTimer) {
+        clearTimeout(clearBadgeTimer);
+        clearBadgeTimer = null;
+    }
+
+    // 如果用户选择了某个分类，设置定时器在3秒后清除该分类的角标
+    if (newFilter.length === 1) {
+        const selectedCategory = newFilter[0];
+        clearBadgeTimer = setTimeout(() => {
+            clearCategoryBadge(selectedCategory);
+            clearBadgeTimer = null;
+        }, 3000); // 3秒后清除角标，表示用户已经查看了该分类的内容
+    }
+}, { deep: true });
 
 // 搜索
 const handleQuery = () => {
