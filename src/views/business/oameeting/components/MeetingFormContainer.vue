@@ -43,6 +43,7 @@ import type { MeetingFormData, MeetingRoom } from './types'
 import { ref, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useMessage } from '@/hooks/web/useMessage'
+import { ElMessageBox } from 'element-plus'
 
 /** 会议表单容器 */
 defineOptions({ name: 'MeetingFormContainer' })
@@ -131,7 +132,7 @@ const open = async (type: string, id?: number) => {
       processedData.meetDate = processTimestamp(processedData.meetDate)
       processedData.startTime = processTimestamp(processedData.startTime)
       processedData.endTime = processTimestamp(processedData.endTime)
-      processedData.fileList = Array.isArray(processedData.fileList) ? processedData.fileList : []
+      processedData.fileList = processedData.fileList && JSON.parse(processedData.fileList) || []
       processedData.participants = processedData.participants || []
       processedData.agendaTopics = processedData.agendaTopics || []
 
@@ -268,9 +269,6 @@ const resetForm = async () => {
 }
 
 defineExpose({ open })
-
-import { ElMessageBox } from 'element-plus'
-import { getIntDictOptions } from '@/utils/dict'
 </script>
 
 <style scoped>

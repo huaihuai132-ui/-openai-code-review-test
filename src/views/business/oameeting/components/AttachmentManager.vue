@@ -1,5 +1,5 @@
 <template>
-  <div class="attachment-manager">
+  <div class="py-4">
     <el-form-item label="会议附件" prop="fileList">
       <BatchFileUpload
         ref="batchUploadRef"
@@ -19,7 +19,7 @@ import { BatchFileUpload } from '@/components/UploadFile'
 import { computed, ref } from 'vue'
 
 interface Props {
-  fileList: number[]
+  fileList: string[]
 }
 
 const props = defineProps<Props>()
@@ -60,9 +60,3 @@ defineExpose({
   batchUploadRef
 })
 </script>
-
-<style scoped>
-.attachment-manager {
-  padding: 16px 0;
-}
-</style>
