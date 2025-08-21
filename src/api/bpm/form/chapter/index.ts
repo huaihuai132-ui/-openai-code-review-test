@@ -10,9 +10,9 @@ export interface ChapterVO {
   useDate: Date
   chapterFileName: string
   chapterName: string
-  storagePath: string
+  sequenceCode: string
   isTakeOut: string
-  editStatus: string
+  fileList: string
   status: number
   processInstanceId: string
   createTime: Date
@@ -32,4 +32,4 @@ export const getChapter = (id: number) => {
 // 获取用章申请分页
 export const getChapterPage = (params: any) => {
   return request.get({ url: '/bpm/oa/form/chapter/page', params })
-} 
+}

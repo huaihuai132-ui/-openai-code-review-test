@@ -1,21 +1,21 @@
 import request from '@/config/axios'
 
 export interface ChapterVO {
-  id: number
-  userId: number
-  deptId: number
-  deptName: string
+  id?: number
+  userId?: number // 用户ID
+  deptId?: number // 部门ID
+  deptName?: string // 部门名称
   fund: number
   reason: string
-  useDate: Date
+  useDate: Date // 用章日期
   chapterFileName: string
   chapterName: string
-  storagePath: string
+  fileList: string // 文件ID列表，逗号分隔的字符串
+  sequenceCode?: string // 文件序列编码
   isTakeOut: string
-  editStatus: string
-  status: number
-  processInstanceId: string
-  createTime: Date
+  status?: number
+  processInstanceId?: string
+  createTime?: Date
   startUserSelectAssignees?: Record<string, number[]>
 }
 

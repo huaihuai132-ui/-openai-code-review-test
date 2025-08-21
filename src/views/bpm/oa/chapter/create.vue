@@ -2,24 +2,20 @@
     <el-row :gutter="20">
         <el-col :span="16">
             <ContentWrap title="申请信息">
+                <!-- 申请人信息显示 -->
+                <el-alert :title="`申请人：${userStore.getUser.nickname || '未知'} | 部门：${deptName || '未知'}`" type="info"
+                    :closable="false" style="margin-bottom: 20px;" />
+
                 <el-form ref="formRef" v-loading="formLoading" :model="formData" :rules="formRules" label-width="100px">
-                    <el-form-item label="用章部门" prop="deptId">
-                        <el-tree-select v-model="formData.deptId" :data="deptOptions"
-                            :props="{ label: 'name', value: 'id', children: 'children' }" placeholder="请选择用章部门"
-                            clearable @change="handleDeptChange" node-key="id" filterable :filter-method="filterDept"
-                            class="w-full" />
+                    <!-- 用章部门字段已隐藏，由后端自动获取当前用户的部门信息 -->
+                    <el-form-item label="用章事由" prop="reason">
+                        <el-input v-model="formData.reason" placeholder="请输入用章事由" type="textarea" />
                     </el-form-item>
                     <el-form-item label="资金" prop="fund">
                         <el-input-number v-model="formData.fund" :precision="2" :step="100" :min="0"
                             controls-position="right" />
                     </el-form-item>
-                    <el-form-item label="用章事由" prop="reason">
-                        <el-input v-model="formData.reason" placeholder="请输入用章事由" type="textarea" />
-                    </el-form-item>
-                    <el-form-item label="用章日期" prop="useDate">
-                        <el-date-picker v-model="formData.useDate" clearable placeholder="请选择用章日期" type="date"
-                            value-format="x" />
-                    </el-form-item>
+                    <!-- 用章日期字段已隐藏，由后端自动设置为当前日期 -->
                     <el-form-item label="用章文件" prop="chapterFileNames">
                         <div v-for="(_, index) in fileNames" :key="index" class="mb-10px">
                             <div class="file-input-container">
@@ -46,18 +42,16 @@
                     </el-form-item>
                     <el-form-item label="是否外带" prop="isTakeOut">
                         <el-radio-group v-model="formData.isTakeOut">
-                            <el-radio label="0">不外带</el-radio>
-                            <el-radio label="1">外带</el-radio>
+                            <el-radio value="0">不外带</el-radio>
+                            <el-radio value="1">外带</el-radio>
                         </el-radio-group>
                     </el-form-item>
-                    <el-form-item label="附件" prop="storagePath">
-                        <el-upload action="#" :auto-upload="false" :on-change="handleFileChange" multiple
-                            :file-list="fileList" :limit="5">
-                            <el-button type="primary">选择文件</el-button>
-                            <template #tip>
-                                <div class="el-upload__tip">支持上传多个文件，每个文件不超过10MB</div>
-                            </template>
-                        </el-upload>
+                  <el-form-item label="文件序列编码" prop="sequenceCode">
+                    <el-input v-model="formData.sequenceCode" disabled />
+                  </el-form-item>
+                    <el-form-item label="附件" prop="fileList">
+                        <BatchFileUpload ref="fileUploadRef" v-model:fileList="formData.fileList" mode="create"
+                            :max-files="10" directory="chapter" :file-size="10" tip="支持上传多个文件，每个文件不超过10MB" />
                     </el-form-item>
                     <el-form-item>
                         <el-button :disabled="formLoading" type="primary" @click="submitForm">
@@ -81,8 +75,10 @@
 import * as ChapterApi from '@/api/bpm/form/chapter'
 import { useTagsViewStore } from '@/store/modules/tagsView'
 import { getIntDictOptions } from '@/utils/dict'
-import * as DeptApi from '@/api/system/dept'
 import { Delete, Plus } from '@element-plus/icons-vue'
+import { BatchFileUpload } from '@/components/UploadFile'
+import { useUserStore } from '@/store/modules/user'
+import * as DeptApi from '@/api/system/dept'
 
 // 审批相关：import
 import * as DefinitionApi from '@/api/bpm/definition'
@@ -99,26 +95,24 @@ const { push, currentRoute } = useRouter() // 路由
 
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formData = ref({
-    deptId: undefined,
-    deptName: '',
     fund: 0,
     reason: '',
-    useDate: new Date().getTime(), // 默认今天
+    useDate: new Date(), // 默认当前日期
     chapterFileName: '',
     chapterName: '',
     isTakeOut: '0',
-    storagePath: ''
+    fileList: [] as number[], // 文件ID列表
+    sequenceCode: '' // 文件序列编码（可选）
 })
 const formRules = reactive({
-    deptId: [{ required: true, message: '用章部门不能为空', trigger: 'change' }],
     reason: [{ required: true, message: '用章事由不能为空', trigger: 'change' }],
-    useDate: [{ required: true, message: '用章日期不能为空', trigger: 'change' }],
     chapterName: [{ required: true, message: '印章类型不能为空', trigger: 'change' }]
 })
 const formRef = ref() // 表单 Ref
-const fileList = ref<any[]>([]) // 文件列表
-const deptOptions = ref<DeptApi.DeptVO[]>([]) // 部门选项
+const fileUploadRef = ref() // 文件上传组件 Ref
 const fileNames = ref<string[]>(['']) // 用章文件名称列表
+const userStore = useUserStore() // 用户Store
+const deptName = ref('') // 部门名称
 
 // 审批相关：变量
 const processDefineKey = 'oa_form_chapter' // 流程定义 Key
@@ -128,32 +122,18 @@ const tempStartUserSelectAssignees = ref<Record<string, number[]>>({}) // 历史
 const activityNodes = ref<ProcessInstanceApi.ApprovalNodeInfo[]>([]) // 审批节点信息
 const processDefinitionId = ref('')
 
-/** 处理部门选择变更 */
-const handleDeptChange = (deptId: number) => {
-    if (!deptId) {
-        formData.value.deptName = ''
-        return
-    }
-    // 查找部门名称
-    const findDeptName = (deptList: any[]): string => {
-        for (const dept of deptList) {
-            if (dept.id === deptId) {
-                return dept.name
-            }
-            if (dept.children && dept.children.length > 0) {
-                const name = findDeptName(dept.children)
-                if (name) return name
-            }
+/** 获取部门名称 */
+const getDeptName = async () => {
+    const currentUser = userStore.getUser
+    if (currentUser.deptId) {
+        try {
+            const dept = await DeptApi.getDept(currentUser.deptId)
+            deptName.value = dept.name || ''
+        } catch (error) {
+            console.error('获取部门信息失败', error)
+            deptName.value = ''
         }
-        return ''
     }
-    formData.value.deptName = findDeptName(deptOptions.value)
-}
-
-/** 部门筛选方法 */
-const filterDept = (value: string, data: any) => {
-    if (!value) return true
-    return data.name.includes(value)
 }
 
 /** 添加用章文件名称 */
@@ -178,11 +158,7 @@ const updateChapterFileName = () => {
     formData.value.chapterFileName = JSON.stringify(validFileNames)
 }
 
-/** 处理文件上传 */
-const handleFileChange = (_file: any, uploadFileList: any[]) => {
-    // 保存文件列表
-    fileList.value = [...uploadFileList]
-}
+
 
 /** 提交表单 */
 const submitForm = async () => {
@@ -193,30 +169,28 @@ const submitForm = async () => {
     if (!formRef) return
     const valid = await formRef.value.validate()
     if (!valid) return
-    
+
     // 2. 提交请求
     formLoading.value = true
     try {
         const data = { ...formData.value } as unknown as ChapterApi.ChapterVO
-        
-        // 转换日期格式
-        if (data.useDate) {
-            // 将时间戳转换为YYYY-MM-DD格式
-            const date = new Date(data.useDate)
-            data.useDate = date
+
+        // 添加用户信息
+        const currentUser = userStore.getUser
+        data.userId = currentUser.id
+        data.deptId = currentUser.deptId
+        data.deptName = deptName.value
+
+        // 转换日期格式 - 确保传递正确的日期格式
+        if (formData.value.useDate) {
+            data.useDate = formData.value.useDate
         }
-        
-        // 处理文件上传
-        if (fileList.value.length > 0) {
-            // 这里应该调用文件上传API，获取文件路径
-            // 示例：将文件信息转换为JSON格式存储
-            const fileInfos = fileList.value.map((file: any) => ({
-                name: file.name,
-                path: `/personal/${file.name}`, // 示例路径
-                size: file.size,
-                type: file.type
-            }))
-            data.storagePath = JSON.stringify(fileInfos)
+
+        // 处理文件列表 - 将文件ID数组转换为逗号分隔的字符串
+        if (formData.value.fileList && formData.value.fileList.length > 0) {
+            data.fileList = formData.value.fileList.join(',')
+        } else {
+            data.fileList = ''
         }
 
         // 审批相关：设置指定审批人
@@ -232,50 +206,7 @@ const submitForm = async () => {
     }
 }
 
-/** 获取部门列表 */
-const getDeptList = async () => {
-    try {
-        const result = await DeptApi.getSimpleDeptList()
-        if (result && result.length > 0) {
-            // 构建部门树形结构
-            deptOptions.value = buildDeptTree(result)
-        } else {
-            deptOptions.value = []
-        }
-    } catch (error) {
-        console.error('获取部门列表失败', error)
-    }
-}
-
-/** 构建部门树形结构 */
-const buildDeptTree = (deptList: DeptApi.DeptVO[]) => {
-    // 创建一个映射表，用于快速查找部门
-    const deptMap = new Map()
-    deptList.forEach(dept => {
-        deptMap.set(dept.id, { ...dept, children: [] })
-    })
-
-    // 构建树形结构
-    const rootDepts: DeptApi.DeptVO[] = []
-    deptList.forEach(dept => {
-        const parentId = dept.parentId
-        if (parentId === 0) {
-            // 根部门
-            rootDepts.push(deptMap.get(dept.id))
-        } else {
-            // 子部门
-            const parentDept = deptMap.get(parentId)
-            if (parentDept) {
-                parentDept.children.push(deptMap.get(dept.id))
-            } else {
-                // 如果找不到父部门，则作为根部门
-                rootDepts.push(deptMap.get(dept.id))
-            }
-        }
-    })
-
-    return rootDepts
-}
+// 部门相关方法已移除，由后端自动处理
 
 /** 审批相关：获取审批详情 */
 const getApprovalDetail = async () => {
@@ -321,8 +252,8 @@ const selectUserConfirm = (id: string, userList: any[]) => {
 
 /** 初始化 */
 onMounted(async () => {
-    // 获取部门列表
-    await getDeptList()
+    // 获取部门名称
+    await getDeptName()
 
     const processDefinitionDetail = await DefinitionApi.getProcessDefinition(
         undefined,

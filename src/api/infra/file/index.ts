@@ -190,7 +190,7 @@ export const getFileContent = (id: number) => {
 }
 
 // 根据 ID 列表批量查询文件详情
-export const getFilesByIds = (ids: number[]) => {
+export const getFilesByIds = (ids: (number | string)[]) => {
   return request.post<FileVO[]>({ url: '/infra/file/getFilesByIds', data: ids })
 }
 
