@@ -6,7 +6,7 @@
       :model="queryParams"
       ref="queryFormRef"
       :inline="true"
-      label-width="68px"
+      label-width="128px"
     >
       <el-form-item label="融资租赁单编号" prop="leaseId">
         <el-input
@@ -18,8 +18,14 @@
         />
       </el-form-item>
 
-      <el-form-item label="企业" prop="companyId">
-        <el-select v-model="queryParams.companyId" placeholder="请选择企业">
+      <el-form-item label="企业名称" prop="companyId">
+        <el-select
+          v-model="queryParams.companyId"
+          placeholder="请选择企业"
+          clearable
+          filterable
+          class="!w-240px"
+        >
           <el-option
             v-for="item in companyList"
             :key="item.id"
@@ -90,8 +96,11 @@
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
 <!--      <el-table-column label="融资租赁放款表单主键" align="center" prop="id" />-->
       <el-table-column label="融资租赁单编号" align="center" prop="leaseId" />
-      <el-table-column label="申请人的用户编号" align="center" prop="userId" />
-      <el-table-column label="企业" align="center" prop="companyId" />
+      <el-table-column label="企业名称" align="center" prop="companyId" width="180">
+        <template #default="scope">
+          <span>{{ companyList.find((item) => item.id === scope.row.companyId)?.enterpriseName }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="放款申请编码" align="center" prop="disbursementCode" />
       <el-table-column label="项目名称" align="center" prop="projectName" />
       <el-table-column label="租赁模式" align="center" prop="leaseMode">
@@ -103,7 +112,11 @@
       <el-table-column label="承租租期" align="center" prop="leaseTerm" />
       <el-table-column label="本次金额" align="center" prop="thistimeAmount" />
       <el-table-column label="累计金额" align="center" prop="accruedAmount" />
-      <el-table-column label="单据状态" align="center" prop="status" />
+      <el-table-column label="单据状态" align="center" prop="status" >
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status" />
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
           <el-button

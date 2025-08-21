@@ -171,20 +171,7 @@
       <el-table-column label="法定代表人" align="center" prop="legalRepresentative" />
       <el-table-column label="所属行业" align="center" prop="industry" />
       <el-table-column label="注册资本(万)" align="center" prop="registeredCapital" />
-      <el-table-column label="企业性质" align="center" prop="companyNature" />
-      <el-table-column label="主营业务" align="center" prop="mainBusiness" />
-      <el-table-column label="主要产品" align="center" prop="mainProducts" />
-      <el-table-column label="备注信息" align="center" prop="remark" />
-      <el-table-column label="文件路径" align="center" prop="filePath" />
       <el-table-column label="企业联系电话" align="center" prop="phone" />
-      <!-- <el-table-column
-        label="创建时间"
-        align="center"
-        prop="createTime"
-        :formatter="dateFormatter"
-        width="180px"
-      /> -->
-      <el-table-column label="部门编号" align="center" prop="deptId" />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
           <el-button

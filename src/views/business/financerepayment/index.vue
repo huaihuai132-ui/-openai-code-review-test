@@ -17,14 +17,21 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="企业" prop="companyId">
-        <el-input
+      <el-form-item label="企业名称" prop="companyId">
+        <el-select
           v-model="queryParams.companyId"
-          placeholder="请输入企业id"
+          placeholder="请选择企业"
           clearable
-          @keyup.enter="handleQuery"
+          filterable
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in companyList"
+            :key="item.id"
+            :label="item.enterpriseName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="还款时间" prop="repaymentDate">
         <el-date-picker
@@ -76,8 +83,11 @@
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
 <!--      <el-table-column label="融资租赁还款表单主键" align="center" prop="id" />-->
       <el-table-column label="融资租赁放款表编号" align="center" prop="disbursementId" />
-      <el-table-column label="企业" align="center" prop="companyId" />
-      <el-table-column
+      <el-table-column label="企业名称" align="center" prop="companyId" width="180">
+        <template #default="scope">
+          <span>{{ companyList.find((item) => item.id === scope.row.companyId)?.enterpriseName }}</span>
+        </template>
+      </el-table-column>      <el-table-column
         label="还款时间"
         align="center"
         prop="repaymentDate"
@@ -140,6 +150,7 @@ import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { FinanceRepaymentApi, FinanceRepaymentVO } from '@/api/business/financerepayment'
 import FinanceRepaymentForm from './FinanceRepaymentForm.vue'
+import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
 
 /** 融资租赁放款 列表 */
 defineOptions({ name: 'FinanceRepayment' })
@@ -170,6 +181,7 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
 
 /** 查询列表 */
 const getList = async () => {
@@ -232,5 +244,7 @@ const handleExport = async () => {
 /** 初始化 **/
 onMounted(() => {
   getList()
+  const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
+  companyList.value = response.data
 })
 </script>

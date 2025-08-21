@@ -6,7 +6,7 @@
       :model="queryParams"
       ref="queryFormRef"
       :inline="true"
-      label-width="68px"
+      label-width="128px"
     >
       <el-form-item label="融资租赁单编号" prop="leaseId">
         <el-input
@@ -17,11 +17,12 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="企业" prop="companyId">
+      <el-form-item label="企业名称" prop="companyId">
         <el-select
           v-model="queryParams.companyId"
           placeholder="请选择企业"
           clearable
+          filterable
           class="!w-240px"
         >
           <el-option
@@ -97,7 +98,11 @@
       <el-table-column type="selection" width="55" />
 <!--      <el-table-column label="编号" align="center" prop="id" />-->
       <el-table-column label="租后管理编码" align="center" prop="manageCode" />
-      <el-table-column label="企业" align="center" prop="companyId" />
+      <el-table-column label="企业名称" align="center" prop="companyId" width="180">
+        <template #default="scope">
+          <span>{{ companyList.find((item) => item.id === scope.row.companyId)?.enterpriseName }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="租赁总额" align="center" prop="leaseAmount" />
       <el-table-column label="租赁余额" align="center" prop="leaseAmountSurplus" />
       <el-table-column label="检查人的用户编号" align="center" prop="userId" />

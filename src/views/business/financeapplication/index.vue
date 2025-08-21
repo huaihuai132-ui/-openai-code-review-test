@@ -8,11 +8,12 @@
       :inline="true"
       label-width="88px"
     >
-      <el-form-item label="企业" prop="companyId">
+      <el-form-item label="企业名称" prop="companyId">
         <el-select
           v-model="queryParams.companyId"
           placeholder="请选择企业"
           clearable
+          filterable
           class="!w-240px"
         >
           <el-option
@@ -86,7 +87,11 @@
       <el-table-column type="selection" width="55" />
 <!--      <el-table-column label="编号" align="center" prop="id" />-->
       <el-table-column label="编号" align="center" prop="applicationCode" />
-      <el-table-column label="企业" align="center" prop="companyId" />
+      <el-table-column label="企业名称" align="center" prop="companyId" width="180">
+        <template #default="scope">
+          <span>{{ companyList.find((item) => item.id === scope.row.companyId)?.enterpriseName }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="标的名称" align="center" prop="leasedProperty" />
       <el-table-column label="标的数量" align="center" prop="leasedPropertyNum" />
       <el-table-column label="标的净值" align="center" prop="leasedPropertyValue" />
