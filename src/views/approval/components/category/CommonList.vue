@@ -28,6 +28,8 @@
                         :class="['category-tag', { 'category-tag-selected': isTagSelected(tag.value) }, tag.colorClass]"
                         @click="toggleCategoryFilter(tag.value)">
                         {{ tag.label }}
+                        <span v-if="getCategoryNewCount(tag.value) > 0" class="category-badge">{{
+                            getCategoryNewCount(tag.value) }}</span>
                         <i v-if="isTagSelected(tag.value)" class="el-icon-check tag-check-icon"></i>
                     </div>
                 </div>
@@ -162,7 +164,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue';
 import { formatDate } from '@/utils/formatTime';
-import { getLastReadTime } from '@/utils/cache';
+import { getLastReadTime, updateLastReadTime } from '@/utils/cache';
 import { getDictLabel } from '@/utils/dict';
 import defaultAvatar from '@/assets/imgs/avatar.gif';
 import { getSimpleDeptList } from '@/api/system/dept';
@@ -170,7 +172,7 @@ import { CategoryApi } from '@/api/bpm/category';
 
 const props = defineProps<{
     data: any[];
-    category: 'waiting' | 'done' | 'apply' | 'copy';
+    category: 'waiting' | 'done' | 'apply' | 'copy' | 'rejected';
     showCategoryTags?: boolean;
 }>();
 
@@ -219,13 +221,18 @@ const isTagSelected = (value: string) => {
     return queryParams.categoryFilter.includes(value);
 };
 
-// 切换分类筛选
+// 切换分类筛选（互斥模式，只能选择一个）
 const toggleCategoryFilter = (value: string) => {
-    const index = queryParams.categoryFilter.indexOf(value);
-    if (index > -1) {
-        queryParams.categoryFilter.splice(index, 1);
+    const isCurrentlySelected = queryParams.categoryFilter.includes(value);
+
+    if (isCurrentlySelected) {
+        // 如果当前标签已选中，则取消选择（清空筛选）
+        queryParams.categoryFilter = [];
     } else {
-        queryParams.categoryFilter.push(value);
+        // 如果当前标签未选中，则设置为唯一选中的标签
+        queryParams.categoryFilter = [value];
+        // 当选择分类时，更新该分类的最后读取时间，清除角标
+        updateLastReadTime(`approval_${props.category}_${value}_last_read`);
     }
     handleQuery();
 };
@@ -256,6 +263,9 @@ const filteredData = computed(() => {
             if (props.category === 'copy') {
                 // 抄送分类：直接从item.category获取
                 categoryCode = item.category;
+            } else if (props.category === 'apply' || props.category === 'rejected') {
+                // 我申请的和被驳回的：直接从item.category获取
+                categoryCode = item.category;
             } else {
                 // 其他分类：从多个可能的位置获取
                 categoryCode = item.category ||
@@ -275,6 +285,8 @@ const getDeptName = (item) => {
     let deptId;
     if (props.category === 'copy') {
         deptId = item.startUser?.deptId;
+    } else if (props.category === 'apply' || props.category === 'rejected') {
+        deptId = item.startUser?.deptId;
     } else {
         deptId = item.processInstance?.startUser?.deptId;
     }
@@ -289,6 +301,8 @@ const getProcessName = (item) => {
         return item.processDefinitionName || '流程抄送';
     } else if (props.category === 'apply') {
         return item.name || '我的申请';
+    } else if (props.category === 'rejected') {
+        return item.name || '被驳回的申请';
     } else {
         return item.processInstance?.name || item.processDefinitionName || getDefaultTitle();
     }
@@ -298,7 +312,7 @@ const getProcessName = (item) => {
 const getProcessInstanceName = (item) => {
     if (props.category === 'copy') {
         return item.processInstanceName || '-';
-    } else if (props.category === 'apply') {
+    } else if (props.category === 'apply' || props.category === 'rejected') {
         return item.name || '-';
     } else {
         return item.processInstance?.name || item.processInstanceName || '-';
@@ -309,6 +323,8 @@ const getProcessInstanceName = (item) => {
 const getAvatar = (item) => {
     if (props.category === 'copy') {
         return item.startUser?.avatar || defaultAvatar;
+    } else if (props.category === 'apply' || props.category === 'rejected') {
+        return item.startUser?.avatar || defaultAvatar;
     } else {
         return item.processInstance?.startUser?.avatar || defaultAvatar;
     }
@@ -317,6 +333,8 @@ const getAvatar = (item) => {
 // 获取用户名称
 const getUserName = (item) => {
     if (props.category === 'copy') {
+        return item.startUser?.nickname || '-';
+    } else if (props.category === 'apply' || props.category === 'rejected') {
         return item.startUser?.nickname || '-';
     } else {
         return item.processInstance?.startUser?.nickname || '-';
@@ -350,6 +368,7 @@ const getTimeValue = (item) => {
         case 'waiting': return item.processInstance?.createTime || item.createTime;
         case 'done': return item.createTime;
         case 'apply': return item.startTime;
+        case 'rejected': return item.startTime;
         case 'copy': return item.createTime;
         default: return item.createTime;
     }
@@ -465,6 +484,46 @@ const getStatusClass = (item) => {
     return '';
 };
 
+// 获取分类新审批数量
+const getCategoryNewCount = (categoryCode) => {
+    if (!categoryCode) return 0;
+
+    // 获取该分类的最后读取时间
+    const lastReadTime = getLastReadTime(`approval_${props.category}_${categoryCode}_last_read`);
+
+    // 筛选出该分类的新数据
+    const categoryItems = filteredData.value.filter(item => {
+        let itemCategoryCode;
+
+        // 根据不同的分类获取categoryCode
+        if (props.category === 'copy') {
+            itemCategoryCode = item.category;
+        } else if (props.category === 'apply' || props.category === 'rejected') {
+            itemCategoryCode = item.category;
+        } else {
+            itemCategoryCode = item.category ||
+                (item.processDefinition ? item.processDefinition.category : null) ||
+                (item.processInstance ? item.processInstance.category : null);
+        }
+
+        return itemCategoryCode === categoryCode;
+    });
+
+    // 计算新数据数量
+    return categoryItems.filter(item => {
+        const itemTime = getTimeValue(item);
+        if (!itemTime) return false;
+
+        try {
+            const createTime = new Date(itemTime).getTime();
+            return createTime > lastReadTime;
+        } catch (e) {
+            console.error('Error calculating category item time:', e);
+            return false;
+        }
+    }).length;
+};
+
 // 搜索
 const handleQuery = () => {
     emit('search', queryParams);
@@ -527,6 +586,25 @@ loadInitialData();
 .category-tag:hover {
     transform: translateY(-2px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.category-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #f56c6c;
+    color: white;
+    border-radius: 50%;
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+    line-height: 16px;
+    text-align: center;
+    padding: 0 4px;
+    box-sizing: border-box;
+    border: 2px solid white;
+    font-weight: bold;
+    z-index: 1;
 }
 
 .category-tag-selected {

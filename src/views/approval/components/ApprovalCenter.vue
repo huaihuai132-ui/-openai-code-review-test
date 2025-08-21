@@ -37,27 +37,36 @@
         </div>
         <span class="menu-text">抄送我的</span>
       </div>
+      <div class="menu-item" :class="{ active: activeCategory === 'rejected' }" @click="changeCategory('rejected')">
+        <div class="menu-icon">
+          <el-icon>
+            <CloseBold />
+          </el-icon>
+          <span v-if="rejectedCount > 0" class="badge">{{ rejectedCount }}</span>
+        </div>
+        <span class="menu-text">被驳回的</span>
+      </div>
     </div>
 
     <div class="content" v-if="activeCategory">
       <div v-show="activeCategory === 'waiting'" class="category-container">
-        <common-list
-:data="waitingList" category="waiting" @select-card="handleSelectCard" @search="handleSearch"
+        <common-list :data="waitingList" category="waiting" @select-card="handleSelectCard" @search="handleSearch"
           :show-category-tags="true" />
       </div>
       <div v-show="activeCategory === 'done'" class="category-container">
-        <common-list
-:data="doneList" category="done" @select-card="handleSelectCard" @search="handleSearch"
+        <common-list :data="doneList" category="done" @select-card="handleSelectCard" @search="handleSearch"
           :show-category-tags="true" />
       </div>
       <div v-show="activeCategory === 'apply'" class="category-container">
-        <common-list
-:data="applyList" category="apply" @select-card="handleSelectCard" @search="handleSearch"
+        <common-list :data="applyList" category="apply" @select-card="handleSelectCard" @search="handleSearch"
           :show-category-tags="true" />
       </div>
       <div v-show="activeCategory === 'copy'" class="category-container">
-        <common-list
-:data="copyList" category="copy" @select-card="handleSelectCard" @search="handleSearch"
+        <common-list :data="copyList" category="copy" @select-card="handleSelectCard" @search="handleSearch"
+          :show-category-tags="true" />
+      </div>
+      <div v-show="activeCategory === 'rejected'" class="category-container">
+        <common-list :data="rejectedList" category="rejected" @select-card="handleSelectCard" @search="handleSearch"
           :show-category-tags="true" />
       </div>
     </div>
@@ -67,22 +76,10 @@
       </div>
     </div>
 
-    <!-- 半透明背景蒙层 -->
-    <div v-if="showDetail" class="detail-overlay" @click="closeDetail"></div>
-
-    <div v-if="showDetail" class="detail-panel">
-      <div class="detail-header">
-        <span class="detail-title">流程详情</span>
-        <el-button type="text" @click="closeDetail">
-          <el-icon>
-            <Close />
-          </el-icon>
-        </el-button>
-      </div>
-      <div class="detail-content">
-        <process-instance-detail :id="selectedItemId" @close="closeDetail" />
-      </div>
-    </div>
+    <!-- 详情蒙层 -->
+    <DetailOverlay v-model:visible="showDetail" title="流程详情" @close="closeDetail">
+      <process-instance-detail :id="selectedItemId" @close="closeDetail" />
+    </DetailOverlay>
   </div>
 </template>
 
@@ -91,9 +88,10 @@ import { ref, reactive, onMounted, watch } from 'vue';
 import CommonList from './category/CommonList.vue';
 import ProcessInstanceDetail from '@/views/bpm/processInstance/detail/index.vue';
 import { getTaskTodoPage, getTaskDonePage } from '@/api/bpm/task';
-import { getProcessInstanceMyPage, getProcessInstanceCopyPage } from '@/api/bpm/processInstance';
+import { getProcessInstanceMyPage, getProcessInstanceCopyPage, getProcessInstanceRejectedPage } from '@/api/bpm/processInstance';
 import { updateLastReadTime, getLastReadTime } from '@/utils/cache';
-import { Clock, Check, Document, CopyDocument, Close } from '@element-plus/icons-vue';
+import { Clock, Check, Document, CopyDocument, CloseBold } from '@element-plus/icons-vue';
+import DetailOverlay from '@/components/DetailOverlay/index.vue';
 import { useRoute } from 'vue-router'
 
 const activeCategory = ref('');
@@ -101,10 +99,12 @@ const waitingList = ref([]);
 const doneList = ref([]);
 const applyList = ref([]);
 const copyList = ref([]);
+const rejectedList = ref([]);
 const waitingCount = ref(0);
 const copyCount = ref(0);
 const applyCount = ref(0);
 const doneCount = ref(0);
+const rejectedCount = ref(0);
 const showDetail = ref(false);
 const selectedItemId = ref('');
 const selectedCategory = ref('');
@@ -127,6 +127,11 @@ const queryParams = reactive({
     createTime: []
   },
   copy: {
+    pageNo: 1,
+    pageSize: 100,
+    createTime: []
+  },
+  rejected: {
     pageNo: 1,
     pageSize: 100,
     createTime: []
@@ -159,6 +164,9 @@ const loadCategoryData = async (category) => {
         break;
       case 'copy':
         await loadCopyList();
+        break;
+      case 'rejected':
+        await loadRejectedList();
         break;
     }
   } catch (error) {
@@ -210,13 +218,26 @@ const calculateNewItems = () => {
 
     // 计算已审批的新数据
     const doneLastRead = getLastReadTime(`approval_done_last_read`);
-    doneCount.value = waitingList.value.filter((item: any) => {
+    doneCount.value = doneList.value.filter((item: any) => {
       if (!item) return false;
       try {
         const createTime = new Date(item.processInstance?.createTime || item.createTime).getTime();
         return createTime > doneLastRead;
       } catch (e) {
-        console.error('Error calculating waiting item time:', e);
+        console.error('Error calculating done item time:', e);
+        return false;
+      }
+    }).length;
+
+    // 计算被驳回的新数据
+    const rejectedLastRead = getLastReadTime(`approval_rejected_last_read`);
+    rejectedCount.value = rejectedList.value.filter((item: any) => {
+      if (!item) return false;
+      try {
+        const createTime = new Date(item.startTime || item.createTime).getTime();
+        return createTime > rejectedLastRead;
+      } catch (e) {
+        console.error('Error calculating rejected item time:', e);
         return false;
       }
     }).length;
@@ -266,6 +287,16 @@ const loadCopyList = async () => {
   calculateNewItems();
 };
 
+// 加载被驳回的列表
+const loadRejectedList = async () => {
+  const params = {
+    ...queryParams.rejected
+  };
+  // 使用被驳回的API获取数据
+  const result = await getProcessInstanceRejectedPage(params);
+  rejectedList.value = result.list || [];
+};
+
 // 处理卡片选择
 const handleSelectCard = (item) => {
   selectedCategory.value = activeCategory.value;
@@ -283,6 +314,9 @@ const handleSelectCard = (item) => {
       break;
     case 'copy':
       selectedItemId.value = item.processInstanceId;
+      break;
+    case 'rejected':
+      selectedItemId.value = item.id;
       break;
   }
 
@@ -324,7 +358,7 @@ onMounted(async () => {
   // 检查路由参数，如果有category参数则设置对应的分类
   if (route.query.category) {
     const category = route.query.category as string;
-    if (['waiting', 'done', 'apply', 'copy'].includes(category)) {
+    if (['waiting', 'done', 'apply', 'copy', 'rejected'].includes(category)) {
       activeCategory.value = category;
     }
   }
@@ -334,7 +368,8 @@ onMounted(async () => {
     loadWaitingList(),
     loadDoneList(),
     loadApplyList(),
-    loadCopyList()
+    loadCopyList(),
+    loadRejectedList()
   ]);
 
   // 计算新数据数量
@@ -460,72 +495,7 @@ onMounted(async () => {
   }
 }
 
-.detail-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 90%;
-  height: 100%;
-  background: #fff;
-  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-  animation: slideIn 0.3s ease;
-  display: flex;
-  flex-direction: column;
-}
-
-.detail-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(3px);
-  z-index: 9;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-  }
-
-  to {
-    transform: translateX(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-.detail-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid #ebeef5;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #f8f9fa;
-}
-
-.detail-title {
-  font-size: 18px;
-  font-weight: bold;
-  color: #303133;
-}
-
-.detail-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 24px;
-}
+/* 详情面板样式已移至 DetailOverlay 组件 */
 
 @media (max-width: 768px) {
   .left-menu {
@@ -538,10 +508,6 @@ onMounted(async () => {
 
   .menu-icon {
     margin-right: 0;
-  }
-
-  .detail-panel {
-    width: 100%;
   }
 }
 </style>

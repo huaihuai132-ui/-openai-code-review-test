@@ -23,14 +23,14 @@
       </div>
     </div>
 
-    <!-- 动态组件弹框 -->
-    <Dialog title="表单详情" :fullscreen="true" v-model="dialogVisible">
+    <!-- 详情蒙层 -->
+    <DetailOverlay v-model:visible="dialogVisible" title="表单详情">
       <component :is="formComponent" v-if="formComponent" :preview-mode="true" :readonly="true"
         :model-info="currentFlow" @success="handleFormSuccess" />
       <div v-else class="flex items-center justify-center h-100px">
         <el-empty description="组件加载失败" />
       </div>
-    </Dialog>
+    </DetailOverlay>
   </div>
 </template>
 
@@ -41,7 +41,7 @@ import { useMessage } from '@/hooks/web/useMessage';
 import * as ModelApi from '@/api/bpm/model';
 import { CategoryApi } from '@/api/bpm/category';
 import { BpmModelFormType } from '@/utils/constants';
-import { Dialog } from '@/components/Dialog';
+import DetailOverlay from '@/components/DetailOverlay/index.vue';
 
 // 定义类型
 interface ModelInfo {
@@ -246,8 +246,8 @@ onMounted(() => {
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
 }
 
 .card-item {

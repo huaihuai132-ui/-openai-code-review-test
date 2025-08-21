@@ -88,6 +88,10 @@ export const getProcessInstanceCopyPage = async (params: any) => {
   return await request.get({ url: '/bpm/process-instance/copy/page', params })
 }
 
+export const getProcessInstanceRejectedPage = async (params: any) => {
+  return await request.get({ url: '/bpm/process-instance/rejected', params })
+}
+
 // 获取审批详情
 export const getApprovalDetail = async (params: any) => {
   return await request.get({ url: '/bpm/process-instance/get-approval-detail', params })
