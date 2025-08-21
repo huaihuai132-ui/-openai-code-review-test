@@ -23,15 +23,7 @@
                   <img src="@/assets/imgs/avatar.gif" alt="" style="object-fit: cover;" />
                 </el-avatar>
                 <div>
-                  <div class="text-20px font-bold">
-                    {{ userName }}
-                  </div>
-                  <div class="text-16px mt-5px">
-                    工号：{{ workerCode }}
-                  </div>
-                  <div class="mt-10px text-14px text-gray-500">
-                    已加入3年2个月
-                  </div>
+                  <iframe width="250" height="80" src="https://i.tianqi.com/?c=code&a=getcode&id=35&site=34&icon=1" frameborder="0"></iframe>
                 </div>
               </div>
             </el-col>
@@ -139,7 +131,7 @@
           </el-skeleton>
         </el-card>
 
-        <!-- 今日日程模块 - 15%高度 -->
+        <!-- 今日日程模块 - 15%高度
         <el-card shadow="never" class="schedule-module">
           <template #header>
             <div class="h-3 flex justify-between">
@@ -163,7 +155,7 @@
               </div>
             </div>
           </el-skeleton>
-        </el-card>
+        </el-card> -->
 
         <!-- 消息模块 - 余下全部高度，带滚动条 -->
         <el-card shadow="never" class="message-module">
