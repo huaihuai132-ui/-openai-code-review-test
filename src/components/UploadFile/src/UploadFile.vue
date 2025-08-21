@@ -118,6 +118,7 @@ import * as FileApi from '@/api/infra/file'
 import { FileBusinessSequenceApi } from '@/api/infra/file/fileBusinessSequence'
 import { base64Encode } from '@/utils'
 import { useUserStore } from '@/store/modules/user'
+import { openPreviewWindow } from '@/utils/previewWindow'
 import {
   Close
 } from '@element-plus/icons-vue'
@@ -672,7 +673,7 @@ const getEmptyStateText = (index: number): string => {
   if (props.sequenceCode && sequenceInfo.value[index]) {
     return `请上传 ${sequenceInfo.value[index].sequenceFile}`
   }
-  return '拖动或点击选择文件'
+  return '点击上传'
 }
 
 // 更新已上传文件ID列表
@@ -702,8 +703,11 @@ const handlePreview = async (index: number) => {
 
     // 构建预览URL
     const encodedUrl = encodeURIComponent(base64Encode(fileUrl))
-    let previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
-    window.open(previewUrl, '_blank')
+    const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
+
+    // 使用预览工具类打开窗口
+    const fileName = box.file?.name || box.fileInfo?.name || '未知文件'
+    openPreviewWindow(previewUrl, fileName)
   } catch (error) {
     console.error('预览文件失败:', error)
     message.error('预览文件失败')
@@ -834,12 +838,13 @@ defineExpose({
   position: relative;
   border: 1px solid #e4e7ed;
   border-radius: 8px;
-  padding: 16px 12px;
+  padding: 8px 6px;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   background: #fff;
   overflow: hidden;
-  aspect-ratio: 1;
+  width: 132px;
+  height: 88px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -923,9 +928,9 @@ defineExpose({
     height: 100%;
 
     .plus-icon {
-      font-size: 48px;
+      font-size: 24px;
       color: #8c939d;
-      margin-bottom: 12px;
+      margin-bottom: 4px;
       transition: all 0.3s ease;
 
       &.hover-blue {
@@ -936,10 +941,10 @@ defineExpose({
 
     .upload-text {
       color: #606266;
-      font-size: 13px;
+      font-size: 11px;
       text-align: center;
-      line-height: 1.4;
-      padding: 0 8px;
+      line-height: 1.2;
+      padding: 0 4px;
     }
   }
 
@@ -1030,10 +1035,10 @@ defineExpose({
       }
 
       .file-icon {
-        font-size: 88px !important;
+        font-size: 32px !important;
         transition: transform 0.2s ease;
         color: #409eff !important;
-        min-height: 88px;
+        min-height: 32px;
         display: flex !important;
         align-items: center;
         justify-content: center;
@@ -1045,26 +1050,36 @@ defineExpose({
 
       .preview-overlay {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.7);
-        border-radius: 8px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, rgba(64, 158, 255, 0.5) 0%, rgba(103, 194, 58, 0.5) 100%);
+        border-radius: 50%;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         color: white;
         transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+        backdrop-filter: blur(4px);
+
+        &:hover {
+          transform: translate(-50%, -50%) scale(1.1);
+          box-shadow: 0 6px 20px rgba(64, 158, 255, 0.3);
+        }
 
         .preview-icon {
-          font-size: 20px;
-          margin-bottom: 4px;
+          font-size: 18px;
+          margin-bottom: 0;
         }
 
         .preview-text {
-          font-size: 12px;
+          font-size: 8px;
+          font-weight: 500;
+          opacity: 0.9;
         }
       }
     }
@@ -1084,7 +1099,7 @@ defineExpose({
         gap: 8px;
 
         .file-name-text {
-          font-size: 13px;
+          font-size: 11px;
           font-weight: 500;
           color: #303133;
           overflow: hidden;
@@ -1096,7 +1111,7 @@ defineExpose({
         }
 
         .edit-icon {
-          font-size: 14px;
+          font-size: 12px;
           cursor: pointer;
           flex-shrink: 0;
           opacity: 0.7;
@@ -1119,7 +1134,7 @@ defineExpose({
         }
 
         .confirm-icon {
-          font-size: 14px;
+          font-size: 12px;
           cursor: pointer;
           flex-shrink: 0;
         }
@@ -1137,14 +1152,14 @@ defineExpose({
     padding: 16px;
 
     .error-icon {
-      font-size: 48px;
-      margin-bottom: 12px;
+      font-size: 24px;
+      margin-bottom: 4px;
     }
 
     .error-text {
-      font-size: 14px;
+      font-size: 11px;
       color: #f56c6c;
-      margin-bottom: 12px;
+      margin-bottom: 6px;
       text-align: center;
     }
   }

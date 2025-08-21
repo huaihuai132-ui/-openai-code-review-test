@@ -14,13 +14,18 @@
         }" @mouseenter="fileBox.isHover = true" @mouseleave="fileBox.isHover = false" @click="handleBoxClick(index)"
         @drop="handleDrop($event, index)" @dragover.prevent @dragenter.prevent>
         <!-- 右上角删除按钮 -->
-        <div v-if="fileBox.file && (mode === 'create' || mode === 'edit')" class="file-close-btn"
+        <div v-if="(fileBox.file || fileBox.uploaded) && (mode === 'create' || mode === 'edit')" class="file-close-btn"
           @click.stop="deleteFile(index)">
           ❌
         </div>
 
         <!-- 空状态 -->
         <div v-if="!fileBox.file && !fileBox.uploaded" class="empty-state">
+          <!-- 空文件框删除按钮 (只在批量模式且有多个文件框时显示) -->
+          <div v-if="!sequenceCode && fileBoxes.length > 1 && (mode === 'create' || mode === 'edit')"
+            class="empty-file-close-btn" @click.stop="deleteFile(index)">
+            ❌
+          </div>
           <div class="plus-icon" :class="{ 'hover-blue': fileBox.isHover }">
             ➕
           </div>
@@ -88,8 +93,8 @@
           style="display: none" @change="handleFileSelect($event, index)" />
       </div>
 
-      <!-- 添加更多文件按钮 (批量模式，仅在创建和编辑模式下显示) -->
-      <div v-if="fileBoxes.length < maxFiles && !sequenceCode && (mode === 'create' || mode === 'edit')"
+      <!-- 添加更多文件按钮 (批量模式，仅在创建和编辑模式下显示，且maxFiles大于1) -->
+      <div v-if="fileBoxes.length < maxFiles && !sequenceCode && maxFiles > 1 && (mode === 'create' || mode === 'edit')"
         class="file-all-in-one-box add-more-box" @click="addNewFileBox">
         <div class="empty-state">
           <div class="plus-icon">
@@ -120,6 +125,7 @@ import axios from 'axios'
 import * as FileApi from '@/api/infra/file'
 import { FileBusinessSequenceApi } from '@/api/infra/file/fileBusinessSequence'
 import { base64Encode } from '@/utils'
+import { openPreviewWindow } from '@/utils/previewWindow'
 
 
 defineOptions({ name: 'BatchFileUpload' })
@@ -510,8 +516,8 @@ const addNewFileBox = () => {
 const deleteFile = async (index: number) => {
   const box = fileBoxes.value[index]
 
+  // 如果是已上传的文件，需要先删除服务器上的文件
   if (box.uploaded && box.fileInfo?.id) {
-    // 删除已上传的文件
     try {
       const confirmMessage = props.mode === 'edit'
         ? '确定要永久删除这个文件吗？删除后无法恢复！'
@@ -547,7 +553,7 @@ const deleteFile = async (index: number) => {
   if (props.sequenceCode) {
     Object.assign(box, createEmptyFileBox())
   } else {
-    // 普通批量模式：移除这个框
+    // 普通批量模式：移除这个框（但至少保留一个）
     if (fileBoxes.value.length > 1) {
       fileBoxes.value.splice(index, 1)
     } else {
@@ -568,7 +574,6 @@ const handlePreview = async (index: number) => {
   if (!box.uploaded || !box.fileInfo) return
 
   try {
-
     // 添加用户昵称参数
     const nickname = userStore.getUser?.nickname || ''
     const fileInfo = box.fileInfo
@@ -580,8 +585,11 @@ const handlePreview = async (index: number) => {
 
     // 构建预览URL
     const encodedUrl = encodeURIComponent(base64Encode(fileUrl))
-    let previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
-    window.open(previewUrl, '_blank')
+    const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
+
+    // 使用预览工具类打开窗口
+    const fileName = box.file?.name || box.fileInfo?.name || '未知文件'
+    openPreviewWindow(previewUrl, fileName)
   } catch (error) {
     console.error('预览文件失败:', error)
     message.error('预览文件失败')
@@ -718,7 +726,7 @@ const getEmptyStateText = (index: number): string => {
   if (props.sequenceCode && sequenceInfo.value[index]) {
     return `请上传 ${sequenceInfo.value[index].sequenceFile}`
   }
-  return '拖动或点击选择文件'
+  return '点击上传'
 }
 
 // 更新已上传文件ID列表
@@ -819,17 +827,16 @@ defineExpose({
 
   .file-boxes-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    /* 调整最小宽度适应缩放 */
-    gap: 16px;
-    margin-bottom: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
   }
 
   .file-all-in-one-box {
     width: 100%;
-    height: 200px;
-    border: 2px dashed #d9d9d9;
-    border-radius: 8px;
+    height: 88px;
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -838,10 +845,6 @@ defineExpose({
     cursor: pointer;
     transition: all 0.3s ease;
     background: #fafafa;
-    transform-origin: center;
-
-    /* 默认缩小15% */
-    transform: scale(0.85);
 
     /* view模式下缩小30% */
     &.view-mode {
@@ -916,11 +919,35 @@ defineExpose({
     justify-content: center;
     height: 100%;
     padding: 16px;
+    position: relative;
+
+    .empty-file-close-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 20px;
+      height: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: white;
+      z-index: 10;
+      transition: all 0.2s ease;
+      font-size: 12px;
+
+      &:hover {
+        background: rgba(245, 108, 108, 0.8);
+        transform: scale(1.1);
+      }
+    }
 
     .plus-icon {
-      font-size: 48px;
+      font-size: 24px;
       color: #c0c4cc;
-      margin-bottom: 12px;
+      margin-bottom: 4px;
       transition: color 0.3s ease;
 
       &.hover-blue {
@@ -929,10 +956,10 @@ defineExpose({
     }
 
     .upload-text {
-      font-size: 14px;
+      font-size: 12px;
       color: #606266;
       text-align: center;
-      line-height: 1.4;
+      line-height: 1.2;
     }
   }
 
@@ -1102,12 +1129,13 @@ defineExpose({
 
       .preview-overlay {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.7);
-        border-radius: 12px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, rgba(64, 158, 255, 0.5) 0%, rgba(103, 194, 58, 0.5) 100%);
+        border-radius: 50%;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -1115,10 +1143,23 @@ defineExpose({
         color: white;
         transition: all 0.3s ease;
         cursor: pointer;
+        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+        backdrop-filter: blur(4px);
+
+        &:hover {
+          transform: translate(-50%, -50%) scale(1.1);
+          box-shadow: 0 6px 20px rgba(64, 158, 255, 0.3);
+        }
+
+        .preview-icon {
+          font-size: 18px;
+          margin-bottom: 0;
+        }
 
         .preview-text {
-          font-size: 12px;
-          margin-top: 4px;
+          font-size: 8px;
+          font-weight: 500;
+          opacity: 0.9;
         }
       }
     }

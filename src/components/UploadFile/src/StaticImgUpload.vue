@@ -686,21 +686,21 @@ watch(() => props.fileList, () => {
 
   .file-box-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 8px;
 
     &.single-mode {
       grid-template-columns: 1fr;
-      max-width: 300px;
+      max-width: 132px;
     }
   }
 
   .file-box {
     position: relative;
     width: 100%;
-    min-height: 200px;
-    border: 2px dashed #dcdfe6;
-    border-radius: 8px;
+    height: 88px;
+    border: 1px dashed #dcdfe6;
+    border-radius: 6px;
     background-color: #fafbfc;
     cursor: pointer;
     transition: all 0.3s ease;

@@ -57,8 +57,7 @@
       <el-table-column label="文件内容" align="center" prop="url" width="110px">
         <template #default="{ row }">
           <el-image v-if="row.type && row.type.includes('image') && row.configId === 0" class="h-80px w-80px" lazy
-            :src="row.url" :preview-src-list="[row.url]" preview-teleported
-            fit="cover" />
+            :src="row.url" :preview-src-list="[row.url]" preview-teleported fit="cover" />
           <el-link v-else type="primary" @click="previewFile(row)" :underline="false">
             预览
           </el-link>
@@ -214,7 +213,7 @@
           <el-descriptions-item label="文件路径" :span="2">{{ staticImgUploadResult?.path }}</el-descriptions-item>
           <el-descriptions-item label="访问URL" :span="2">
             <el-link type="primary" :href="staticImgUploadResult?.url" target="_blank">{{ staticImgUploadResult?.url
-              }}</el-link>
+            }}</el-link>
           </el-descriptions-item>
         </el-descriptions>
         <div class="file-actions" style="margin-top: 12px;">
@@ -258,6 +257,7 @@ import * as StaticFileApi from '@/api/infra/file/staticFile'
 import FileForm from './FileForm.vue'
 import { UploadFile, BatchFileUpload, StaticFileUpload, StaticImgUpload } from '@/components/UploadFile'
 import { useUserStore } from '@/store/modules/user'
+import { openPreviewWindow } from '@/utils/previewWindow'
 
 defineOptions({ name: 'InfraFile' })
 
@@ -356,19 +356,20 @@ const previewFile = async (file) => {
     console.log('预览文件:', file)
     // 添加用户昵称参数
     const nickname = userStore.getUser?.nickname || ''
+
     // 判断是否为静态文件
     if (file.configId === 0) {
       // 静态文件预览
+      const staticFileUrl = `${file.url}?nickname=${nickname}`
+
       if (file.type && file.type.includes('image')) {
-        // 静态图片文件：使用现有的getStaticImageUrl方法（在模板中已处理）
-        // 这里不需要额外处理，因为图片预览在模板中已经通过getStaticImageUrl处理了
-        return
+        // 静态图片文件直接预览
+        openPreviewWindow(staticFileUrl, file.name || '未知文件')
       } else {
-        // 静态非图片文件：拼接预览地址
-        const staticFileUrl = `${file.url}` + `?nickname=${nickname}`
+        // 静态非图片文件通过预览服务
         const encodedUrl = encodeURIComponent(base64Encode(staticFileUrl))
         const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
-        window.open(previewUrl, '_blank')
+        openPreviewWindow(previewUrl, file.name || '未知文件')
       }
     } else {
       // 普通文件预览 - 不能修改签名URL的查询参数，否则会破坏签名
@@ -376,10 +377,12 @@ const previewFile = async (file) => {
       // 构建文件访问URL，保持签名完整性
       const fileUrl = signedUrl + `&nickname=${nickname}`
 
-      // 构建预览URL，将nickName作为预览服务的参数而不是文件URL的参数
+      // 构建预览URL
       const encodedUrl = encodeURIComponent(base64Encode(fileUrl))
-      let previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
-      window.open(previewUrl, '_blank')
+      const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
+
+      // 使用预览工具类打开窗口
+      openPreviewWindow(previewUrl, file.name || '未知文件')
     }
   } catch (error) {
     console.error('预览文件失败:', error)
@@ -587,7 +590,10 @@ const previewUploadedFile = async (fileData: any) => {
     if (isStaticFile) {
       // 静态文件直接使用URL预览
       const staticUrl = getStaticImageUrl(fileData.path)
-      window.open(staticUrl, '_blank')
+      const fileName = fileData.name || fileData.path || '未知文件'
+
+      // 使用预览工具类打开窗口
+      openPreviewWindow(staticUrl, fileName)
     } else {
       // 普通文件需要获取预览URL
       const response = await FileApi.getDownloadUrl(fileData.id)
@@ -596,7 +602,9 @@ const previewUploadedFile = async (fileData: any) => {
       // 构建预览链接
       const encodedUrl = base64Encode(previewUrl + '&nickname=' + userStore.getUser.nickname)
       const previewLink = `http://127.0.0.1:8012/onlinePreview?url=${encodeURIComponent(encodedUrl)}`
-      window.open(previewLink, '_blank')
+
+      // 使用预览工具类打开窗口
+      openPreviewWindow(previewLink, fileData.name || '未知文件')
     }
   } catch (error) {
     console.error('预览文件失败:', error)

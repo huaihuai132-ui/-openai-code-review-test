@@ -73,7 +73,7 @@ const props = defineProps({
   },
   size: {
     type: Number,
-    default: 120 // 头像大小（像素）
+    default: 88 // 头像大小（像素）
   },
   showDelete: {
     type: Boolean,
@@ -265,6 +265,7 @@ const handleDelete = () => {
   cursor: pointer;
   transition: all 0.3s ease;
   overflow: hidden;
+
 
   &:hover {
     border-color: #409eff;

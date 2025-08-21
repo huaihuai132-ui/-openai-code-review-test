@@ -1,6 +1,7 @@
 import { useMessage } from '@/hooks/web/useMessage'
 import { useUserStore } from '@/store/modules/user'
 import * as FileApi from '@/api/infra/file/index'
+import { openPreviewWindow } from '@/utils/previewWindow'
 
 // 常量配置
 const FIXED_DOMAIN = 'http://182.109.52.126:49090'
@@ -24,21 +25,27 @@ export function useFileOperations() {
       const nickname = userStore.getUser?.nickname || ''
 
       if (file.configId === 0) {
+        // 静态文件预览
+        const staticFileUrl = `${file.url}?nickname=${nickname}`
+
         if (file.type && file.type.includes('image')) {
-          return
+          // 静态图片文件直接预览
+          openPreviewWindow(staticFileUrl, file.name || '未知文件')
         } else {
-          const staticFileUrl = `${file.url}` + `?nickname=${nickname}`
+          // 静态非图片文件通过预览服务
           const encodedUrl = encodeURIComponent(base64Encode(staticFileUrl))
           const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
-          window.open(previewUrl, '_blank')
+          openPreviewWindow(previewUrl, file.name || '未知文件')
         }
       } else {
+        // 普通文件预览
         const signedUrl = await FileApi.getDownloadUrl(file.id)
         const fileUrl = signedUrl + `&nickname=${nickname}`
-
         const encodedUrl = encodeURIComponent(base64Encode(fileUrl))
         const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
-        window.open(previewUrl, '_blank')
+
+        // 使用预览工具类打开窗口
+        openPreviewWindow(previewUrl, file.name || '未知文件')
       }
     } catch (error) {
       console.error('预览文件失败:', error)

@@ -12,13 +12,18 @@
       }" @mouseenter="fileBox.isHover = true" @mouseleave="fileBox.isHover = false" @click="handleBoxClick(index)"
         @drop="handleDrop($event, index)" @dragover.prevent @dragenter.prevent>
         <!-- 右上角删除按钮 -->
-        <div v-if="fileBox.file && (mode === 'create' || mode === 'edit')" class="file-close-btn"
+        <div v-if="(fileBox.file || fileBox.uploaded) && (mode === 'create' || mode === 'edit')" class="file-close-btn"
           @click.stop="deleteFile(index)">
           ❌
         </div>
 
         <!-- 空状态 -->
         <div v-if="!fileBox.file && !fileBox.uploaded" class="empty-state">
+          <!-- 空文件框删除按钮 (只在批量模式且有多个文件框时显示) -->
+          <div v-if="!sequenceCode && fileBoxes.length > 1 && (mode === 'create' || mode === 'edit')"
+            class="empty-file-close-btn" @click.stop="deleteFile(index)">
+            ❌
+          </div>
           <div class="plus-icon" :class="{ 'hover-blue': fileBox.isHover }">
             ➕
           </div>
@@ -86,8 +91,8 @@
           style="display: none" @change="handleFileSelect($event, index)" />
       </div>
 
-      <!-- 添加更多文件按钮 (批量模式) -->
-      <div v-if="fileBoxes.length < maxFiles && !sequenceCode" class="file-all-in-one-box add-more-box"
+      <!-- 添加更多文件按钮 (批量模式，且maxFiles大于1) -->
+      <div v-if="fileBoxes.length < maxFiles && !sequenceCode && maxFiles > 1" class="file-all-in-one-box add-more-box"
         @click="addNewFileBox">
         <div class="empty-state">
           <div class="plus-icon">
@@ -119,6 +124,7 @@ import * as StaticFileApi from '@/api/infra/file/staticFile'
 import { FileBusinessSequenceApi } from '@/api/infra/file/fileBusinessSequence'
 import { base64Encode } from '@/utils'
 import { createImageViewer } from '@/components/ImageViewer'
+import { openPreviewWindow } from '@/utils/previewWindow'
 
 
 defineOptions({ name: 'StaticFileUpload' })
@@ -588,8 +594,8 @@ const addNewFileBox = () => {
 const deleteFile = async (index: number) => {
   const box = fileBoxes.value[index]
 
+  // 如果是已上传的文件，需要先删除服务器上的文件
   if (box.uploaded && box.fileInfo?.id) {
-    // 删除已上传的文件
     try {
       const confirmMessage = props.mode === 'edit'
         ? '确定要永久删除这个文件吗？删除后无法恢复！'
@@ -627,7 +633,7 @@ const deleteFile = async (index: number) => {
   if (props.sequenceCode) {
     Object.assign(box, createEmptyFileBox())
   } else {
-    // 普通批量模式：移除这个框
+    // 普通批量模式：移除这个框（但至少保留一个）
     if (fileBoxes.value.length > 1) {
       fileBoxes.value.splice(index, 1)
     } else {
@@ -663,10 +669,12 @@ const handlePreview = async (index: number) => {
       })
     } else {
       // 静态非图片文件：拼接预览地址
-      const staticFileUrl = `${fileInfo.url}` + `?nickname=${nickname}`
+      const staticFileUrl = `${fileInfo.url}?nickname=${nickname}`
       const encodedUrl = encodeURIComponent(base64Encode(staticFileUrl))
       const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
-      window.open(previewUrl, '_blank')
+
+      // 使用预览工具类打开窗口
+      openPreviewWindow(previewUrl, fileInfo.name || '未知文件')
     }
   } catch (error) {
     console.error('预览文件失败:', error)
@@ -734,7 +742,7 @@ const getEmptyStateText = (index: number): string => {
     console.log('静态文件上传-getEmptyStateText - 返回文本:', text)
     return text
   }
-  return '拖动或点击选择文件'
+  return '点击上传'
 }
 
 // 更新已上传文件ID列表
@@ -835,16 +843,16 @@ defineExpose({
 
   .file-boxes-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-    margin-bottom: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
   }
 
   .file-all-in-one-box {
     width: 100%;
-    height: 200px;
-    border: 2px dashed #d9d9d9;
-    border-radius: 8px;
+    height: 88px;
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -922,11 +930,35 @@ defineExpose({
     justify-content: center;
     height: 100%;
     padding: 16px;
+    position: relative;
+
+    .empty-file-close-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 20px;
+      height: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: white;
+      z-index: 10;
+      transition: all 0.2s ease;
+      font-size: 12px;
+
+      &:hover {
+        background: rgba(245, 108, 108, 0.8);
+        transform: scale(1.1);
+      }
+    }
 
     .plus-icon {
-      font-size: 48px;
+      font-size: 24px;
       color: #c0c4cc;
-      margin-bottom: 12px;
+      margin-bottom: 4px;
       transition: color 0.3s ease;
 
       &.hover-blue {
@@ -935,10 +967,10 @@ defineExpose({
     }
 
     .upload-text {
-      font-size: 14px;
+      font-size: 12px;
       color: #606266;
       text-align: center;
-      line-height: 1.4;
+      line-height: 1.2;
     }
   }
 
@@ -1108,12 +1140,13 @@ defineExpose({
 
       .preview-overlay {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.7);
-        border-radius: 12px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, rgba(64, 158, 255, 0.5) 0%, rgba(103, 194, 58, 0.5) 100%);
+        border-radius: 50%;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -1121,10 +1154,23 @@ defineExpose({
         color: white;
         transition: all 0.3s ease;
         cursor: pointer;
+        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+        backdrop-filter: blur(4px);
+
+        &:hover {
+          transform: translate(-50%, -50%) scale(1.1);
+          box-shadow: 0 6px 20px rgba(64, 158, 255, 0.3);
+        }
+
+        .preview-icon {
+          font-size: 18px;
+          margin-bottom: 0;
+        }
 
         .preview-text {
-          font-size: 12px;
-          margin-top: 4px;
+          font-size: 8px;
+          font-weight: 500;
+          opacity: 0.9;
         }
       }
     }

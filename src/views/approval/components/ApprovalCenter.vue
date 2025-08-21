@@ -464,7 +464,7 @@ onMounted(async () => {
   position: fixed;
   top: 0;
   right: 0;
-  width: 66.66%;
+  width: 90%;
   height: 100%;
   background: #fff;
   box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);

@@ -46,9 +46,6 @@
                             <el-radio value="1">外带</el-radio>
                         </el-radio-group>
                     </el-form-item>
-                  <el-form-item label="文件序列编码" prop="sequenceCode">
-                    <el-input v-model="formData.sequenceCode" disabled />
-                  </el-form-item>
                     <el-form-item label="附件" prop="fileList">
                         <BatchFileUpload ref="fileUploadRef" v-model:fileList="formData.fileList" mode="create"
                             :max-files="10" directory="chapter" :file-size="10" tip="支持上传多个文件，每个文件不超过10MB" />

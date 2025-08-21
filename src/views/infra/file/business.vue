@@ -129,6 +129,7 @@ import { UploadFile } from '@/components/UploadFile'
 import { fileSizeFormatter } from '@/utils'
 import { dateFormatter } from '@/utils/formatTime'
 import * as FileApi from '@/api/infra/file/index'
+import { openPreviewWindow } from '@/utils/previewWindow'
 
 defineOptions({ name: 'BusinessFiles' })
 
@@ -249,7 +250,8 @@ const handleUploadError = (error, file) => {
 const previewFile = (file) => {
     console.log('预览业务文件:', file)
     if (file.url) {
-        window.open(file.url, '_blank')
+        // 使用预览工具类打开窗口
+        openPreviewWindow(file.url, file.name || '未知文件')
     }
 }
 
