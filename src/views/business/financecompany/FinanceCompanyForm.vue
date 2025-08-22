@@ -43,8 +43,13 @@
       <el-form-item label="部门编号" prop="deptId">
         <el-input v-model="formData.deptId" placeholder="请输入部门编号" />
       </el-form-item>
-      <el-form-item label="文件路径" prop="filePath">
-        <el-input v-model="formData.filePath" placeholder="请输入文件路径" />
+      <el-form-item label="附件文件" prop="fileList">
+        <BatchFileUpload
+          ref="fileUploadRef"
+          v-model:fileList="formData.fileList"
+          :mode="getUploadMode()"
+          directory="business"
+        />
       </el-form-item>
       <el-form-item label="企业联系电话" prop="phone">
         <el-input v-model="formData.phone" placeholder="请输入企业联系电话" />
@@ -58,6 +63,7 @@
 </template>
 <script setup lang="ts">
 import { FinanceCompanyApi, FinanceCompanyVO } from '@/api/business/financecompany'
+import { BatchFileUpload } from '@/components/UploadFile'
 
 /** 企业名单管理 表单 */
 defineOptions({ name: 'FinanceCompanyForm' })
@@ -69,6 +75,13 @@ const dialogVisible = ref(false) // 弹窗的是否展示
 const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
+
+/** 获取上传组件的模式 */
+const getUploadMode = () => {
+  if (formType.value === 'create') return 'create'
+  if (formType.value === 'update' || formType.value === 'edit') return 'edit'
+  return 'view'
+}
 const formData = ref({
   id: undefined,
   enterpriseName: undefined,
@@ -83,7 +96,8 @@ const formData = ref({
   mainProducts: undefined,
   remark: undefined,
   deptId: undefined,
-  filePath: undefined,
+  fileList: [] as string[],
+  sequenceCode: undefined,
   phone: undefined,
 })
 const formRules = reactive({
@@ -103,7 +117,11 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await FinanceCompanyApi.getFinanceCompany(id)
+      const data = await FinanceCompanyApi.getFinanceCompany(id)
+      formData.value = {
+        ...data,
+        fileList: data.fileList ? (typeof data.fileList === 'string' ? data.fileList.split(',').filter(id => id.trim() !== '') : data.fileList) : []
+      }
     } finally {
       formLoading.value = false
     }
@@ -119,7 +137,13 @@ const submitForm = async () => {
   // 提交请求
   formLoading.value = true
   try {
-    const data = formData.value as unknown as FinanceCompanyVO
+    const data = {
+      ...formData.value,
+      fileList: Array.isArray(formData.value.fileList) && formData.value.fileList.length > 0
+        ? formData.value.fileList.join(',')
+        : ''
+    } as unknown as FinanceCompanyVO
+
     if (formType.value === 'create') {
       await FinanceCompanyApi.createFinanceCompany(data)
       message.success(t('common.createSuccess'))
@@ -151,7 +175,8 @@ const resetForm = () => {
     mainProducts: undefined,
     remark: undefined,
     deptId: undefined,
-    filePath: undefined,
+    fileList: [],
+    sequenceCode: undefined,
     phone: undefined,
   }
   formRef.value?.resetFields()

@@ -106,7 +106,7 @@
           class="!w-220px"
         />
       </el-form-item>
-      <el-form-item> 
+      <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
         <el-button
@@ -120,7 +120,7 @@
         <el-button
           type="success"
           plain
-          @click="handleExport" 
+          @click="handleExport"
           :loading="exportLoading"
           v-hasPermi="['business:oa-meeting-issue:export']"
         >
@@ -151,12 +151,12 @@
       <el-table-column label="议题概述" align="center" prop="description" />
       <el-table-column label="议题状态" align="center" prop="issueStatus">
         <template #default="scope">
-          <dict-tag :type="DICT_TYPE.ISSUE_STATUS" :value="scope.row.issueStatus" />
+          <dict-tag :type="DICT_TYPE.ISSUE_STATUS" :value="scope.row.issueStatus || 0" />
         </template>
       </el-table-column>
       <el-table-column label="审核状态" align="center" prop="status">
         <template #default="scope">
-          <dict-tag :type="DICT_TYPE.ISSUE_AUDIT_STATUS" :value="scope.row.status" />
+          <dict-tag :type="DICT_TYPE.ISSUE_AUDIT_STATUS" :value="scope.row.status || 0" />
         </template>
       </el-table-column>
       <el-table-column
@@ -169,7 +169,7 @@
       <el-table-column label="操作" align="center" min-width="180px">
         <template #default="scope">
           <el-button
-            link 
+            link
             type="info"
             @click="openDetail(scope.row.id)"
             v-hasPermi="['business:oa-meeting-issue:query']"
@@ -178,7 +178,7 @@
           </el-button>
           <template v-if="scope.row.status === -1">
             <el-button
-              link 
+              link
               type="primary"
               @click="openForm('update', scope.row.id)"
               v-hasPermi="['business:oa-meeting-issue:update']"
@@ -270,7 +270,7 @@ const getList = async () => {
         list.value = data || []
         total.value = data ? data.length : 0
       }
-    } 
+    }
   } catch (error) {
     console.error('获取议题列表失败:', error)
     message.error('获取列表失败，请稍后重试')

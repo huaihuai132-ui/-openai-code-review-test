@@ -15,7 +15,8 @@ export interface FinanceCompanyVO {
   mainProducts: string // 主要产品
   remark: string // 备注信息
   deptId: number // 部门编号
-  filePath: string // 文件路径
+  fileList: string // 文件id列表
+  sequenceCode: string // 文件序列编码
   phone: string // 企业联系电话（手机号）
 }
 

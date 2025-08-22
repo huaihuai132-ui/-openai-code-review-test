@@ -8,7 +8,7 @@
         <div class="flex items-center gap-5 mb-10px h-40px">
           <div class="text-26px font-bold mb-5px">{{ processInstance.name }}</div>
           <dict-tag v-if="processInstance.status" :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS"
-            :value="processInstance.status" />
+            :value="processInstance.status || 0" />
         </div>
 
         <div class="flex items-center gap-5 mb-10px text-13px h-35px">
@@ -34,36 +34,36 @@
                       <!-- 情况一：流程表单 -->
                       <el-col v-if="processDefinition?.formType === BpmModelFormType.NORMAL">
                         <!-- 只有融资租赁流程才显示 FinanceLeaseForm -->
-                        <FinanceLeaseForm 
+                        <FinanceLeaseForm
                           v-if="processDefinition?.key === 'bpm_oa_finance_lease'"
-                          :process-instance="processInstance" 
-                          :process-definition="processDefinition" 
-                          :form-variables="processInstance.formVariables" 
-                          :readonly="true" 
+                          :process-instance="processInstance"
+                          :process-definition="processDefinition"
+                          :form-variables="processInstance.formVariables"
+                          :readonly="true"
                         />
                         <!-- 其他流程使用原有的 form-create -->
-                        <form-create 
+                        <form-create
                           v-else
-                          v-model="detailForm.value" 
-                          v-model:api="fApi" 
+                          v-model="detailForm.value"
+                          v-model:api="fApi"
                           :option="detailForm.option"
-                          :rule="detailForm.rule" 
+                          :rule="detailForm.rule"
                         />
                       </el-col>
                       <!-- 情况二：业务表单 -->
                       <div v-if="processDefinition?.formType === BpmModelFormType.CUSTOM">
-                        <FinanceLeaseForm 
+                        <FinanceLeaseForm
                           v-if="processDefinition?.key === 'bpm_oa_finance_lease'"
-                          :process-instance="processInstance" 
-                          :process-definition="processDefinition" 
-                          :form-variables="processInstance.formVariables" 
-                          :readonly="true" 
+                          :process-instance="processInstance"
+                          :process-definition="processDefinition"
+                          :form-variables="processInstance.formVariables"
+                          :readonly="true"
                         />
                         <!-- 其他业务表单使用原有的 BusinessFormComponent -->
-                        <component 
+                        <component
                           v-else
-                          :is="BusinessFormComponent" 
-                          :id="processInstance.businessKey" 
+                          :is="BusinessFormComponent"
+                          :id="processInstance.businessKey"
                         />
                       </div>
                     </div>

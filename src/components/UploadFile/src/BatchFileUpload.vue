@@ -3,7 +3,7 @@
     <!-- 文件全能框列表 -->
     <div class="file-boxes-container">
       <div v-for="(fileBox, index) in fileBoxes" :key="index"
-        v-show="mode !== 'view' || fileBox.uploaded || fileBox.file" class="file-all-in-one-box" :class="{
+        v-show="mode === 'create' || mode === 'edit' || fileBox.uploaded || fileBox.file" class="file-all-in-one-box" :class="{
           'is-empty': !fileBox.file,
           'is-selected': fileBox.file && !fileBox.uploading && !fileBox.uploaded,
           'is-uploading': fileBox.uploading,
@@ -105,7 +105,10 @@
       </div>
     </div>
 
-
+    <!-- 没有附件提示 (仅在view模式且没有文件时显示) -->
+    <div v-if="mode === 'view' && !hasAnyFiles" class="no-files-tip">
+      <div class="no-files-text">没有附件</div>
+    </div>
 
     <!-- 提示信息 -->
     <div v-if="isShowTip && tip" class="upload-tip">
@@ -204,6 +207,11 @@ const isUploading = computed(() => {
   return fileBoxes.value.some(box => box.uploading)
 })
 
+// 判断是否有任何文件（已上传或待上传）
+const hasAnyFiles = computed(() => {
+  return fileBoxes.value.some(box => box.uploaded || box.file)
+})
+
 // ========== 初始化方法 ==========
 // 初始化文件框
 const initFileBoxes = async () => {
@@ -275,7 +283,6 @@ const loadExistingFiles = async () => {
     })
 
     const files = await FileApi.getFilesByIds(fileIds as any)
-
     const fileData = files.data || files
 
     // 确保有足够的文件框来显示所有文件
@@ -293,7 +300,13 @@ const loadExistingFiles = async () => {
       }
     })
 
-    updateUploadedFileIds()
+    // 加载已有文件时不触发emit，避免循环
+    const ids = fileBoxes.value
+      .filter(box => box.uploaded && box.fileInfo?.id)
+      .map(box => box.fileInfo.id)
+    uploadedFileIds.value = ids
+
+
   } catch (error) {
     console.error('加载已有文件失败:', error)
   }
@@ -791,18 +804,43 @@ const resetComponent = () => {
 }
 
 // ========== 生命周期 ==========
-onMounted(() => {
+onMounted(async () => {
   initFileBoxes()
+
+  if ((props.mode === 'view' || props.mode === 'edit') && props.fileList && props.fileList.length > 0) {
+    await loadExistingFiles()
+  }
 })
 
 // ========== 监听器 ==========
+// 添加一个标志来防止重复加载
+const isLoadingFiles = ref(false)
+
 watch(
   () => props.fileList,
-  () => {
-    if (props.mode === 'view' || props.mode === 'edit') {
-      // loadExistingFiles()
+  async (newFileList, oldFileList) => {
+    // 防止重复加载
+    if (isLoadingFiles.value) {
+      return
     }
-  }
+
+    // 深度比较数组内容，如果内容相同则不处理
+    if (oldFileList && newFileList &&
+        oldFileList.length === newFileList.length &&
+        oldFileList.every((item, index) => item === newFileList[index])) {
+      return
+    }
+
+    if ((props.mode === 'view' || props.mode === 'edit') && newFileList && newFileList.length > 0) {
+      isLoadingFiles.value = true
+      try {
+        await loadExistingFiles()
+      } finally {
+        isLoadingFiles.value = false
+      }
+    }
+  },
+  { immediate: true }
 )
 
 watch(
@@ -1180,7 +1218,20 @@ defineExpose({
     }
   }
 
+  // 没有附件提示
+  .no-files-tip {
+    margin-top: 8px;
+    text-align: center;
+    padding: 20px;
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    background-color: #fafafa;
 
+    .no-files-text {
+      font-size: 14px;
+      color: #999;
+    }
+  }
 
   // 提示信息
   .upload-tip {

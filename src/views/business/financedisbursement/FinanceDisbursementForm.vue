@@ -136,8 +136,13 @@
           <!-- 附件上传 tab -->
           <el-tab-pane label="附件上传" name="upload">
             <div class="upload-content">
-              <el-form-item label="文件路径" prop="filePath">
-                <UploadFile v-model="formData.filePath" />
+              <el-form-item label="附件文件" prop="fileList">
+                <BatchFileUpload
+                  ref="fileUploadRef"
+                  v-model:fileList="formData.fileList"
+                  :mode="getUploadMode()"
+                  directory="business"
+                />
               </el-form-item>
             </div>
           </el-tab-pane>
@@ -154,7 +159,7 @@
 <script setup lang="ts">
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { FinanceDisbursementApi, FinanceDisbursementVO } from '@/api/business/financedisbursement'
-import { UploadFile } from '@/components/UploadFile'
+import { BatchFileUpload } from '@/components/UploadFile'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
 
 /** 融资租赁放款 表单 */
@@ -167,6 +172,13 @@ const dialogVisible = ref(false) // 弹窗的是否展示
 const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
+
+/** 获取上传组件的模式 */
+const getUploadMode = () => {
+  if (formType.value === 'create') return 'create'
+  if (formType.value === 'update' || formType.value === 'edit') return 'edit'
+  return 'view'
+}
 
 const formData = ref({
   id: undefined,
@@ -192,7 +204,8 @@ const formData = ref({
   beneficiaryName: undefined,
   beneficiaryBanklocation: undefined,
   beneficiaryAccount: undefined,
-  filePath: undefined,
+  fileList: [] as string[],
+  sequenceCode: undefined,
   status: undefined,
   processInstanceId: undefined,
   deptId: undefined,
@@ -238,7 +251,11 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await FinanceDisbursementApi.getFinanceDisbursement(id)
+      const data = await FinanceDisbursementApi.getFinanceDisbursement(id)
+      formData.value = {
+        ...data,
+        fileList: data.fileList ? (typeof data.fileList === 'string' ? data.fileList.split(',').filter(id => id.trim() !== '') : data.fileList) : []
+      }
     } finally {
       formLoading.value = false
     }
@@ -257,7 +274,13 @@ const submitForm = async () => {
   // 提交请求
   formLoading.value = true
   try {
-    const data = formData.value as unknown as FinanceDisbursementVO
+    const data = {
+      ...formData.value,
+      fileList: Array.isArray(formData.value.fileList) && formData.value.fileList.length > 0
+        ? formData.value.fileList.join(',')
+        : ''
+    } as unknown as FinanceDisbursementVO
+
     if (formType.value === 'create') {
       await FinanceDisbursementApi.createFinanceDisbursement(data)
       message.success(t('common.createSuccess'))
@@ -299,7 +322,8 @@ const resetForm = () => {
     beneficiaryName: undefined,
     beneficiaryBanklocation: undefined,
     beneficiaryAccount: undefined,
-    filePath: undefined,
+    fileList: [],
+    sequenceCode: undefined,
     status: undefined,
     processInstanceId: undefined,
     deptId: undefined,

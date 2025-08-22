@@ -19,5 +19,8 @@ export {
   StaticImgUpload,
 
   // 头像上传组件
-  UploadImg
+  UploadImg,
+
+  // 兼容性导出：UploadImgs 使用 UploadImg 替代
+  UploadImg as UploadImgs
 }

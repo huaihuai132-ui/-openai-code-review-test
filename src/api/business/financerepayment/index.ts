@@ -11,7 +11,8 @@ export interface FinanceRepaymentVO {
   capital: Date // 还款本金
   interest: Date // 还款利息
   repaymentStatus: number // 还款状态
-  filePath: string // 还款凭证文件路径
+  fileList: string // 文件id列表
+  sequenceCode: string // 文件序列编码
   deptId: number // 部门id
 }
 
@@ -46,4 +47,4 @@ export const FinanceRepaymentApi = {
   exportFinanceRepayment: async (params) => {
     return await request.download({ url: `/business/finance-repayment/export-excel`, params })
   },
-}
+}

@@ -69,7 +69,7 @@
                     <el-radio
                       v-for="dict in getBoolDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)"
                       :key="String(dict.value)"
-                      :label="dict.value"
+                      :value="dict.value"
                     >
                       {{ dict.label }}
                     </el-radio>
@@ -85,7 +85,7 @@
                     <el-radio
                       v-for="dict in getBoolDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)"
                       :key="String(dict.value)"
-                      :label="dict.value"
+                      :value="dict.value"
                     >
                       {{ dict.label }}
                     </el-radio>
@@ -101,7 +101,7 @@
                     <el-radio
                       v-for="dict in getBoolDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)"
                       :key="String(dict.value)"
-                      :label="dict.value"
+                      :value="dict.value"
                     >
                       {{ dict.label }}
                     </el-radio>
@@ -117,7 +117,7 @@
                     <el-radio
                       v-for="dict in getBoolDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)"
                       :key="String(dict.value)"
-                      :label="dict.value"
+                      :value="dict.value"
                     >
                       {{ dict.label }}
                     </el-radio>
@@ -133,7 +133,7 @@
                     <el-radio
                       v-for="dict in getBoolDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)"
                       :key="String(dict.value)"
-                      :label="dict.value"
+                      :value="dict.value"
                     >
                       {{ dict.label }}
                     </el-radio>
@@ -149,7 +149,7 @@
                     <el-radio
                       v-for="dict in getBoolDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)"
                       :key="String(dict.value)"
-                      :label="dict.value"
+                      :value="dict.value"
                     >
                       {{ dict.label }}
                     </el-radio>
@@ -165,7 +165,7 @@
                     <el-radio
                       v-for="dict in getBoolDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)"
                       :key="String(dict.value)"
-                      :label="dict.value"
+                      :value="dict.value"
                     >
                       {{ dict.label }}
                     </el-radio>
@@ -173,20 +173,18 @@
                 </el-form-item>
                 <el-form-item label="备注" prop="badCreditRecordReason" v-if="formData.badCreditRecord === true">
                   <el-input v-model="formData.badCreditRecordReason" placeholder="请输入备注" />
-                </el-form-item> 
+                </el-form-item>
               </div>
             </div>
           </el-tab-pane>
           <el-tab-pane label="附件上传" name="upload">
             <div class="upload-content">
-              <el-form-item label="文件路径" prop="filePath">
-                <UploadFile
-                  v-model="formData.filePath"
-                  :limit="10"
-                  file-type="jpg,png,pdf,doc,docx"
-                  :file-size="10"
-                  :drag="true"
-                  directory="uploads"
+              <el-form-item label="附件文件" prop="fileList">
+                <BatchFileUpload
+                  ref="fileUploadRef"
+                  v-model:fileList="formData.fileList"
+                  :mode="getUploadMode()"
+                  directory="business"
                 />
               </el-form-item>
             </div>
@@ -204,7 +202,7 @@
 import { getBoolDictOptions, DICT_TYPE } from '@/utils/dict'
 import { FinanceApplicationApi, FinanceApplicationVO } from '@/api/business/financeapplication'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
-import { UploadFile } from '@/components/UploadFile'
+import { BatchFileUpload } from '@/components/UploadFile'
 import { useUserStore } from '@/store/modules/user'
 
 /** 融资租赁立项 表单 */
@@ -218,7 +216,7 @@ const message = useMessage() // 消息弹窗
 const dialogVisible = ref(false) // 弹窗的是否展示
 const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
-const formType = ref('') // 表单的类型：create - 新增；update - 修改
+const formType = ref('create') // 表单的类型：create - 新增；update - 修改
 
 const userStore = useUserStore()
 const formData = ref({
@@ -241,12 +239,12 @@ const formData = ref({
   taxFraudRiskReason: undefined,
   landPermitEhsOk: undefined,
   landPermitEhsOkReason: undefined,
-  ehsCompliance: undefined,
   licenseAnnualOk: undefined,
   licenseAnnualOkReason: undefined,
   badCreditRecord: undefined,
   badCreditRecordReason: undefined,
-  filePath: undefined,
+  fileList: [] as string[],
+  sequenceCode: undefined,
   status: 1,
   processInstanceId: undefined,
   deptId: undefined,
@@ -264,7 +262,6 @@ const formRules = reactive({
   obsoleteOrOverdep: [{ required: true, message: '租赁物是否为濒临淘汰或折旧严重的设备不能为空', trigger: 'blur' }],
   taxFraudRisk: [{ required: true, message: '是否涉嫌走私、偷逃税款或骗取出口退税不能为空', trigger: 'blur' }],
   landPermitEhsOk: [{ required: true, message: '企业（项目）立项、生产经营用地批文是否齐全不能为空', trigger: 'blur' }],
-  ehsCompliance: [{ required: true, message: '环评、能耗、安全消防是否达标不能为空', trigger: 'blur' }],
   licenseAnnualOk: [{ required: true, message: '营业执照等证件是否经过当地年检不能为空', trigger: 'blur' }],
   badCreditRecord: [{ required: true, message: '申请人及其法定代表人是否有不良信用记录不能为空', trigger: 'blur' }],
   status: [{ required: true, message: '单据状态不能为空', trigger: 'blur' }],
@@ -273,9 +270,12 @@ const formRef = ref() // 表单 Ref
 const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
 const activeTab = ref('radio') // 当前激活的tab
 
-
-
-
+/** 获取上传组件的模式 */
+const getUploadMode = () => {
+  if (formType.value === 'create') return 'create'
+  if (formType.value === 'update' || formType.value === 'edit') return 'edit'
+  return 'view'
+}
 
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
@@ -285,12 +285,16 @@ const open = async (type: string, id?: number) => {
   resetForm()
     // 设置用户ID
   formData.value.userId = userStore.getUser?.id
-  
+
   // 修改时，设置数据
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await FinanceApplicationApi.getFinanceApplication(id)
+      const data = await FinanceApplicationApi.getFinanceApplication(id)
+      formData.value = {
+        ...data,
+        fileList: data.fileList ? (typeof data.fileList === 'string' ? data.fileList.split(',').filter(id => id.trim() !== '') : data.fileList) : []
+      }
     } finally {
       formLoading.value = false
     }
@@ -308,7 +312,13 @@ const submitForm = async () => {
   // 提交请求
   formLoading.value = true
   try {
-    const data = formData.value as unknown as FinanceApplicationVO
+    const data = {
+      ...formData.value,
+      fileList: Array.isArray(formData.value.fileList) && formData.value.fileList.length > 0
+        ? formData.value.fileList.join(',')
+        : ''
+    } as unknown as FinanceApplicationVO
+
     if (formType.value === 'create') {
       await FinanceApplicationApi.createFinanceApplication(data)
       message.success(t('common.createSuccess'))
@@ -329,7 +339,6 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     applicationCode: undefined,
-    userId: undefined,
     companyId: undefined,
     leasedProperty: undefined,
     leasedPropertyNum: undefined,
@@ -346,12 +355,12 @@ const resetForm = () => {
     taxFraudRiskReason: undefined,
     landPermitEhsOk: undefined,
     landPermitEhsOkReason: undefined,
-    ehsCompliance: undefined,
     licenseAnnualOk: undefined,
     licenseAnnualOkReason: undefined,
     badCreditRecord: undefined,
     badCreditRecordReason: undefined,
-    filePath: undefined,
+    fileList: [],
+    sequenceCode: undefined,
     status: 1,
     processInstanceId: undefined,
     deptId: undefined,

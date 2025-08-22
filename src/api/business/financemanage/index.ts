@@ -77,7 +77,8 @@ export interface FinanceManageVO {
   overallRiskEval: string // 对项目风险状况的总体评价
   overallLeaseEval: string // 对租赁物件状况的总体评价
   riskMgmtSuggestion: number // 对该项目的风险管理策略建议
-  filePath: string // 文件路径
+  fileList: string // 文件id列表
+  sequenceCode: string // 文件序列编码
   status: number // 单据状态
   processInstanceId: string // 流程实例的编号
   deptId: number // 部门id

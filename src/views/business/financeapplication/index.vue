@@ -99,7 +99,7 @@
       <el-table-column label="承租租期" align="center" prop="leaseTerm" />
       <el-table-column label="单据状态" align="center" prop="status" >
         <template #default="scope">
-          <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status" />
+          <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status || 0" />
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" min-width="120px">
@@ -108,7 +108,7 @@
             link
             type="primary"
             v-if="isShowEdit(scope.row)"
-            @click="openForm('update', scope.row.id)"
+            @click="openForm('edit', scope.row.id)"
             v-hasPermi="['business:finance-application:update']"
           >
             编辑
@@ -117,7 +117,7 @@
             link
             type="info"
             v-if="isShowDetail(scope.row)"
-            @click="openForm('detail', scope.row.id)"
+            @click="openForm('view', scope.row.id)"
             v-hasPermi="['business:finance-application:query']"
           >
             详情
@@ -157,15 +157,11 @@
 </template>
 
 <script setup lang="ts">
-import { getBoolDictOptions, DICT_TYPE, getIntDictOptions } from '@/utils/dict'
-import { dateFormatter } from '@/utils/formatTime'
+import {  DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import download from '@/utils/download'
 import { FinanceApplicationApi, FinanceApplicationVO } from '@/api/business/financeapplication'
 import FinanceApplicationForm from './FinanceApplicationForm.vue'
-import {FinanceLeaseApi} from "@/api/business/financelease";
-import {FinanceManageVO} from "@/api/business/financemanage";
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
-import * as UserApi from "@/api/system/user";
 import {isShowEdit, isShowDetail} from "@/api/bpm/task";
 
 /** 融资租赁立项 列表 */

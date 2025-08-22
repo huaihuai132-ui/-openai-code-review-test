@@ -46,10 +46,10 @@
           />
           <el-table-column align="center" label="审批状态" prop="status" min-width="90">
             <template #default="scope">
-              <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status" />
+              <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status || 0" />
             </template>
           </el-table-column>
-         
+
           <el-table-column align="center" label="耗时" prop="durationInMillis" width="100">
             <template #default="scope">
               {{ formatPast2(scope.row.durationInMillis) }}
@@ -83,7 +83,7 @@ const dialogVisible = ref(false) // 弹窗可见性
 const processInstanceInfos = ref<any[]>([]) // 流程的审批信息
 
 const nodeClick = () => {
-  if (readonly) { 
+  if (readonly) {
     if(processInstance && processInstance.value){
       processInstanceInfos.value = [
       {

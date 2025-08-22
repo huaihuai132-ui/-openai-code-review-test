@@ -58,6 +58,14 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="还款凭证" prop="fileList">
+        <BatchFileUpload
+          ref="fileUploadRef"
+          v-model:fileList="formData.fileList"
+          :mode="getUploadMode()"
+          directory="business"
+        />
+      </el-form-item>
     </el-form>
     <template #footer>
       <el-button @click="submitForm" type="primary" :disabled="formLoading">确 定</el-button>
@@ -69,6 +77,7 @@
 import { FinanceRepaymentApi, FinanceRepaymentVO } from '@/api/business/financerepayment'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
+import { BatchFileUpload } from '@/components/UploadFile'
 
 /** 融资租赁放款 表单 */
 defineOptions({ name: 'FinanceRepaymentForm' })
@@ -80,6 +89,13 @@ const dialogVisible = ref(false) // 弹窗的是否展示
 const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
+
+/** 获取上传组件的模式 */
+const getUploadMode = () => {
+  if (formType.value === 'create') return 'create'
+  if (formType.value === 'update' || formType.value === 'edit') return 'edit'
+  return 'view'
+}
 const formData = ref({
   id: undefined,
   disbursementId: undefined,
@@ -90,7 +106,8 @@ const formData = ref({
   capital: undefined,
   interest: undefined,
   repaymentStatus: undefined,
-  filePath: undefined,
+  fileList: [] as string[],
+  sequenceCode: undefined,
   deptId: undefined,
 })
 const formRules = reactive({
@@ -116,7 +133,11 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await FinanceRepaymentApi.getFinanceRepayment(id)
+      const data = await FinanceRepaymentApi.getFinanceRepayment(id)
+      formData.value = {
+        ...data,
+        fileList: data.fileList ? (typeof data.fileList === 'string' ? data.fileList.split(',').filter(id => id.trim() !== '') : data.fileList) : []
+      }
     } finally {
       formLoading.value = false
     }
@@ -134,7 +155,13 @@ const submitForm = async () => {
   // 提交请求
   formLoading.value = true
   try {
-    const data = formData.value as unknown as FinanceRepaymentVO
+    const data = {
+      ...formData.value,
+      fileList: Array.isArray(formData.value.fileList) && formData.value.fileList.length > 0
+        ? formData.value.fileList.join(',')
+        : ''
+    } as unknown as FinanceRepaymentVO
+
     if (formType.value === 'create') {
       await FinanceRepaymentApi.createFinanceRepayment(data)
       message.success(t('common.createSuccess'))
@@ -162,7 +189,8 @@ const resetForm = () => {
     capital: undefined,
     interest: undefined,
     repaymentStatus: undefined,
-    filePath: undefined,
+    fileList: [],
+    sequenceCode: undefined,
     deptId: undefined,
   }
   formRef.value?.resetFields()

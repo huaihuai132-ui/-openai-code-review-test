@@ -16,7 +16,8 @@ export interface FinanceLeaseVO {
   leaseDate: Date // 承租时间
   leaseTerm: number // 承租租期
   interestRate: number // 利率
-  filePath: string // 文件路径
+  fileList: string // 文件id列表
+  sequenceCode: string // 文件序列编码
   status: number // 单据状态
   processInstanceId: string // 流程实例的编号
   deptId: number // 部门id

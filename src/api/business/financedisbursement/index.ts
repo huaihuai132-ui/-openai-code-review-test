@@ -25,7 +25,8 @@ export interface FinanceDisbursementVO {
   beneficiaryName: string // 收款单位账户名称
   beneficiaryBanklocation: string // 收款单位账开户行
   beneficiaryAccount: string // 收款单位账号
-  filePath: string // 文件路径
+  fileList: string // 文件id列表
+  sequenceCode: string // 文件序列编码
   status: number // 单据状态
   processInstanceId: string // 流程实例的编号
   deptId: number // 部门id

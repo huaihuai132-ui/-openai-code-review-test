@@ -115,7 +115,7 @@
       />
       <el-table-column label="单据状态" align="center" prop="status" >
         <template #default="scope">
-          <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status" />
+          <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status || 0" />
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" min-width="120px">

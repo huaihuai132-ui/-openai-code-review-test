@@ -164,7 +164,7 @@
           </template>
           <!-- 非审批中状态 -->
           <template v-else>
-            <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status" />
+            <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status || 0" />
           </template>
         </template>
       </el-table-column>

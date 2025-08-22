@@ -307,6 +307,7 @@ export default {
     delete: '删除',
     edit: '编辑',
     update: '编辑',
+    view: '查看',
     preview: '预览',
     more: '更多',
     sync: '同步',

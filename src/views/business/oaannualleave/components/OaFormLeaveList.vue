@@ -26,7 +26,7 @@
       <el-table-column label="请假天数" align="center" prop="day" />
       <el-table-column label="请假结果" align="center">
         <template #default="scope">
-          <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status" />
+          <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status || 0" />
         </template>
       </el-table-column>
       <el-table-column label="流程实例的编号" align="center" prop="processInstanceId" />

@@ -25,7 +25,8 @@ export interface FinanceApplicationVO {
   licenseAnnualOkReason: string // 营业执照等证件是否经过当地年检备注
   badCreditRecord: boolean // 申请人及其法定代表人是否有不良信用记录
   badCreditRecordReason: string // 申请人及其法定代表人是否有不良信用记录备注
-  filePath: string // 文件路径
+  fileList: string // 文件id列表
+  sequenceCode: string // 文件序列编码
   status: number // 单据状态
   processInstanceId: string // 流程实例的编号
   deptId: number // 部门id

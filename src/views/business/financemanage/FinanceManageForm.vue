@@ -684,14 +684,12 @@
           <!-- 附件上传 -->
           <el-tab-pane label="附件上传" name="upload">
             <div class="radio-content">
-              <el-form-item label="文件路径" prop="filePath">
-                <UploadFile
-                  v-model="formData.filePath"
-                  :limit="10"
-                  file-type="jpg,png,pdf,doc,docx"
-                  :file-size="10"
-                  :drag="true"
-                  directory="uploads"
+              <el-form-item label="附件文件" prop="fileList">
+                <BatchFileUpload
+                  ref="fileUploadRef"
+                  v-model:fileList="formData.fileList"
+                  :mode="getUploadMode()"
+                  directory="business"
                 />
               </el-form-item>
             </div>
@@ -709,7 +707,7 @@
 import { getBoolDictOptions, DICT_TYPE } from '@/utils/dict'
 import { FinanceManageApi, FinanceManageVO } from '@/api/business/financemanage'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
-import { UploadFile } from '@/components/UploadFile'
+import { BatchFileUpload } from '@/components/UploadFile'
 import { useUserStore } from '@/store/modules/user'
 
 const userStore = useUserStore()
@@ -724,6 +722,13 @@ const dialogVisible = ref(false) // 弹窗的是否展示
 const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
+
+/** 获取上传组件的模式 */
+const getUploadMode = () => {
+  if (formType.value === 'create') return 'create'
+  if (formType.value === 'update' || formType.value === 'edit') return 'edit'
+  return 'view'
+}
 const formData = ref({
   id: undefined,
   manageCode: undefined,
@@ -800,7 +805,8 @@ const formData = ref({
   overallRiskEval: undefined,
   overallLeaseEval: undefined,
   riskMgmtSuggestion: undefined,
-  filePath: undefined,
+  fileList: [] as string[],
+  sequenceCode: undefined,
   status: undefined,
   processInstanceId: undefined,
   deptId: undefined,
@@ -877,7 +883,11 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await FinanceManageApi.getFinanceManage(id)
+      const data = await FinanceManageApi.getFinanceManage(id)
+      formData.value = {
+        ...data,
+        fileList: data.fileList ? (typeof data.fileList === 'string' ? data.fileList.split(',').filter(id => id.trim() !== '') : data.fileList) : []
+      }
     } finally {
       formLoading.value = false
     }
@@ -896,7 +906,13 @@ const submitForm = async () => {
   // 提交请求
   formLoading.value = true
   try {
-    const data = formData.value as unknown as FinanceManageVO
+    const data = {
+      ...formData.value,
+      fileList: Array.isArray(formData.value.fileList) && formData.value.fileList.length > 0
+        ? formData.value.fileList.join(',')
+        : ''
+    } as unknown as FinanceManageVO
+
     if (formType.value === 'create') {
       await FinanceManageApi.createFinanceManage(data)
       message.success(t('common.createSuccess'))
@@ -990,7 +1006,8 @@ const resetForm = () => {
     overallRiskEval: undefined,
     overallLeaseEval: undefined,
     riskMgmtSuggestion: undefined,
-    filePath: undefined,
+    fileList: [],
+    sequenceCode: undefined,
     status: 1,
     processInstanceId: undefined,
     deptId: undefined,

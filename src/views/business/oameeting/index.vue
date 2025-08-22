@@ -178,8 +178,8 @@
       <el-table-column label="会议事由" align="center" prop="reason" />
       <el-table-column label="会议概述" align="center" prop="description" />
       <el-table-column label="会议状态" align="center" prop="status">
-        <template #default="scope"> 
-          <dict-tag :type="DICT_TYPE.MEET_STATUS" :value="scope.row.status" />
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.MEET_STATUS" :value="scope.row.status || 0" />
         </template>
       </el-table-column>
       <el-table-column

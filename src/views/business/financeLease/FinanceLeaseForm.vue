@@ -99,19 +99,16 @@
               <EquipmentList v-model="formData.deviceList" />
             </div>
           </el-tab-pane>
-          
+
           <!-- 附件上传 tab -->
           <el-tab-pane label="附件上传" name="upload">
             <div class="upload-content">
-              <el-form-item label="文件路径" prop="filePath">
-                <UploadFile
+              <el-form-item label="附件文件" prop="fileList">
+                <BatchFileUpload
+                  ref="fileUploadRef"
                   v-model:fileList="formData.fileList"
                   :mode="fileStatus"
-                  :limit="10"
-                  file-type="jpg,png,pdf,doc,docx"
-                  :file-size="10"
-                  :drag="true"
-                  directory="uploads"
+                  directory="business"
                 />
               </el-form-item>
             </div>
@@ -222,29 +219,19 @@
               <EquipmentList v-model="formData.deviceList" />
             </div>
           </el-tab-pane>
-          
+
           <!-- 附件上传 tab -->
           <el-tab-pane label="附件上传" name="upload">
             <div class="upload-content">
-              <el-form-item label="文件路径" prop="filePath">
-                <!-- <BatchFileUpload 
-                ref="fileUploadRef" 
-                v-model:fileList="formData.fileList"
-                mode="create"
-                :max-files="10" 
-                directory="chapter" 
-                :file-size="10" 
-                tip="支持上传多个文件，每个文件不超过10MB" /> -->
-
-                <UploadFile
-                  ref="fileUploadRef" 
+              <el-form-item label="附件文件" prop="fileList">
+                <BatchFileUpload
+                  ref="fileUploadRef"
                   v-model:fileList="formData.fileList"
                   :mode="fileStatus"
-                  :limit="10"
-                  file-type="jpg,png,pdf,doc,docx"
+                  :max-files="10"
+                  directory="business"
                   :file-size="10"
-                  :drag="true"
-                  directory="uploads"
+                  tip="支持上传多个文件，每个文件不超过10MB"
                 />
               </el-form-item>
             </div>
@@ -262,7 +249,7 @@
 <script setup lang="ts">
 import { FinanceLeaseApi, FinanceLeaseVO } from '@/api/business/financelease'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
-import { UploadFile } from '@/components/UploadFile'
+import { BatchFileUpload } from '@/components/UploadFile'
 import { useUserStore } from '@/store/modules/user'
 import EquipmentList from './components/EquipmentList.vue'
 
@@ -320,6 +307,8 @@ const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
 
+
+
 const formData = ref({
   id: undefined,
   leasedCode: undefined,
@@ -335,12 +324,12 @@ const formData = ref({
   leaseDate: undefined,
   leaseTerm: undefined,
   interestRate: undefined,
-  filePath: undefined,
+  fileList: [] as string[],
+  sequenceCode: undefined,
   deviceList: [],
   status: undefined,
   processInstanceId: undefined,
   deptId: undefined,
-  fileList: [] // 文件ID列表
 })
 
 const formRules = reactive({
@@ -365,19 +354,19 @@ const loadFinanceLeaseData = async (businessKey: string) => {
   try {
     console.log('开始加载融资租赁数据，业务键:', businessKey)
     formLoading.value = true
-    
+
     // 从后端获取融资租赁详细数据
     const response = await FinanceLeaseApi.getFinanceLease(businessKey as any)
     if (response) {
       console.log('获取到的融资租赁数据:', response)
-      
+
       // 更新表单数据
       Object.keys(response).forEach(key => {
         if (key in formData.value) {
           formData.value[key] = response[key]
         }
       })
-      
+
       // 确保流程相关字段不被覆盖
       if (props.processInstance?.id) {
         formData.value.processInstanceId = props.processInstance.id as any
@@ -385,7 +374,7 @@ const loadFinanceLeaseData = async (businessKey: string) => {
       if (props.processInstance?.startUser?.id) {
         formData.value.userId = props.processInstance.startUser.id as any
       }
-      
+
       console.log('更新后的表单数据:', formData.value)
     }
   } catch (error) {
@@ -403,24 +392,24 @@ watchEffect(() => {
     console.log('watchEffect 触发，流程表单模式:', isProcessForm.value)
     console.log('流程变量:', props.formVariables)
     console.log('流程实例:', props.processInstance)
-    
+
     // 从流程变量中加载表单数据
     Object.keys(props.formVariables).forEach(key => {
       if (key in formData.value) {
         formData.value[key] = props.formVariables[key]
       }
     })
-    
+
     // 设置流程实例ID
     if (props.processInstance?.id) {
       formData.value.processInstanceId = props.processInstance.id as any
     }
-    
+
     // 设置申请人ID
     if (props.processInstance?.startUser?.id) {
       formData.value.userId = props.processInstance.startUser.id as any
     }
-    
+
     // 如果有业务键，尝试从后端获取详细数据
     if (props.processInstance?.businessKey) {
       console.log('准备调用 loadFinanceLeaseData，业务键:', props.processInstance.businessKey)
@@ -429,9 +418,9 @@ watchEffect(() => {
       console.log('没有业务键，无法加载详细数据')
     }
   } else {
-    console.log('watchEffect 条件不满足:', { 
-      isProcessForm: isProcessForm.value, 
-      hasFormVariables: !!props.formVariables 
+    console.log('watchEffect 条件不满足:', {
+      isProcessForm: isProcessForm.value,
+      hasFormVariables: !!props.formVariables
     })
   }
 })
@@ -447,7 +436,14 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await FinanceLeaseApi.getFinanceLease(id)
+      const data = await FinanceLeaseApi.getFinanceLease(id)
+      const processedFileList = data.fileList ? (typeof data.fileList === 'string' ? data.fileList.split(',').filter(id => id.trim() !== '') : data.fileList) : []
+
+
+      formData.value = {
+        ...data,
+        fileList: processedFileList
+      }
     } finally {
       formLoading.value = false
     }
@@ -463,19 +459,17 @@ const emit = defineEmits(['success', 'click']) // 定义 success 和 click 事�
 const submitForm = async () => {
   // 校验表单
   await formRef.value.validate()
-  
+
   // 提交请求
   formLoading.value = true
   try {
-    const data = formData.value as unknown as FinanceLeaseVO
-    
-  //  处理文件列表 - 将文件ID数组转换为逗号分隔的字符串
-    if (formData.value.fileList && formData.value.fileList.length > 0) {
-      data.fileList = formData.value.fileList.join(',')
-    } else {
-      data.fileList = ''
-    }
-    
+    const data = {
+      ...formData.value,
+      fileList: Array.isArray(formData.value.fileList) && formData.value.fileList.length > 0
+        ? formData.value.fileList.join(',')
+        : ''
+    } as unknown as FinanceLeaseVO
+
     if (formType.value === 'create') {
       await FinanceLeaseApi.createFinanceLease(data)
       message.success(t('common.createSuccess'))
@@ -508,12 +502,12 @@ const resetForm = () => {
     leaseDate: undefined,
     leaseTerm: undefined,
     interestRate: undefined,
-    filePath: undefined,
+    fileList: [],
+    sequenceCode: undefined,
     deviceList: [],
     status: undefined,
     processInstanceId: undefined,
     deptId: undefined,
-    fileList: [], // 添加文件列表字段
   }
   formRef.value?.resetFields()
 }
@@ -521,12 +515,12 @@ const resetForm = () => {
   // 流程表单模式下的初始化
   onMounted(async () => {
     console.log('onMounted 触发，流程表单模式:', isProcessForm.value)
-    
+
     if (isProcessForm.value) {
       // 加载企业列表
       const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
       companyList.value = response.data as any
-      
+
       // 如果 watchEffect 没有触发，在这里也尝试加载数据
       if (props.processInstance?.businessKey && !formData.value.id) {
         console.log('onMounted 中尝试加载数据，业务键:', props.processInstance.businessKey)
