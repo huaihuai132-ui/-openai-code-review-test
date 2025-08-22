@@ -58,10 +58,7 @@ const goToApproval = (item: any) => {
   if (params.processInstanceId && params.processId) {
     push({
       path: '/bpm/process-instance/detail',
-      query: {
-        id: params.processId,
-        taskId: params.processInstanceId
-      }
+      query: { id: params.processInstanceId }
     })
   }
 }
