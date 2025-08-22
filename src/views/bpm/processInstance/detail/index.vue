@@ -28,21 +28,47 @@
             <div class="form-scroll-area">
               <el-scrollbar>
                 <el-row>
-                  <el-col :span="17" class="!flex !flex-col formCol">
+                  <el-col :span="19" class="!flex !flex-col formCol">
                     <!-- 表单信息 -->
                     <div v-loading="processInstanceLoading" class="form-box flex flex-col mb-30px flex-1">
                       <!-- 情况一：流程表单 -->
                       <el-col v-if="processDefinition?.formType === BpmModelFormType.NORMAL">
-                        <form-create v-model="detailForm.value" v-model:api="fApi" :option="detailForm.option"
-                          :rule="detailForm.rule" />
+                        <!-- 只有融资租赁流程才显示 FinanceLeaseForm -->
+                        <FinanceLeaseForm 
+                          v-if="processDefinition?.key === 'bpm_oa_finance_lease'"
+                          :process-instance="processInstance" 
+                          :process-definition="processDefinition" 
+                          :form-variables="processInstance.formVariables" 
+                          :readonly="true" 
+                        />
+                        <!-- 其他流程使用原有的 form-create -->
+                        <form-create 
+                          v-else
+                          v-model="detailForm.value" 
+                          v-model:api="fApi" 
+                          :option="detailForm.option"
+                          :rule="detailForm.rule" 
+                        />
                       </el-col>
                       <!-- 情况二：业务表单 -->
                       <div v-if="processDefinition?.formType === BpmModelFormType.CUSTOM">
-                        <BusinessFormComponent :id="processInstance.businessKey" />
+                        <FinanceLeaseForm 
+                          v-if="processDefinition?.key === 'bpm_oa_finance_lease'"
+                          :process-instance="processInstance" 
+                          :process-definition="processDefinition" 
+                          :form-variables="processInstance.formVariables" 
+                          :readonly="true" 
+                        />
+                        <!-- 其他业务表单使用原有的 BusinessFormComponent -->
+                        <component 
+                          v-else
+                          :is="BusinessFormComponent" 
+                          :id="processInstance.businessKey" 
+                        />
                       </div>
                     </div>
                   </el-col>
-                  <el-col :span="7">
+                  <el-col :span="4">
                     <!-- 审批记录时间线 -->
                     <ProcessInstanceTimeline :activity-nodes="activityNodes" />
                   </el-col>
@@ -104,6 +130,7 @@ import ProcessInstanceTaskList from './ProcessInstanceTaskList.vue'
 import ProcessInstanceOperationButton from './ProcessInstanceOperationButton.vue'
 import ProcessInstanceTimeline from './ProcessInstanceTimeline.vue'
 import { FieldPermissionType } from '@/components/SimpleProcessDesignerV2/src/consts'
+import FinanceLeaseForm from '@/views/business/financeLease/FinanceLeaseForm.vue'
 import { TaskStatusEnum } from '@/api/bpm/task'
 import runningSvg from '@/assets/svgs/bpm/running.svg'
 import approveSvg from '@/assets/svgs/bpm/approve.svg'
@@ -278,14 +305,14 @@ $button-height: 51px;
 $process-header-height: 194px;
 
 .processInstance-wrap-main {
-  height: calc(100vh - var(--top-tool-height) - var(--tags-view-height) - var(--app-footer-height) - 35px);
-  max-height: calc(100vh - var(--top-tool-height) - var(--tags-view-height) - var(--app-footer-height) - 35px);
+  height: 100%;
+  max-height: 100%;
   overflow: auto;
 
   .form-scroll-area {
     display: flex;
-    height: calc(100vh - var(--top-tool-height) - var(--tags-view-height) - var(--app-footer-height) - 35px - $process-header-height - 40px);
-    max-height: calc(100vh - var(--top-tool-height) - var(--tags-view-height) - var(--app-footer-height) - 35px - $process-header-height - 40px);
+    height: 100%;
+    max-height: 100%;
     overflow: auto;
     flex-direction: column;
 
@@ -306,4 +333,6 @@ $process-header-height: 194px;
     border: none;
   }
 }
+
+
 </style>

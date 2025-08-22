@@ -170,7 +170,7 @@
           <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status" />
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" min-width="120px">
+      <el-table-column label="操作" align="center" min-width="280px">
         <template #default="scope">
           <el-button
             link
