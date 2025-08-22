@@ -65,6 +65,7 @@
           <BatchFileUpload 
           ref="batchUploadRef"
           v-model:fileList="batchFileList"
+          v-model:mode="formType"
           :max-files="5" :concurrent="2" :drag="true" directory="test-batch" />
       </el-form-item>
     </el-form>
