@@ -59,9 +59,14 @@
       <el-table-column label="请假结果" min-width="150">
         <template #default="{ row, $index }">
           <el-form-item :prop="`${$index}.status`" :rules="formRules.status" class="mb-0px!">
-            <el-radio-group v-model="row.status">
-                <el-radio value="1">请选择字典生成</el-radio>
-            </el-radio-group>
+            <el-select v-model="row.status" placeholder="请选择请假结果">
+              <el-option
+                v-for="dict in getDictOptions(DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS)"
+                :key="dict.value"
+                :label="dict.label"
+               :value="parseInt(dict.value)"
+              />
+            </el-select>
           </el-form-item>
         </template>
       </el-table-column>
@@ -85,6 +90,8 @@
 </template>
 <script setup lang="ts">
 import { OaAnnualLeaveApi } from '@/api/business/oaannualleave'
+import { DICT_TYPE } from '@/utils/dict'
+import { getDictOptions } from '@/utils/dict'
 
 const props = defineProps<{
   userId: undefined // 申请人的用户编号（主表的关联字段）
@@ -95,6 +102,8 @@ const formRules = reactive({
   userId: [{ required: true, message: '申请人的用户编号不能为空', trigger: 'blur' }],
   type: [{ required: true, message: '请假类型不能为空', trigger: 'change' }],
   reason: [{ required: true, message: '请假原因不能为空', trigger: 'blur' }],
+  startTime: [{ required: true, message: '开始时间不能为空', trigger: 'change' }],
+  endTime: [{ required: true, message: '结束时间不能为空', trigger: 'change' }],
 })
 const formRef = ref() // 表单 Ref
 
@@ -116,6 +125,36 @@ watch(
     }
   },
   { immediate: true }
+)
+
+/** 计算两个日期之间的天数差 */
+const calculateDays = (startTime, endTime) => {
+  if (!startTime || !endTime) return ''
+  
+  // 将时间戳转换为毫秒
+  const start = new Date(parseInt(startTime))
+  const end = new Date(parseInt(endTime))
+  
+  // 计算天数差（向上取整，包含开始和结束当天）
+  const diffTime = end.getTime() - start.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+  
+  return diffDays > 0 ? diffDays.toString() : ''
+}
+
+/** 监听每一行的开始时间和结束时间变化，自动计算请假天数 */
+watch(
+  () => formData.value,
+  (rows) => {
+    if (!rows || rows.length === 0) return
+    
+    rows.forEach(row => {
+      if (row.startTime && row.endTime) {
+        row.day = calculateDays(row.startTime, row.endTime)
+      }
+    })
+  },
+  { deep: true }
 )
 
 /** 新增按钮操作 */

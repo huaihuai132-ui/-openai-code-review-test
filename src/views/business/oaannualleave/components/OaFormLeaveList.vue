@@ -26,9 +26,7 @@
       <el-table-column label="请假天数" align="center" prop="day" />
       <el-table-column label="请假结果" align="center">
         <template #default="scope">
-          <span v-if="scope.row.status === 1">通过</span>
-          <span v-else-if="scope.row.status === 2">不通过</span>
-          <span v-else>审批中</span>
+          <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status" />
         </template>
       </el-table-column>
       <el-table-column label="流程实例的编号" align="center" prop="processInstanceId" />
@@ -45,6 +43,7 @@
 <script setup lang="ts">
 import { dateFormatter } from '@/utils/formatTime'
 import { OaAnnualLeaveApi } from '@/api/business/oaannualleave'
+import { DICT_TYPE } from '@/utils/dict'
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
