@@ -123,3 +123,8 @@ export const myTodoTask = async (processInstanceId: string) => {
 export const getChildrenTaskList = async (id: string) => {
   return await request.get({ url: '/bpm/task/list-by-parent-task-id?parentTaskId=' + id })
 }
+
+// 获取 审批中心角标数量
+export const getTaskCenterTags = async () => {
+  return await request.get({ url: '/bpm/task/taskcenter-tags' })
+}

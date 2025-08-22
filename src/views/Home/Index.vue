@@ -36,22 +36,22 @@
           :xs="24">
           <div class="h-70px flex items-center justify-end">
                   <el-col :span="6" class="text-center cursor-pointer" @click="goApproval('waiting')">
-                  <div class="text-20px">2</div>
+                  <div class="text-20px">{{ taskCenterTagsData.todo }}</div>
                   <div class="text-14px text-gray-500">待我审批</div>
                 </el-col>
                 <el-divider direction="vertical" border-style="dashed" class="h-40px" />
                 <el-col :span="6" class="text-center cursor-pointer" @click="goApproval('done')">
-                  <div class="text-20px">6</div>
+                  <div class="text-20px">{{ taskCenterTagsData.apply }}</div>
                   <div class="text-14px text-gray-500">我申请的</div>
                 </el-col>
                 <el-divider direction="vertical" border-style="dashed" class="h-40px" />
               <el-col :span="6" class="text-center cursor-pointer" @click="goApproval('apply')">
-                  <div class="text-20px">2</div>
+                  <div class="text-20px">{{ taskCenterTagsData.reject }}</div>
                   <div class="text-14px text-gray-500">驳回我的</div>
                 </el-col>
                   <el-divider direction="vertical" border-style="dashed" class="h-40px" />
               <el-col :span="6" class="text-center cursor-pointer" @click="goApproval('copy')">
-                  <div class="text-20px">2</div>
+                  <div class="text-20px">{{ taskCenterTagsData.copy }}</div>
                   <div class="text-14px text-gray-500">抄送我的</div>
                 </el-col>
               </div>
@@ -173,6 +173,7 @@ import MessageModule from './components/MessageModule.vue'
 import type { Shortcut } from './types'
 import { pieOptions, barOptions } from './echarts-data'
 import { useRouter } from 'vue-router'
+import { getTaskCenterTags } from '@/api/bpm/task'
 
 defineOptions({ name: 'Index' })
 
@@ -318,11 +319,26 @@ const getWeeklyUserActivity = async () => {
   ])
 }
 
+const taskCenterTagsData = reactive({
+  apply: 0,
+  copy: 0,
+  reject: 0,
+  todo: 0
+})
+const getTaskCenterTagsData = async () => {
+  const data = await getTaskCenterTags()
+  taskCenterTagsData.apply = data.apply ||0
+  taskCenterTagsData.copy = data.copy||0
+  taskCenterTagsData.reject = data.reject||0
+  taskCenterTagsData.todo = data.todo||0
+}
+
 const getAllApi = async () => {
   await Promise.all([
     getShortcut(),
     getUserAccessSource(),
-    getWeeklyUserActivity()
+    getWeeklyUserActivity(),
+    getTaskCenterTagsData()
   ])
   loading.value = false
 }
