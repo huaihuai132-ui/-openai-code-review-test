@@ -14,7 +14,7 @@
         </el-button>
       </div>
       <div class="detail-content">
-        <el-config-provider :z-index="10000" namespace="el">
+        <el-config-provider :z-index="3000" namespace="el">
           <slot></slot>
         </el-config-provider>
       </div>
@@ -54,7 +54,7 @@ const handleClose = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9999;
+  z-index: 2000;
 }
 
 .detail-overlay {

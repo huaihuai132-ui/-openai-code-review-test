@@ -56,7 +56,7 @@
               {{ getFileTypeIcon(fileBox.file?.name || fileBox.fileInfo?.name || '') }}
             </div>
             <!-- 预览悬浮层 -->
-            <div v-if="fileBox.isHover && mode !== 'view'" class="preview-overlay">
+            <div v-if="fileBox.isHover" class="preview-overlay">
               <div class="preview-icon">👁️</div>
               <span class="preview-text">预览</span>
             </div>
@@ -65,7 +65,7 @@
           <!-- 文件名和编辑 -->
           <div class="file-name-section">
             <div v-if="!fileBox.editingName || mode === 'view'" class="file-name-display">
-              <div class="file-name-text" :title="fileBox.displayName">{{ fileBox.displayName }}</div>
+              <div class="file-name-text" :title="fileBox.displayName">{{ truncateFileName(fileBox.displayName) }}</div>
               <div v-if="mode !== 'view'" class="edit-icon" @click.stop="startEditName(index)">
                 ✏️
               </div>
@@ -562,6 +562,27 @@ const getFileNameWithoutExtension = (fileName: string): string => {
   return lastDotIndex > -1 ? fileName.slice(0, lastDotIndex) : fileName
 }
 
+// 截断文件名用于显示
+const truncateFileName = (filename: string, maxLength: number = 12): string => {
+  if (filename.length <= maxLength) {
+    return filename
+  }
+
+  // 如果文件名太长，显示前面部分 + ... + 扩展名
+  const extension = getFileExtension(filename)
+  const nameWithoutExt = getFileNameWithoutExtension(filename)
+
+  if (extension) {
+    const availableLength = maxLength - extension.length - 4 // 4 for "..." and "."
+    if (availableLength > 0) {
+      return nameWithoutExt.substring(0, availableLength) + '...' + extension
+    }
+  }
+
+  // 如果没有扩展名或者太短，直接截断
+  return filename.substring(0, maxLength - 3) + '...'
+}
+
 
 
 // 获取文件类型图标（emoji）
@@ -829,8 +850,8 @@ defineExpose({
   }
 
   @media (max-width: 480px) {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
   }
 }
 
@@ -843,8 +864,8 @@ defineExpose({
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   background: #fff;
   overflow: hidden;
-  width: 132px;
-  height: 88px;
+  width: 140px;
+  height: 120px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1053,9 +1074,9 @@ defineExpose({
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, rgba(64, 158, 255, 0.5) 0%, rgba(103, 194, 58, 0.5) 100%);
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, rgba(64, 158, 255, 0.3) 0%, rgba(103, 194, 58, 0.3) 100%);
         border-radius: 50%;
         display: flex;
         flex-direction: column;
@@ -1072,12 +1093,12 @@ defineExpose({
         }
 
         .preview-icon {
-          font-size: 18px;
+          font-size: 14px;
           margin-bottom: 0;
         }
 
         .preview-text {
-          font-size: 8px;
+          font-size: 7px;
           font-weight: 500;
           opacity: 0.9;
         }
@@ -1091,31 +1112,43 @@ defineExpose({
     .file-name-section {
       width: 100%;
       text-align: center;
+      flex-shrink: 1;
+      min-height: 0;
 
       .file-name-display {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 3px;
+        width: 100%;
+        max-width: 120px;
+        flex-wrap: nowrap;
 
         .file-name-text {
-          font-size: 11px;
+          font-size: 13px;
           font-weight: 500;
           color: #303133;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          line-height: 1.3;
-          min-height: 17px;
+          line-height: 1.2;
+          min-height: 16px;
           flex: 1;
+          min-width: 0;
+          max-width: 100px;
         }
 
         .edit-icon {
-          font-size: 12px;
+          font-size: 11px;
           cursor: pointer;
           flex-shrink: 0;
           opacity: 0.7;
           transition: opacity 0.2s ease;
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
 
           &:hover {
             opacity: 1;

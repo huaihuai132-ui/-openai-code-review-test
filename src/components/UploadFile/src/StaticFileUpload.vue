@@ -62,7 +62,7 @@
               {{ getFileTypeIcon(fileBox.file?.name || fileBox.fileInfo?.name || '') }}
             </div>
             <!-- 预览悬浮层 -->
-            <div v-if="fileBox.isHover && mode !== 'view'" class="preview-overlay">
+            <div v-if="fileBox.isHover" class="preview-overlay">
               <div class="preview-icon">👁️</div>
               <span class="preview-text">预览</span>
             </div>
@@ -71,7 +71,7 @@
           <!-- 文件名和编辑 -->
           <div class="file-name-section">
             <div v-if="!fileBox.editingName || mode === 'view'" class="file-name-display">
-              <div class="file-name-text" :title="fileBox.displayName">{{ fileBox.displayName }}</div>
+              <div class="file-name-text" :title="fileBox.displayName">{{ truncateFileName(fileBox.displayName) }}</div>
               <div v-if="mode !== 'view'" class="edit-icon" @click.stop="startEditName(index)">
                 ✏️
               </div>
@@ -702,6 +702,27 @@ const getFileNameWithoutExtension = (filename: string): string => {
   return lastDotIndex > 0 ? filename.substring(0, lastDotIndex) : filename
 }
 
+// 截断文件名用于显示
+const truncateFileName = (filename: string, maxLength: number = 12): string => {
+  if (filename.length <= maxLength) {
+    return filename
+  }
+
+  // 如果文件名太长，显示前面部分 + ... + 扩展名
+  const extension = getFileExtension(filename)
+  const nameWithoutExt = getFileNameWithoutExtension(filename)
+
+  if (extension) {
+    const availableLength = maxLength - extension.length - 4 // 4 for "..." and "."
+    if (availableLength > 0) {
+      return nameWithoutExt.substring(0, availableLength) + '...' + '.' + extension
+    }
+  }
+
+  // 如果没有扩展名或者太短，直接截断
+  return filename.substring(0, maxLength - 3) + '...'
+}
+
 // 格式化文件大小
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 B'
@@ -843,14 +864,14 @@ defineExpose({
 
   .file-boxes-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
     margin-bottom: 12px;
   }
 
   .file-all-in-one-box {
     width: 100%;
-    height: 88px;
+    height: 120px;
     border: 1px dashed #d9d9d9;
     border-radius: 6px;
     display: flex;
@@ -989,36 +1010,43 @@ defineExpose({
     }
 
     .file-name-section {
-      flex: 1;
+      flex-shrink: 1;
       width: 100%;
-      margin-bottom: 12px;
+      margin-bottom: 4px;
+      min-height: 0;
 
       .file-name-display {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 3px;
+        width: 100%;
+        max-width: 120px;
+        flex-wrap: nowrap;
 
         .file-name-text {
-          font-size: 14px;
+          font-size: 13px;
           color: #333;
           text-align: center;
-          word-break: break-all;
-          line-height: 1.4;
-          max-width: 160px;
-          min-height: 20px;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
+          line-height: 1.2;
+          flex: 1;
+          min-width: 0;
+          max-width: 100px;
           overflow: hidden;
           text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         .edit-icon {
-          font-size: 16px;
+          font-size: 11px;
           color: #409eff;
           cursor: pointer;
           flex-shrink: 0;
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
 
           &:hover {
             color: #66b1ff;
@@ -1112,25 +1140,27 @@ defineExpose({
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     height: 100%;
     padding: 16px;
 
     .file-icon-container {
       position: relative;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
+      flex-shrink: 0;
 
       .file-icon {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 64px;
-        height: 64px;
+        width: 48px;
+        height: 48px;
         color: #67c23a;
         background: #f0f9f0;
-        border-radius: 12px;
+        border-radius: 8px;
         transition: all 0.3s ease;
         cursor: pointer;
+        font-size: 20px;
 
         &:hover {
           transform: scale(1.05);
@@ -1143,9 +1173,9 @@ defineExpose({
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, rgba(64, 158, 255, 0.5) 0%, rgba(103, 194, 58, 0.5) 100%);
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, rgba(64, 158, 255, 0.3) 0%, rgba(103, 194, 58, 0.3) 100%);
         border-radius: 50%;
         display: flex;
         flex-direction: column;
@@ -1163,12 +1193,12 @@ defineExpose({
         }
 
         .preview-icon {
-          font-size: 18px;
+          font-size: 14px;
           margin-bottom: 0;
         }
 
         .preview-text {
-          font-size: 8px;
+          font-size: 7px;
           font-weight: 500;
           opacity: 0.9;
         }
@@ -1176,18 +1206,21 @@ defineExpose({
     }
 
     .file-name {
-      font-size: 14px;
+      font-size: 13px;
       color: #333;
       text-align: center;
-      padding: 0 8px;
+      padding: 0 4px;
       max-width: 100%;
       word-break: break-all;
-      line-height: 1.4;
+      line-height: 1.2;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 1;
       -webkit-box-orient: vertical;
       overflow: hidden;
       text-overflow: ellipsis;
+      flex-shrink: 1;
+      min-height: 0;
+      max-height: 16px;
     }
   }
 
