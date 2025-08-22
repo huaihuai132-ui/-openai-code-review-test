@@ -158,38 +158,7 @@
         </el-card> -->
 
         <!-- 消息模块 - 余下全部高度，带滚动条 -->
-        <el-card shadow="never" class="message-module">
-          <template #header>
-            <div class="h-3 flex justify-between">
-              <span>
-                <Icon icon="ion:grid-outline" class="mr-8px" />消息 >
-              </span>
-              <el-link type="primary" :underline="false">{{ t('action.more') }}</el-link>
-            </div>
-          </template>
-          <div class="message-content">
-            <el-skeleton :loading="loading" animated>
-              <div v-for="(item, index) in notice" :key="`dynamics-${index}`">
-                <div class="flex items-center">
-                  <el-avatar :src="avatar" :size="35" class="mr-16px" shape="square">
-                    <img src="@/assets/imgs/avatar.gif" alt="" style="object-fit: cover;" />
-                  </el-avatar>
-                  <div>
-                    <div class="text-14px">
-                      <Highlight :keys="item.keys.map((v) => t(v))">
-                        {{ item.type }} : {{ item.title }}
-                      </Highlight>
-                    </div>
-                    <div class="mt-16px text-12px text-gray-400">
-                      {{ formatTime(item.date, 'yyyy-MM-dd') }}
-                    </div>
-                  </div>
-                </div>
-                <el-divider />
-              </div>
-            </el-skeleton>
-          </div>
-        </el-card>
+        <MessageModule />
       </div>
     </el-col>
   </el-row>
@@ -198,11 +167,10 @@
 <script lang="ts" setup>
 import { set } from 'lodash-es'
 import { EChartsOption } from 'echarts'
-import { formatTime } from '@/utils'
 
 import { useUserStore } from '@/store/modules/user'
-// import { useWatermark } from '@/hooks/web/useWatermark'
-import type { Notice, Shortcut } from './types'
+import MessageModule from './components/MessageModule.vue'
+import type { Shortcut } from './types'
 import { pieOptions, barOptions } from './echarts-data'
 import { useRouter } from 'vue-router'
 
@@ -214,12 +182,6 @@ const userStore = useUserStore()
 const loading = ref(true)
 // 头像
 const avatar = userStore.getUser.avatar
-// 用户名
-const userName = userStore.getUser.nickname
-// 工号
-const workerCode = userStore.getUser.workerCode
-// 职级
-const rank = userStore.getUser.rank
 
 // 导入图片
 import banner from '@/assets/imgs/banner.png'
@@ -244,38 +206,6 @@ const bannerList = ref([
 ])
 // 后续通过接口获取用户的这些信息
 const pieOptionsData = reactive<EChartsOption>(pieOptions) as EChartsOption
-
-// 获取通知公告
-let notice = reactive<Notice[]>([])
-const getNotice = async () => {
-  const data = [
-    {
-      title: '小赵发来了一条待审批通知',
-      type: '病假审批',
-      keys: ['日常', '病假'],
-      date: new Date()
-    },
-    {
-      title: '小王发来了一条待审批通知',
-      type: '用章申请',
-      keys: ['行政', '用章'],
-      date: new Date()
-    },
-    {
-      title: '小李发来了一条待审批通知',
-      type: '用车申请',
-      keys: ['用车'],
-      date: new Date()
-    },
-    {
-      title: '小张发来了一条待审批通知',
-      type: '团建申请',
-      keys: ['团建', '活动'],
-      date: new Date()
-    }
-  ]
-  notice = Object.assign(notice, data)
-}
 
 // 获取快捷入口
 let shortcut = reactive<Shortcut[]>([])
@@ -390,7 +320,6 @@ const getWeeklyUserActivity = async () => {
 
 const getAllApi = async () => {
   await Promise.all([
-    getNotice(),
     getShortcut(),
     getUserAccessSource(),
     getWeeklyUserActivity()
@@ -470,35 +399,4 @@ getAllApi()
   min-height: 120px;
 }
 
-.message-module {
-  flex: 1; // 占据剩余空间
-  display: flex;
-  flex-direction: column;
-
-  .message-content {
-    flex: 1;
-    overflow-y: auto;
-    max-height: calc(100% - 60px); // 减去header高度
-    padding-right: 8px;
-
-    // 自定义滚动条样式
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 3px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: #c1c1c1;
-      border-radius: 3px;
-
-      &:hover {
-        background: #a8a8a8;
-      }
-    }
-  }
-}
 </style>
