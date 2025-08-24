@@ -34,6 +34,8 @@
 </template>
 
 <script lang="ts" setup>
+import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { formatTime } from '@/utils'
 import { useUserStore } from '@/store/modules/user'
 import * as NotifyMessageApi from '@/api/system/notify/message'

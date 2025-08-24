@@ -1,4 +1,5 @@
 import request from '@/config/axios'
+import { conformsTo } from 'lodash-es'
 
 export interface FileVO {
   id: number
@@ -191,6 +192,7 @@ export const getFileContent = (id: number) => {
 
 // 根据 ID 列表批量查询文件详情
 export const getFilesByIds = (ids: (number | string)[]) => {
+  console.log("====ids",ids)
   return request.post<FileVO[]>({ url: '/infra/file/getFilesByIds', data: ids })
 }
 

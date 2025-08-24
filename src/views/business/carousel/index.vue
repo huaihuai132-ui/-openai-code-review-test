@@ -6,7 +6,7 @@
       :model="queryParams"
       ref="queryFormRef"
       :inline="true"
-      label-width="128px"
+      label-width="68px"
     >
       <el-form-item label="标题" prop="title">
         <el-input
@@ -17,49 +17,16 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="跳转链接" prop="jumpLink">
-        <el-input
-          v-model="queryParams.jumpLink"
-          placeholder="请输入跳转链接"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="启用状态" prop="isEnabled">
+      <el-form-item label="状态" prop="isEnabled">
         <el-select
           v-model="queryParams.isEnabled"
-          placeholder="请选择启用状态"
+          placeholder="请选择状态"
           clearable
           class="!w-240px"
         >
-          <el-option
-            v-for="dict in getBoolDictOptions(DICT_TYPE.SYS_ENABLE_TYPE)"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
+          <el-option label="启用" :value="1" />
+          <el-option label="禁用" :value="0" />
         </el-select>
-      </el-form-item>
-      <el-form-item label="顺序" prop="sortOrder">
-        <el-input
-          v-model="queryParams.sortOrder"
-          placeholder="请输入顺序"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
-        <el-date-picker
-          v-model="queryParams.createTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
-        />
       </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
@@ -79,7 +46,7 @@
           :loading="exportLoading"
           v-hasPermi="['business:carousel:export']"
         >
-          <Icon icon="ep:download" class="mr-5px" /> 导出
+          <Icon icon="ep:download" class="mr-5px" /> 导出Excel
         </el-button>
       </el-form-item>
     </el-form>
@@ -87,25 +54,31 @@
 
   <!-- 列表 -->
   <ContentWrap>
-    <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
-      <el-table-column label="编号" align="center" prop="id" />
-      <el-table-column label="标题" align="center" prop="title" />
-      <el-table-column label="跳转链接" align="center" prop="jumpLink" />
-      <el-table-column label="Banner图片URL" align="center" prop="bannerImage" />
-      <el-table-column label="启用状态" align="center" prop="isEnabled">
+    <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true" @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="55" />
+      <el-table-column label="编号" align="center" prop="id" width="80" />
+      <el-table-column label="标题" align="center" prop="title" min-width="120" />
+      <el-table-column label="Banner图片" align="center" prop="bannerImage" width="120">
         <template #default="scope">
-          <dict-tag :type="DICT_TYPE.SYS_ENABLE_TYPE" :value="scope.row.isEnabled" />
+          <el-image
+            :src="scope.row.bannerImage"
+            :preview-src-list="[scope.row.bannerImage]"
+            fit="cover"
+            style="width: 80px; height: 50px; border-radius: 4px;"
+          />
         </template>
       </el-table-column>
-      <el-table-column label="顺序" align="center" prop="sortOrder" />
-      <el-table-column
-        label="创建时间"
-        align="center"
-        prop="createTime"
-        :formatter="dateFormatter"
-        width="180px"
-      />
-      <el-table-column label="操作" align="center" min-width="120px">
+      <el-table-column label="跳转链接" align="center" prop="jumpLink" min-width="150" show-overflow-tooltip />
+      <el-table-column label="启用状态" align="center" prop="isEnabled" width="100">
+        <template #default="scope">
+          <el-tag :type="scope.row.isEnabled === 1 ? 'success' : 'danger'">
+            {{ scope.row.isEnabled === 1 ? '启用' : '禁用' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="顺序" align="center" prop="sortOrder" width="80" />
+      <el-table-column label="创建时间" align="center" prop="createTime" width="180" />
+      <el-table-column label="操作" align="center" min-width="200px">
         <template #default="scope">
           <el-button
             link
@@ -114,6 +87,14 @@
             v-hasPermi="['business:carousel:update']"
           >
             编辑
+          </el-button>
+          <el-button
+            link
+            type="success"
+            @click="handleStatusChange(scope.row)"
+            v-hasPermi="['business:carousel:update']"
+          >
+            {{ scope.row.isEnabled === 1 ? '禁用' : '启用' }}
           </el-button>
           <el-button
             link
@@ -140,13 +121,13 @@
 </template>
 
 <script setup lang="ts">
-import { getBoolDictOptions, DICT_TYPE } from '@/utils/dict'
-import { dateFormatter } from '@/utils/formatTime'
-import download from '@/utils/download'
-import { CarouselApi, CarouselVO } from '@/api/business/carousel'
+import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { CarouselApi, CarouselVO } from '@/api/business/carousel/index'
 import CarouselForm from './CarouselForm.vue'
+import download from '@/utils/download'
 
-/** 轮播管理 列表 */
+/** 轮播图管理 列表 */
 defineOptions({ name: 'Carousel' })
 
 const message = useMessage() // 消息弹窗
@@ -159,20 +140,26 @@ const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
   title: undefined,
-  jumpLink: undefined,
-  bannerImage: undefined,
   isEnabled: undefined,
-  sortOrder: undefined,
   createTime: [],
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+const selectedIds = ref<number[]>([]) // 表格的选中 ID 数组
+const selectedRows = ref<CarouselVO[]>([]) // 表格的选中 数据 数组
+
+/** 表格选中事件 */
+const handleSelectionChange = (rows: CarouselVO[]) => {
+  selectedIds.value = rows.map((row) => row.id)
+  selectedRows.value = rows.map((row) => row)
+}
 
 /** 查询列表 */
 const getList = async () => {
   loading.value = true
   try {
     const data = await CarouselApi.getCarouselPage(queryParams)
+    console.log("----",data)
     list.value = data.list
     total.value = data.total
   } finally {
@@ -211,6 +198,33 @@ const handleDelete = async (id: number) => {
   } catch {}
 }
 
+/** 状态变更操作 */
+const handleStatusChange = async (row: CarouselVO) => {
+  try {
+    const newStatus = row.isEnabled === 1 ? 0 : 1
+    const statusText = newStatus === 1 ? '启用' : '禁用'
+    
+    // 状态变更的二次确认
+    await message.confirm(`确认要${statusText}该轮播图吗？`)
+    
+    // 发起状态变更 - 使用 updateCarousel 方法
+    await CarouselApi.updateCarousel({
+      ...row,
+      isEnabled: newStatus
+    })
+    message.success(`${statusText}成功`)
+    
+    // 立即更新本地数据，确保界面立即响应
+    row.isEnabled = newStatus
+    
+    // 刷新列表以确保数据同步
+    await getList()
+  } catch (error) {
+    console.error('状态变更失败:', error)
+    message.error('状态变更失败')
+  }
+}
+
 /** 导出按钮操作 */
 const handleExport = async () => {
   try {
@@ -219,7 +233,7 @@ const handleExport = async () => {
     // 发起导出
     exportLoading.value = true
     const data = await CarouselApi.exportCarousel(queryParams)
-    download.excel(data, '轮播管理.xls')
+    download.excel(data, '轮播图管理.xls')
   } catch {
   } finally {
     exportLoading.value = false
@@ -227,7 +241,7 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
+onMounted(async () => {
   getList()
 })
 </script>

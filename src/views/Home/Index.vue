@@ -13,24 +13,24 @@
           <el-row :gutter="16" justify="space-between">
             <!-- 员工信息左侧：占 1/3 宽度 -->
             <el-col
-              :xl="9"
-              :lg="9"
+              :xl="12"
+              :lg="12"
               :md="12"
               :sm="24"
               :xs="24">
               <div class="flex items-center">
-                <el-avatar :src="avatar" :size="70" class="mr-20px" shape="square">
+                <el-avatar :src="avatar" :size="70" class="mr-30px" shape="square">
                   <img src="@/assets/imgs/avatar.gif" alt="" style="object-fit: cover;" />
                 </el-avatar>
-                <div>
+              <div>
                   <iframe width="250" height="80" src="https://i.tianqi.com/?c=code&a=getcode&id=35&site=34&icon=1" frameborder="0"></iframe>
                 </div>
               </div>
             </el-col>
             <!-- 员工信息右侧：占 2/3 宽度 -->
             <el-col
-          :xl="15"
-          :lg="15"
+          :xl="12"
+          :lg="12"
           :md="24"
           :sm="24"
           :xs="24">
@@ -116,20 +116,11 @@
       :xs="24">
       <div class="right-container">
         <!-- 横幅模块 - 自动轮播 -->
-        <el-card shadow="never" class="banner-module">
-          <el-skeleton :loading="loading" animated>
-            <el-carousel height="120px" :interval="5000" arrow="always" indicator-position="outside">
-              <el-carousel-item v-for="(item, index) in bannerList" :key="index">
-                <div class="relative w-full h-full">
-                  <img :src="item.imageUrl" alt="" class="w-full h-full object-cover" />
-                  <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white px-4 py-2">
-                    {{ item.title }}
-                  </div>
-                </div>
-              </el-carousel-item>
-            </el-carousel>
-          </el-skeleton>
-        </el-card>
+        <BannerCarousel 
+          :banner-list="bannerList"
+          :loading="loading"
+          @banner-click="handleBannerClick"
+        />
 
         <!-- 今日日程模块 - 15%高度
         <el-card shadow="never" class="schedule-module">
@@ -165,15 +156,19 @@
 </template>
 
 <script lang="ts" setup>
+import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { set } from 'lodash-es'
 import { EChartsOption } from 'echarts'
 
 import { useUserStore } from '@/store/modules/user'
-import MessageModule from './components/MessageModule.vue'
+import { MessageModule } from './components'
 import type { Shortcut } from './types'
 import { pieOptions, barOptions } from './echarts-data'
 import { useRouter } from 'vue-router'
 import { getTaskCenterTags } from '@/api/bpm/task'
+import { getEnabledCarouselList } from '@/api/business/carousel/index'
+import banner from '@/assets/imgs/banner.png'
 
 defineOptions({ name: 'Index' })
 
@@ -184,27 +179,16 @@ const loading = ref(true)
 // 头像
 const avatar = userStore.getUser.avatar
 
-// 导入图片
-import banner from '@/assets/imgs/banner.png'
+// 轮播图数据类型定义
+interface BannerItem {
+  imageUrl: string
+  link: string
+  title: string
+  id?: number
+}
 
 // 轮播图数据
-const bannerList = ref([
-  {
-    imageUrl: banner,
-    link: '#',
-    title: '公司新闻'
-  },
-  {
-    imageUrl: banner,
-    link: '#',
-    title: '企业文化'
-  },
-  {
-    imageUrl: banner,
-    link: '#',
-    title: '通知公告'
-  }
-])
+const bannerList = ref<BannerItem[]>([])
 // 后续通过接口获取用户的这些信息
 const pieOptionsData = reactive<EChartsOption>(pieOptions) as EChartsOption
 
@@ -333,12 +317,37 @@ const getTaskCenterTagsData = async () => {
   taskCenterTagsData.todo = data.todo||0
 }
 
+// 获取启用的轮播图数据
+const getBannerData = async () => {
+  try {
+    const data = await getEnabledCarouselList()
+    // 将接口返回的数据转换为轮播组件需要的格式
+    bannerList.value = data.map((item: any) => ({
+      imageUrl: item.bannerImage,
+      link: item.jumpLink,
+      title: item.title,
+      id: item.id
+    }))
+  } catch (error) {
+    console.error('获取轮播图数据失败:', error)
+    // 如果获取失败，使用默认数据
+    bannerList.value = [
+      {
+        imageUrl: banner,
+        link: '#',
+        title: '默认轮播图'
+      }
+    ]
+  }
+}
+
 const getAllApi = async () => {
   await Promise.all([
     getShortcut(),
     getUserAccessSource(),
     getWeeklyUserActivity(),
-    getTaskCenterTagsData()
+    getTaskCenterTagsData(),
+    getBannerData()
   ])
   loading.value = false
 }
@@ -348,20 +357,31 @@ const handleShortcutClick = (url: string) => {
 }
 
   const goApproval = (category: 'waiting' | 'done' | 'apply' | 'copy') => {
-    // 根据首页的分类名称映射到审批页面的分类
-    const categoryMap = {
-      'waiting': 'waiting',    // 待我审批 -> 待审批
-      'done': 'done',          // 我申请的 -> 已审批  
-      'apply': 'apply',        // 驳回我的 -> 我申请的
-      'copy': 'copy'           // 抄送我的 -> 抄送我的
-    }
-    
-    const targetCategory = categoryMap[category]
-    router.push({ 
-      path: '/approval', 
-      query: { category: targetCategory }
-    })
+  // 根据首页的分类名称映射到审批页面的分类
+  const categoryMap = {
+    'waiting': 'waiting',    // 待我审批 -> 待审批
+    'done': 'done',          // 我申请的 -> 已审批  
+    'apply': 'apply',        // 驳回我的 -> 我申请的
+    'copy': 'copy'           // 抄送我的 -> 抄送我的
   }
+  
+  const targetCategory = categoryMap[category]
+  router.push({ 
+    path: '/approval', 
+    query: { category: targetCategory }
+  })
+}
+
+// 处理轮播图点击事件
+const handleBannerClick = (item: any) => {
+  console.log('轮播图被点击:', item)
+  // 这里可以添加具体的点击处理逻辑
+  // 比如跳转到详情页、打开弹窗等
+  if (item.link && item.link !== '#') {
+    // 如果有有效链接，可以在这里处理
+    console.log('跳转链接:', item.link)
+  }
+}
 
 getAllApi()
 </script>
@@ -380,35 +400,7 @@ getAllApi()
   gap: 12px;
 }
 
-.banner-module {
-  height: auto;
-  min-height: 120px;
-  overflow: hidden;
 
-  :deep(.el-carousel) {
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  :deep(.el-carousel__arrow) {
-    background-color: rgba(0, 0, 0, 0.3);
-
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-  }
-
-  :deep(.el-carousel__item img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-
-    &:hover {
-      transform: scale(1.05);
-    }
-  }
-}
 
 .schedule-module {
   height: auto;

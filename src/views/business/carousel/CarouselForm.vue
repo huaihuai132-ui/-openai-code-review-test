@@ -18,13 +18,8 @@
       </el-form-item>
       <el-form-item label="启用状态" prop="isEnabled">
         <el-radio-group v-model="formData.isEnabled">
-          <el-radio
-            v-for="dict in getBoolDictOptions(DICT_TYPE.SYS_ENABLE_TYPE)"
-            :key="dict.value"
-            :label="dict.value"
-          >
-            {{ dict.label }}
-          </el-radio>
+          <el-radio :label="1">启用</el-radio>
+          <el-radio :label="0">禁用</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="顺序" prop="sortOrder">
@@ -38,8 +33,9 @@
   </Dialog>
 </template>
 <script setup lang="ts">
-import { getBoolDictOptions, DICT_TYPE } from '@/utils/dict'
-import { CarouselApi, CarouselVO } from '@/api/business/carousel'
+import { ref, reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { CarouselApi, CarouselVO } from '@/api/business/carousel/index'
 
 /** 轮播管理 表单 */
 defineOptions({ name: 'CarouselForm' })
@@ -56,7 +52,7 @@ const formData = ref({
   title: undefined,
   jumpLink: undefined,
   bannerImage: undefined,
-  isEnabled: undefined,
+  isEnabled: 1, // 默认为启用状态，使用数字类型
   sortOrder: undefined,
 })
 const formRules = reactive({
@@ -73,12 +69,28 @@ const open = async (type: string, id?: number) => {
   dialogVisible.value = true
   dialogTitle.value = t('action.' + type)
   formType.value = type
-  resetForm()
-  // 修改时，设置数据
-  if (id) {
+  
+  if (type === 'create') {
+    // 新增时重置表单
+    resetForm()
+  } else if (id) {
+    // 修改时，先重置表单，然后获取数据
+    resetForm()
     formLoading.value = true
     try {
-      formData.value = await CarouselApi.getCarousel(id)
+      const data = await CarouselApi.getCarousel(id)
+      // 确保数据正确赋值
+      formData.value = {
+        id: data.id,
+        title: data.title,
+        jumpLink: data.jumpLink,
+        bannerImage: data.bannerImage,
+        isEnabled: data.isEnabled,
+        sortOrder: data.sortOrder
+      }
+    } catch (error) {
+      console.error('获取轮播图数据失败:', error)
+      message.error('获取轮播图数据失败')
     } finally {
       formLoading.value = false
     }
@@ -117,7 +129,7 @@ const resetForm = () => {
     title: undefined,
     jumpLink: undefined,
     bannerImage: undefined,
-    isEnabled: undefined,
+    isEnabled: 1, // 默认为启用状态，使用数字类型
     sortOrder: undefined,
   }
   formRef.value?.resetFields()

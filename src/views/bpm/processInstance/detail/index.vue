@@ -68,6 +68,7 @@
                       </div>
                     </div>
                   </el-col>
+                  <!-- <el-col :span="3" class="!flex !flex-col formCol"/> -->
                   <el-col :span="4">
                     <!-- 审批记录时间线 -->
                     <ProcessInstanceTimeline :activity-nodes="activityNodes" />
@@ -196,6 +197,7 @@ const getApprovalDetail = async () => {
     }
     processInstance.value = data.processInstance
     processDefinition.value = data.processDefinition
+    console.log("====",processDefinition.value)
 
     // 设置表单信息
     if (processDefinition.value.formType === BpmModelFormType.NORMAL) {

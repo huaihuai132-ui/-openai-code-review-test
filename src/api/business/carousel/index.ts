@@ -6,7 +6,7 @@ export interface CarouselVO {
   title: string // 标题
   jumpLink: string // 跳转链接
   bannerImage: string // Banner图片URL
-  isEnabled: boolean // 启用状态
+  isEnabled: number // 启用状态 (1: 启用, 0: 禁用)
   sortOrder: number // 顺序
 }
 
@@ -41,4 +41,9 @@ export const CarouselApi = {
   exportCarousel: async (params) => {
     return await request.download({ url: `/business/carousel/export-excel`, params })
   },
-}
+}
+// 获取启用的轮播图列表（用于前端展示）
+export const getEnabledCarouselList = () => {
+  return request.get({ url: '/business/carousel/enabled-list' })
+}
+
