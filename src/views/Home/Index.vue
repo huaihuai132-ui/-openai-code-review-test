@@ -156,19 +156,17 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { set } from 'lodash-es'
 import { EChartsOption } from 'echarts'
 
 import { useUserStore } from '@/store/modules/user'
-import { MessageModule } from './components'
+import MessageModule from './components/MessageModule.vue'
+import { BannerCarousel } from '@/components/BannerCarousel'
 import type { Shortcut } from './types'
 import { pieOptions, barOptions } from './echarts-data'
 import { useRouter } from 'vue-router'
 import { getTaskCenterTags } from '@/api/bpm/task'
 import { getEnabledCarouselList } from '@/api/business/carousel/index'
-import banner from '@/assets/imgs/banner.png'
 
 defineOptions({ name: 'Index' })
 
@@ -178,6 +176,9 @@ const userStore = useUserStore()
 const loading = ref(true)
 // 头像
 const avatar = userStore.getUser.avatar
+
+// 导入图片
+import banner from '@/assets/imgs/banner.png'
 
 // 轮播图数据类型定义
 interface BannerItem {
