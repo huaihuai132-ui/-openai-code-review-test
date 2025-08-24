@@ -80,65 +80,78 @@
 
   <!-- 列表 -->
   <ContentWrap>
-    <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
-<!--      <el-table-column label="融资租赁还款表单主键" align="center" prop="id" />-->
-      <el-table-column label="融资租赁放款表编号" align="center" prop="disbursementId" />
-      <el-table-column label="企业名称" align="center" prop="companyId" width="180">
-        <template #default="scope">
-          <span>{{ companyList.find((item) => item.id === scope.row.companyId)?.enterpriseName }}</span>
-        </template>
-      </el-table-column>      <el-table-column
-        label="还款时间"
-        align="center"
-        prop="repaymentDate"
-        :formatter="dateFormatter"
-        width="180px"
-      />
-      <el-table-column label="租金" align="center" prop="rent" />
-      <el-table-column label="利率" align="center" prop="interestRate" />
-      <el-table-column
-        label="还款本金"
-        align="center"
-        prop="capital"
-        :formatter="dateFormatter"
-        width="180px"
-      />
-      <el-table-column
-        label="还款利息"
-        align="center"
-        prop="interest"
-        :formatter="dateFormatter"
-        width="180px"
-      />
-      <el-table-column label="还款状态" align="center" prop="repaymentStatus" />
-      <el-table-column label="操作" align="center" min-width="120px">
-        <template #default="scope">
-          <el-button
-            link
-            type="primary"
-            @click="openForm('update', scope.row.id)"
-            v-hasPermi="['business:finance-repayment:update']"
-          >
-            编辑
-          </el-button>
-          <el-button
-            link
-            type="danger"
-            @click="handleDelete(scope.row.id)"
-            v-hasPermi="['business:finance-repayment:delete']"
-          >
-            删除
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <!-- 分页 -->
-    <Pagination
-      :total="total"
-      v-model:page="queryParams.pageNo"
-      v-model:limit="queryParams.pageSize"
-      @pagination="getList"
-    />
+    <el-tabs v-model="activeTab" @tab-click="handleTabClick">
+      <el-tab-pane label="还款记录" name="repayment">
+        <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
+          <!--      <el-table-column label="融资租赁还款表单主键" align="center" prop="id" />-->
+          <el-table-column label="融资租赁放款表编号" align="center" prop="disbursementId" />
+          <el-table-column label="企业名称" align="center" prop="companyId" width="180">
+            <template #default="scope">
+              <span>{{ companyList.find((item) => item.id === scope.row.companyId)?.enterpriseName }}</span>
+            </template>
+          </el-table-column>      
+          <el-table-column
+            label="还款时间"
+            align="center"
+            prop="repaymentDate"
+            :formatter="dateFormatter"
+            width="180px"
+          />
+          <el-table-column label="租金" align="center" prop="rent" />
+          <el-table-column label="利率" align="center" prop="interestRate" />
+          <el-table-column
+            label="还款本金"
+            align="center"
+            prop="capital"
+            :formatter="dateFormatter"
+            width="180px"
+          />
+          <el-table-column
+            label="还款利息"
+            align="center"
+            prop="interest"
+            :formatter="dateFormatter"
+            width="180px"
+          />
+          <el-table-column label="还款状态" align="center" prop="repaymentStatus" />
+          <el-table-column label="操作" align="center" min-width="120px">
+            <template #default="scope">
+              <el-button
+                link
+                type="primary"
+                @click="openForm('update', scope.row.id)"
+                v-hasPermi="['business:finance-repayment:update']"
+              >
+                编辑
+              </el-button>
+              <el-button
+                link
+                type="danger"
+                @click="handleDelete(scope.row.id)"
+                v-hasPermi="['business:finance-repayment:delete']"
+              >
+                删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <!-- 分页 -->
+        <Pagination
+          :total="total"
+          v-model:page="queryParams.pageNo"
+          v-model:limit="queryParams.pageSize"
+          @pagination="getList"
+        />
+      </el-tab-pane>
+      
+      <el-tab-pane label="还款计划维护" name="plan">
+        <RepaymentPlanMaintenance 
+          ref="planMaintenanceRef"
+          :company-list="companyList"
+          @refresh="getList"
+        />
+      </el-tab-pane>
+    </el-tabs>
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
@@ -151,6 +164,7 @@ import download from '@/utils/download'
 import { FinanceRepaymentApi, FinanceRepaymentVO } from '@/api/business/financerepayment'
 import FinanceRepaymentForm from './FinanceRepaymentForm.vue'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
+import { TabsPaneContext } from 'element-plus'
 
 /** 融资租赁放款 列表 */
 defineOptions({ name: 'FinanceRepayment' })
@@ -161,6 +175,7 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<FinanceRepaymentVO[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
+const activeTab = ref('repayment') // 当前激活的tab页
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -171,9 +186,7 @@ const queryParams = reactive({
   rent: undefined,
   interestRate: undefined,
   capital: undefined,
-  capital: [],
   interest: undefined,
-  interest: [],
   repaymentStatus: undefined,
   fileList: undefined,
   createTime: [],
@@ -182,6 +195,16 @@ const queryParams = reactive({
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
+const planMaintenanceRef = ref() // 还款计划维护组件引用
+
+/** tab 切换 */
+const handleTabClick = (tab: TabsPaneContext) => {
+  activeTab.value = tab.paneName
+  if (tab.paneName === 'plan') {
+    // 切换到还款计划维护tab时，刷新计划数据
+    planMaintenanceRef.value?.getPlanList()
+  }
+}
 
 /** 查询列表 */
 const getList = async () => {
@@ -245,6 +268,6 @@ const handleExport = async () => {
 onMounted(async () => {
   getList()
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
-  companyList.value = response.data
+  companyList.value = response
 })
 </script>

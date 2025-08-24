@@ -310,6 +310,6 @@ onMounted(async () => {
   getList()
   // 加载岗位列表
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
-  companyList.value = response.data
+  companyList.value = response
 })
 </script>

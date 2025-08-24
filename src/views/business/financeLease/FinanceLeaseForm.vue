@@ -449,7 +449,7 @@ const open = async (type: string, id?: number) => {
     }
   }
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
-  companyList.value = response.data
+  companyList.value = response
 }
 
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
@@ -519,7 +519,7 @@ const resetForm = () => {
     if (isProcessForm.value) {
       // 加载企业列表
       const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
-      companyList.value = response.data as any
+      companyList.value = response
 
       // 如果 watchEffect 没有触发，在这里也尝试加载数据
       if (props.processInstance?.businessKey && !formData.value.id) {

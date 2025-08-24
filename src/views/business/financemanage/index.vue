@@ -373,6 +373,6 @@ const handleDocExport = async () => {
 onMounted(async () => {
   getList()
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
-  companyList.value = response.data
+  companyList.value = response
 })
 </script>

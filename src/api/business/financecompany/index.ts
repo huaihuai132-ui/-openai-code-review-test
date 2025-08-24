@@ -53,7 +53,7 @@ export const FinanceCompanyApi = {
   },
 
   getSimpleFinanceCompanyList: async (): Promise<FinanceCompanyVO[]> => {
-    return await request.download({ url: `/business/finance-company/list-all-simple` })
+    return await request.get({ url: `/business/finance-company/list-all-simple` })
   }
 
 }
