@@ -1,5 +1,5 @@
 <template>
-  <Dialog :title="dialogTitle" v-model="dialogVisible">
+  <Dialog :title="dialogTitle" v-model="dialogVisible" class="right-full-dia">
     <el-form
       ref="formRef"
       :model="formData"
@@ -143,7 +143,7 @@ const open = async (type: string, id?: number) => {
     }
   }
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
-  companyList.value = response.data
+  companyList.value = response
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 
