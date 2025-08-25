@@ -65,7 +65,7 @@
           <BatchFileUpload 
           ref="batchUploadRef"
           v-model:fileList="batchFileList"
-          v-model:mode="formType"
+          :mode="formType === 'create' ? 'create' : 'edit'"
           :max-files="5" :concurrent="2" :drag="true" directory="test-batch" />
       </el-form-item>
     </el-form>
@@ -141,6 +141,8 @@ const batchUploadRef = ref<typeof BatchFileUpload | null>(null)
 const open = async (type: string, id?: number) => {
   dialogTitle.value = t('action.' + type)
   formType.value = type
+  console.log('open called', type, id)
+  console.log(formType.value)
   resetForm()
   
   // 延迟显示弹窗，确保数据已完全加载和处理

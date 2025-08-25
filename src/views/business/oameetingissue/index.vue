@@ -133,7 +133,7 @@
   <!-- 列表 -->
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
-      <el-table-column label="议题ID" align="center" prop="id" />
+<!--      <el-table-column label="议题ID" align="center" prop="id" />-->
 <!--      <el-table-column label="议题发起人ID" align="center" prop="userId" />-->
       <el-table-column label="议题编号" align="center" prop="issueNo" />
       <el-table-column label="议题标题" align="center" prop="issueTitle" />
