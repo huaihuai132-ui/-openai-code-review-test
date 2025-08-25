@@ -376,11 +376,15 @@ const handleShortcutClick = (url: string) => {
 // 处理轮播图点击事件
 const handleBannerClick = (item: any) => {
   console.log('轮播图被点击:', item)
-  // 这里可以添加具体的点击处理逻辑
-  // 比如跳转到详情页、打开弹窗等
   if (item.link && item.link !== '#') {
-    // 如果有有效链接，可以在这里处理
-    console.log('跳转链接:', item.link)
+    // 判断链接类型
+    if (item.link.startsWith('http://') || item.link.startsWith('https://')) {
+      // 外部链接，在新窗口打开
+      window.open(item.link, '_blank')
+    } else {
+      // 内部路由链接，使用 router.push 导航
+      router.push(item.link)
+    }
   }
 }
 
