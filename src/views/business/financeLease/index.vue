@@ -221,13 +221,9 @@
     v-model="deviceDialogVisible"
     title="设备清单"
     width="80%"
-    :close-on-click-modal="false"
+    :close-on-click-modal="true"
   >
-    <EquipmentList v-model="deviceList" ref="equipmentListRef" />
-    <template #footer>
-      <el-button @click="saveDeviceList" type="primary">确 定</el-button>
-      <el-button @click="deviceDialogVisible = false">取 消</el-button>
-    </template>
+    <DeviceListDisplay :device-list="deviceList" :loading="deviceLoading" />
   </el-dialog>
   
   <!-- 表单弹窗：添加/修改 -->
@@ -241,7 +237,7 @@ import download from '@/utils/download'
 import { FinanceLeaseApi, FinanceLeaseVO } from '@/api/business/financelease'
 import { FinanceDeviceApi } from '@/api/business/financedevice'
 import FinanceLeaseForm from './FinanceLeaseForm.vue'
-import EquipmentList from './components/EquipmentList.vue'
+import DeviceListDisplay from './components/DeviceListDisplay.vue'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
 
 /** 融资租赁 列表 */
@@ -279,8 +275,8 @@ const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
 
 // 设备清单相关变量
 const deviceDialogVisible = ref(false)
-const deviceList = ref([])
-const equipmentListRef = ref()
+const deviceList = ref<any[]>([])
+const deviceLoading = ref(false)
 const currentLeaseId = ref(0)
 /** 表格选中事件 */
 const handleSelectionChange = (rows: FinanceLeaseVO[]) => {
@@ -335,6 +331,7 @@ const handleDelete = async (id: number) => {
 const queryDeviceList = async (id: number) => {
   currentLeaseId.value = id
   deviceDialogVisible.value = true
+  deviceLoading.value = true
   
   try {
     const data = await FinanceLeaseApi.getFinanceDeviceList(id)
@@ -347,40 +344,12 @@ const queryDeviceList = async (id: number) => {
     console.error('获取设备清单失败', error)
     deviceList.value = []
     message.error('获取设备清单失败')
+  } finally {
+    deviceLoading.value = false
   }
 }
 
-/** 保存设备清单 */
-const saveDeviceList = async () => {
-  try {
-    // 从组件中获取最新的设备列表
-    const updatedDeviceList = equipmentListRef.value?.getEquipmentList() || deviceList.value
-    
-    // 检查是否有设备数据
-    if (!updatedDeviceList || updatedDeviceList.length === 0) {
-      message.warning('没有设备数据需要保存')
-      return
-    }
-    
-    // 确保每个设备都有leaseId
-    const devicesToSave = updatedDeviceList.map(device => ({
-      ...device,
-      leaseId: currentLeaseId.value
-    }))
-    
-    // 调用批量保存API
-    await FinanceDeviceApi.batchSaveFinanceDevice(currentLeaseId.value, devicesToSave)
-    
-    message.success('设备清单保存成功')
-    deviceDialogVisible.value = false
-    
-    // 刷新列表
-    await getList()
-  } catch (error) {
-    console.error('保存设备清单失败', error)
-    message.error(`保存设备清单失败: ${error.message || '未知错误'}`)
-  }
-}
+
 
 /** 送审按钮操作 */
 const sendApprove = async (id: number) => {
