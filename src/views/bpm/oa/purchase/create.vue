@@ -6,10 +6,6 @@
                     <el-form-item label="采购事由" prop="reason">
                         <el-input v-model="formData.reason" placeholder="请输入采购事由" type="textarea" />
                     </el-form-item>
-                    <el-form-item label="采购日期" prop="purchaseDate">
-                        <el-date-picker v-model="formData.purchaseDate" clearable placeholder="请选择采购日期" type="date"
-                            value-format="x" />
-                    </el-form-item>
                     <el-form-item label="物品清单" prop="itemList">
                         <div class="mb-10px">
                             <el-button type="primary" @click="addItem">添加物品</el-button>
@@ -17,32 +13,32 @@
                         <el-table :data="items" border style="width: 100%">
                             <el-table-column label="类别">
                                 <template #default="{ row }">
-                                    <el-input v-model="row.category" placeholder="请输入类别" />
+                                    <el-input v-model="row.type" placeholder="请输入类别" />
                                 </template>
                             </el-table-column>
                             <el-table-column label="名称">
                                 <template #default="{ row }">
-                                    <el-input v-model="row.name" placeholder="请输入名称" />
+                                    <el-input v-model="row.itemName" placeholder="请输入名称" />
                                 </template>
                             </el-table-column>
                             <el-table-column label="型号">
                                 <template #default="{ row }">
-                                    <el-input v-model="row.model" placeholder="请输入型号" />
+                                    <el-input v-model="row.specification" placeholder="请输入型号" />
                                 </template>
                             </el-table-column>
                             <el-table-column label="数量">
                                 <template #default="{ row }">
-                                    <el-input-number v-model="row.quantity" :min="1" :precision="0" />
+                                    <el-input-number v-model="row.number" :min="1" :precision="0" />
                                 </template>
                             </el-table-column>
                             <el-table-column label="用途">
                                 <template #default="{ row }">
-                                    <el-input v-model="row.purpose" placeholder="请输入用途" />
+                                    <el-input v-model="row.usage" placeholder="请输入用途" />
                                 </template>
                             </el-table-column>
                             <el-table-column label="预计金额">
                                 <template #default="{ row }">
-                                    <el-input-number v-model="row.estimatedPrice" :min="0" :precision="2" />
+                                    <el-input-number v-model="row.estimatedAmount" :min="0" :precision="2" />
                                 </template>
                             </el-table-column>
                             <el-table-column label="操作" width="100">
@@ -56,14 +52,9 @@
                         <el-input-number v-model="formData.totalPrice" :precision="2" :step="100" :min="0"
                             controls-position="right" />
                     </el-form-item>
-                    <el-form-item label="附件" prop="storagePath">
-                        <el-upload action="#" :auto-upload="false" :on-change="handleFileChange" :limit="1"
-                            :file-list="fileList">
-                            <el-button type="primary">选择文件</el-button>
-                            <template #tip>
-                                <div class="el-upload__tip">支持上传PDF、Word、Excel等文件</div>
-                            </template>
-                        </el-upload>
+                    <el-form-item label="附件" prop="fileList">
+                        <BatchFileUpload ref="fileUploadRef" v-model:fileList="formData.fileList" mode="create"
+                            :max-files="10" directory="purchase" :file-size="10" tip="支持上传多个文件，每个文件不超过10MB" />
                     </el-form-item>
                     <el-form-item>
                         <el-button :disabled="formLoading" type="primary" @click="submitForm">
@@ -86,6 +77,7 @@
 <script lang="ts" setup>
 import * as PurchaseApi from '@/api/bpm/form/purchase'
 import { useTagsViewStore } from '@/store/modules/tagsView'
+import { BatchFileUpload } from '@/components/UploadFile'
 
 // 审批相关：import
 import * as DefinitionApi from '@/api/bpm/definition'
@@ -100,22 +92,25 @@ const message = useMessage() // 消息弹窗
 const { delView } = useTagsViewStore() // 视图操作
 const { push, currentRoute } = useRouter() // 路由
 
+// 定义 emit 事件
+const emit = defineEmits(['success'])
+
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formData = ref({
     reason: '',
-    purchaseDate: undefined,
-    itemList: '',
+    purchaseDate: new Date().toISOString().split('T')[0], // 默认当前日期
+    itemList: [] as PurchaseApi.ItemListVO[],
     totalPrice: 0,
-    storagePath: ''
+    fileList: [] as number[],
+    sequenceCode: ''
 })
 const formRules = reactive({
     reason: [{ required: true, message: '采购事由不能为空', trigger: 'change' }],
-    purchaseDate: [{ required: true, message: '采购日期不能为空', trigger: 'change' }],
     totalPrice: [{ required: true, message: '总价不能为空', trigger: 'change' }]
 })
 const formRef = ref() // 表单 Ref
-const fileList = ref([]) // 文件列表
-const items = ref<any[]>([]) // 物品清单
+const fileUploadRef = ref() // 文件上传组件 Ref
+const items = ref<PurchaseApi.ItemListVO[]>([]) // 物品清单
 
 // 审批相关：变量
 const processDefineKey = 'oa_form_purchase' // 流程定义 Key
@@ -128,12 +123,12 @@ const processDefinitionId = ref('')
 /** 添加物品 */
 const addItem = () => {
     items.value.push({
-        category: '',
-        name: '',
-        model: '',
-        quantity: 1,
-        purpose: '',
-        estimatedPrice: 0
+        type: '',
+        itemName: '',
+        specification: '',
+        number: 1,
+        usage: '',
+        estimatedAmount: 0
     })
     updateItemList()
 }
@@ -146,17 +141,9 @@ const removeItem = (index: number) => {
 
 /** 更新物品清单和总价 */
 const updateItemList = () => {
-    formData.value.itemList = JSON.stringify(items.value)
+    formData.value.itemList = items.value
     // 计算总价
-    formData.value.totalPrice = items.value.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0)
-}
-
-/** 处理文件上传 */
-const handleFileChange = (file: any) => {
-    // 这里只是简单示例，实际项目中可能需要调用上传API
-    fileList.value = [file]
-    // 模拟上传后的路径
-    formData.value.storagePath = file.name
+    formData.value.totalPrice = items.value.reduce((sum, item) => sum + (item.estimatedAmount || 0), 0)
 }
 
 /** 提交表单 */
@@ -181,12 +168,22 @@ const submitForm = async () => {
     formLoading.value = true
     try {
         const data = { ...formData.value } as unknown as PurchaseApi.PurchaseVO
+
+        // 处理文件列表 - 将文件ID数组转换为逗号分隔的字符串
+        if (formData.value.fileList && formData.value.fileList.length > 0) {
+            data.fileList = formData.value.fileList.join(',')
+        } else {
+            data.fileList = ''
+        }
+
         // 审批相关：设置指定审批人
         if (startUserSelectTasks.value?.length > 0) {
             data.startUserSelectAssignees = startUserSelectAssignees.value
         }
         await PurchaseApi.createPurchase(data)
         message.success('发起成功')
+        // 发送成功事件
+        emit('success')
         // 关闭当前 Tab
         delView(unref(currentRoute))
     } finally {

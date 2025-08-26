@@ -89,7 +89,7 @@ import { ApprovalNodeInfo } from '@/api/bpm/processInstance'
 defineOptions({ name: 'BpmOAMeetingIssueCreate' })
 
 // 定义组件发出的事件
-const emit = defineEmits(['close'])
+const emit = defineEmits(['success'])
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
@@ -170,10 +170,10 @@ const submitForm = async () => {
     }
     await OaMeetingIssueApi.createOaMeetingIssue(data)
     message.success('发起成功')
+    // 发送成功事件
+    emit('success')
     // 关闭当前 Tab
     delView(unref(currentRoute))
-    // 关闭弹窗
-    close()
   } finally {
     formLoading.value = false
   }

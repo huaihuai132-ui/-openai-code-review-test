@@ -8,14 +8,14 @@
                 {{ formatDate(detailData.purchaseDate, 'YYYY-MM-DD') }}
             </el-descriptions-item>
             <el-descriptions-item label="物品清单">
-                <div v-if="itemList && itemList.length > 0">
-                    <el-table :data="itemList" border style="width: 100%">
-                        <el-table-column prop="category" label="类别" />
-                        <el-table-column prop="name" label="名称" />
-                        <el-table-column prop="model" label="型号" />
-                        <el-table-column prop="quantity" label="数量" />
-                        <el-table-column prop="purpose" label="用途" />
-                        <el-table-column prop="estimatedPrice" label="预计金额" />
+                <div v-if="detailData.itemList && detailData.itemList.length > 0">
+                    <el-table :data="detailData.itemList" border style="width: 100%">
+                        <el-table-column prop="type" label="类别" />
+                        <el-table-column prop="itemName" label="名称" />
+                        <el-table-column prop="specification" label="型号" />
+                        <el-table-column prop="number" label="数量" />
+                        <el-table-column prop="usage" label="用途" />
+                        <el-table-column prop="estimatedAmount" label="预计金额" />
                     </el-table>
                 </div>
                 <div v-else>无物品信息</div>
@@ -23,8 +23,11 @@
             <el-descriptions-item label="总价">
                 {{ detailData.totalPrice }}
             </el-descriptions-item>
-            <el-descriptions-item label="附件" v-if="detailData.storagePath">
-                <el-link type="primary" :href="detailData.storagePath" target="_blank">查看附件</el-link>
+            <el-descriptions-item label="附件" v-if="fileIdList && fileIdList.length > 0">
+                <BatchFileUpload v-model:fileList="fileIdList" mode="view" directory="purchase" />
+            </el-descriptions-item>
+            <el-descriptions-item label="附件" v-else>
+                <span>无附件</span>
             </el-descriptions-item>
         </el-descriptions>
     </ContentWrap>
@@ -33,6 +36,7 @@
 import { formatDate } from '@/utils/formatTime'
 import { propTypes } from '@/utils/propTypes'
 import * as PurchaseApi from '@/api/bpm/form/purchase/purchase'
+import { BatchFileUpload } from '@/components/UploadFile'
 
 defineOptions({ name: 'BpmOAPurchaseDetail' })
 
@@ -46,16 +50,19 @@ const props = defineProps({
 })
 const detailLoading = ref(false) // 表单的加载中
 const detailData = ref<any>({}) // 详情数据
-const itemList = ref<any[]>([]) // 物品清单
 const queryId = query.id as unknown as number // 从 URL 传递过来的 id 编号
+const fileIdList = ref<string[]>([]) // 文件ID列表（使用字符串避免精度丢失）
 
-/** 解析物品清单JSON */
-const parseItemList = (itemListStr: string) => {
-    if (!itemListStr) return []
+/** 解析文件ID列表 */
+const parseFileIdList = (fileList: string): string[] => {
+    if (!fileList) {
+        return []
+    }
     try {
-        return JSON.parse(itemListStr)
-    } catch (e) {
-        console.error('解析物品清单失败:', e)
+        // 直接返回字符串数组，避免数字精度丢失
+        return fileList.split(',').map(id => id.trim()).filter(id => id.length > 0)
+    } catch (error) {
+        console.error('解析文件ID列表失败', error)
         return []
     }
 }
@@ -65,14 +72,14 @@ const getInfo = async () => {
     // 如果是预览模式，直接使用传入的模型信息
     if (props.previewMode && props.modelInfo) {
         detailData.value = props.modelInfo
-        itemList.value = parseItemList(props.modelInfo.itemList)
+        fileIdList.value = parseFileIdList(props.modelInfo.fileList)
         return
     }
 
     detailLoading.value = true
     try {
         detailData.value = await PurchaseApi.getPurchase(props.id || queryId)
-        itemList.value = parseItemList(detailData.value.itemList)
+        fileIdList.value = parseFileIdList(detailData.value.fileList)
     } finally {
         detailLoading.value = false
     }

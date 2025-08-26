@@ -90,6 +90,9 @@ const message = useMessage() // 消息弹窗
 const { delView } = useTagsViewStore() // 视图操作
 const { push, currentRoute } = useRouter() // 路由
 
+// 定义 emit 事件
+const emit = defineEmits(['success'])
+
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formData = ref({
     fund: 0,
@@ -196,6 +199,8 @@ const submitForm = async () => {
         }
         await ChapterApi.createChapter(data)
         message.success('发起成功')
+        // 发送成功事件
+        emit('success')
         // 关闭当前 Tab
         delView(unref(currentRoute))
     } finally {

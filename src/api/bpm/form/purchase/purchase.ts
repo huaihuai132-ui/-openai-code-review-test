@@ -1,14 +1,24 @@
 import request from '@/config/axios'
 
+export interface ItemListVO {
+  id?: number
+  type: string
+  itemName: string
+  specification: string
+  number: number
+  usage: string
+  estimatedAmount: number
+}
+
 export interface PurchaseVO {
   id: number
   userId: number
   reason: string
   purchaseDate: Date
-  itemList: string
+  itemList: ItemListVO[]
   totalPrice: number
-  storagePath: string
-  editStatus: string
+  fileList: string
+  sequenceCode: string
   status: number
   processInstanceId: string
   createTime: Date
