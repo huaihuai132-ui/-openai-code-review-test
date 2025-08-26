@@ -20,6 +20,10 @@
           <el-form-item label="详细原因" prop="reason">
             <el-input v-model="formData.reason" placeholder="请输入外出详细原因" type="textarea" />
           </el-form-item>
+          <el-form-item label="附件" prop="fileList">
+            <BatchFileUpload ref="fileUploadRef" v-model:fileList="formData.fileList" mode="create"
+                :max-files="10" directory="business" :file-size="10" tip="支持上传多个文件，每个文件不超过10MB" />
+          </el-form-item>
           <el-form-item>
             <el-button :disabled="formLoading" type="primary" @click="submitForm">
               确 定
@@ -42,6 +46,7 @@
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import * as OutApi from '@/api/bpm/form/out'
 import { useTagsViewStore } from '@/store/modules/tagsView'
+import { BatchFileUpload } from '@/components/UploadFile'
 
 // 审批相关：import
 import * as DefinitionApi from '@/api/bpm/definition'
@@ -64,7 +69,9 @@ const formData = ref({
   type: undefined,
   reason: undefined,
   startTime: undefined,
-  endTime: undefined
+  endTime: undefined,
+  fileList: [] as string[],
+  sequenceCode: ''
 })
 const formRules = reactive({
   type: [{ required: true, message: '外出类型不能为空', trigger: 'blur' }],
@@ -73,6 +80,7 @@ const formRules = reactive({
   endTime: [{ required: true, message: '外出结束时间不能为空', trigger: 'change' }]
 })
 const formRef = ref() // 表单 Ref
+const fileUploadRef = ref() // 文件上传组件 Ref
 
 // 审批相关：变量
 const processDefineKey = 'oa_form_out' // 流程定义 Key
@@ -104,6 +112,14 @@ const submitForm = async () => {
   formLoading.value = true
   try {
     const data = { ...formData.value } as unknown as OutApi.OutVO
+
+    // 处理文件列表 - 将文件ID数组转换为逗号分隔的字符串
+    if (formData.value.fileList && formData.value.fileList.length > 0) {
+      data.fileList = formData.value.fileList.join(',')
+    } else {
+      data.fileList = ''
+    }
+
     // 审批相关：设置指定审批人
     if (startUserSelectTasks.value?.length > 0) {
       data.startUserSelectAssignees = startUserSelectAssignees.value

@@ -10,6 +10,8 @@ export type OutVO = {
   endTime: string
   day: number
   createTime: string
+  fileList: string
+  sequenceCode: string
   startUserSelectAssignees?: Record<string, number[]>
 }
 

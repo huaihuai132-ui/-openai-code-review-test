@@ -22,6 +22,12 @@
             <el-descriptions-item label="审批状态">
                 <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="detailData.status" />
             </el-descriptions-item>
+            <el-descriptions-item label="附件" v-if="fileIdList && fileIdList.length > 0">
+                <BatchFileUpload v-model:fileList="fileIdList" mode="view" directory="business" />
+            </el-descriptions-item>
+            <el-descriptions-item label="附件" v-else>
+                <span>无附件</span>
+            </el-descriptions-item>
         </el-descriptions>
     </ContentWrap>
 </template>
@@ -31,6 +37,7 @@ import { DICT_TYPE } from '@/utils/dict'
 import * as OutApi from '@/api/bpm/form/out'
 import { formatDate } from '@/utils/formatTime'
 import { propTypes } from '@/utils/propTypes'
+import { BatchFileUpload } from '@/components/UploadFile'
 
 defineOptions({ name: 'BpmOAOutDetail' })
 
@@ -54,14 +61,33 @@ const detailData = ref<OutApi.OutVO>({
     startTime: '',
     endTime: '',
     day: 0,
-    createTime: ''
+    createTime: '',
+    fileList: '',
+    sequenceCode: ''
 })
+const fileIdList = ref<string[]>([]) // 文件ID列表（使用字符串避免精度丢失）
+
+/** 解析文件ID列表 */
+const parseFileIdList = (fileList: string): string[] => {
+    if (!fileList) {
+        return []
+    }
+    try {
+        // 直接返回字符串数组，避免数字精度丢失
+        return fileList.split(',').map(id => id.trim()).filter(id => id.length > 0)
+    } catch (error) {
+        console.error('解析文件ID列表失败', error)
+        return []
+    }
+}
 
 /** 获得详情 */
 const getInfo = async () => {
     detailLoading.value = true
     try {
         detailData.value = await OutApi.getOut(props.id || queryId)
+        // 处理文件列表，如果字段不存在则设为空字符串
+        fileIdList.value = parseFileIdList(detailData.value.fileList || '')
     } finally {
         detailLoading.value = false
     }
