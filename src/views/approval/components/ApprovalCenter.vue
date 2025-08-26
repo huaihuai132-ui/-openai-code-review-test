@@ -49,25 +49,60 @@
     </div>
 
     <div class="content" v-if="activeCategory">
-      <div v-show="activeCategory === 'waiting'" class="category-container">
+      <div v-show="activeCategory === 'waiting'" class="category-container" @scroll="handleScroll" ref="waitingContainer">
         <common-list :data="waitingList" category="waiting" @select-card="handleSelectCard" @search="handleSearch"
           :show-category-tags="true" />
+        <div v-if="pageStates.waiting.loading" class="loading-more">
+          <el-icon class="is-loading"><Loading /></el-icon>
+          <span>加载中...</span>
+        </div>
+        <div v-else-if="!pageStates.waiting.hasMore && waitingList.length > 0" class="no-more">
+          <span>没有更多数据了</span>
+        </div>
       </div>
-      <div v-show="activeCategory === 'done'" class="category-container">
+      <div v-show="activeCategory === 'done'" class="category-container" @scroll="handleScroll" ref="doneContainer">
         <common-list :data="doneList" category="done" @select-card="handleSelectCard" @search="handleSearch"
           :show-category-tags="true" />
+        <div v-if="pageStates.done.loading" class="loading-more">
+          <el-icon class="is-loading"><Loading /></el-icon>
+          <span>加载中...</span>
+        </div>
+        <div v-else-if="!pageStates.done.hasMore && doneList.length > 0" class="no-more">
+          <span>没有更多数据了</span>
+        </div>
       </div>
-      <div v-show="activeCategory === 'apply'" class="category-container">
+      <div v-show="activeCategory === 'apply'" class="category-container" @scroll="handleScroll" ref="applyContainer">
         <common-list :data="applyList" category="apply" @select-card="handleSelectCard" @search="handleSearch"
           :show-category-tags="true" />
+        <div v-if="pageStates.apply.loading" class="loading-more">
+          <el-icon class="is-loading"><Loading /></el-icon>
+          <span>加载中...</span>
+        </div>
+        <div v-else-if="!pageStates.apply.hasMore && applyList.length > 0" class="no-more">
+          <span>没有更多数据了</span>
+        </div>
       </div>
-      <div v-show="activeCategory === 'copy'" class="category-container">
+      <div v-show="activeCategory === 'copy'" class="category-container" @scroll="handleScroll" ref="copyContainer">
         <common-list :data="copyList" category="copy" @select-card="handleSelectCard" @search="handleSearch"
           :show-category-tags="true" />
+        <div v-if="pageStates.copy.loading" class="loading-more">
+          <el-icon class="is-loading"><Loading /></el-icon>
+          <span>加载中...</span>
+        </div>
+        <div v-else-if="!pageStates.copy.hasMore && copyList.length > 0" class="no-more">
+          <span>没有更多数据了</span>
+        </div>
       </div>
-      <div v-show="activeCategory === 'rejected'" class="category-container">
+      <div v-show="activeCategory === 'rejected'" class="category-container" @scroll="handleScroll" ref="rejectedContainer">
         <common-list :data="rejectedList" category="rejected" @select-card="handleSelectCard" @search="handleSearch"
           :show-category-tags="true" />
+        <div v-if="pageStates.rejected.loading" class="loading-more">
+          <el-icon class="is-loading"><Loading /></el-icon>
+          <span>加载中...</span>
+        </div>
+        <div v-else-if="!pageStates.rejected.hasMore && rejectedList.length > 0" class="no-more">
+          <span>没有更多数据了</span>
+        </div>
       </div>
     </div>
     <div class="content" v-else>
@@ -90,7 +125,7 @@ import ProcessInstanceDetail from '@/views/bpm/processInstance/detail/index.vue'
 import { getTaskTodoPage, getTaskDonePage } from '@/api/bpm/task';
 import { getProcessInstanceMyPage, getProcessInstanceCopyPage, getProcessInstanceRejectedPage } from '@/api/bpm/processInstance';
 import { updateLastReadTime, getLastReadTime } from '@/utils/cache';
-import { Clock, Check, Document, CopyDocument, CloseBold } from '@element-plus/icons-vue';
+import { Clock, Check, Document, CopyDocument, CloseBold, Loading } from '@element-plus/icons-vue';
 import DetailOverlay from '@/components/DetailOverlay/index.vue';
 import { useRoute } from 'vue-router'
 
@@ -113,34 +148,64 @@ const selectedCategory = ref('');
 const queryParams = reactive({
   waiting: {
     pageNo: 1,
-    pageSize: 100,
+    pageSize: 20,
     createTime: []
   },
   done: {
     pageNo: 1,
-    pageSize: 100,
+    pageSize: 20,
     createTime: []
   },
   apply: {
     pageNo: 1,
-    pageSize: 100,
+    pageSize: 20,
     createTime: []
   },
   copy: {
     pageNo: 1,
-    pageSize: 100,
+    pageSize: 20,
     createTime: []
   },
   rejected: {
     pageNo: 1,
-    pageSize: 100,
+    pageSize: 20,
     createTime: []
   }
+});
+
+// 分页状态
+const pageStates = reactive({
+  waiting: { hasMore: true, loading: false },
+  done: { hasMore: true, loading: false },
+  apply: { hasMore: true, loading: false },
+  copy: { hasMore: true, loading: false },
+  rejected: { hasMore: true, loading: false }
 });
 
 // 切换分类
 const changeCategory = (category) => {
   activeCategory.value = category;
+  // 重置分页参数
+  queryParams[category].pageNo = 1;
+  pageStates[category].hasMore = true;
+  // 清空当前列表
+  switch (category) {
+    case 'waiting':
+      waitingList.value = [];
+      break;
+    case 'done':
+      doneList.value = [];
+      break;
+    case 'apply':
+      applyList.value = [];
+      break;
+    case 'copy':
+      copyList.value = [];
+      break;
+    case 'rejected':
+      rejectedList.value = [];
+      break;
+  }
   // 重新加载数据
   loadCategoryData(category);
   // 计算新数据数量
@@ -150,28 +215,36 @@ const changeCategory = (category) => {
 };
 
 // 加载分类数据
-const loadCategoryData = async (category) => {
+const loadCategoryData = async (category, isLoadMore = false) => {
   try {
     switch (category) {
       case 'waiting':
-        await loadWaitingList();
+        await loadWaitingList(isLoadMore);
         break;
       case 'done':
-        await loadDoneList();
+        await loadDoneList(isLoadMore);
         break;
       case 'apply':
-        await loadApplyList();
+        await loadApplyList(isLoadMore);
         break;
       case 'copy':
-        await loadCopyList();
+        await loadCopyList(isLoadMore);
         break;
       case 'rejected':
-        await loadRejectedList();
+        await loadRejectedList(isLoadMore);
         break;
     }
   } catch (error) {
     console.error(`加载${category}数据失败`, error);
   }
+};
+
+// 加载更多数据
+const loadMoreData = async () => {
+  if (!activeCategory.value || !pageStates[activeCategory.value].hasMore || pageStates[activeCategory.value].loading) {
+    return;
+  }
+  await loadCategoryData(activeCategory.value, true);
 };
 
 // 计算新数据数量
@@ -248,53 +321,167 @@ const calculateNewItems = () => {
 };
 
 // 加载待审批列表
-const loadWaitingList = async () => {
-  const params = {
-    ...queryParams.waiting
-  };
-  const result = await getTaskTodoPage(params);
-  waitingList.value = result.list || [];
+const loadWaitingList = async (isLoadMore = false) => {
+  if (pageStates.waiting.loading) return;
+
+  pageStates.waiting.loading = true;
+  try {
+    const params = {
+      ...queryParams.waiting
+    };
+    const result = await getTaskTodoPage(params);
+    const newList = result.list || [];
+
+    if (isLoadMore) {
+      // 加载更多时，追加到现有列表
+      waitingList.value = [...waitingList.value, ...newList];
+    } else {
+      // 首次加载或刷新时，替换列表
+      waitingList.value = newList;
+    }
+
+    // 检查是否还有更多数据
+    pageStates.waiting.hasMore = newList.length === queryParams.waiting.pageSize;
+
+    // 如果有更多数据，准备下一页
+    if (pageStates.waiting.hasMore) {
+      queryParams.waiting.pageNo++;
+    }
+
+    // 如果是加载更多，需要重新计算新消息数量
+    if (isLoadMore) {
+      calculateNewItems();
+    }
+  } finally {
+    pageStates.waiting.loading = false;
+  }
 };
 
 // 加载已审批列表
-const loadDoneList = async () => {
-  const params = {
-    ...queryParams.done
-  };
-  const result = await getTaskDonePage(params);
-  doneList.value = result.list || [];
+const loadDoneList = async (isLoadMore = false) => {
+  if (pageStates.done.loading) return;
+
+  pageStates.done.loading = true;
+  try {
+    const params = {
+      ...queryParams.done
+    };
+    const result = await getTaskDonePage(params);
+    const newList = result.list || [];
+
+    if (isLoadMore) {
+      doneList.value = [...doneList.value, ...newList];
+    } else {
+      doneList.value = newList;
+    }
+
+    pageStates.done.hasMore = newList.length === queryParams.done.pageSize;
+
+    if (pageStates.done.hasMore) {
+      queryParams.done.pageNo++;
+    }
+
+    if (isLoadMore) {
+      calculateNewItems();
+    }
+  } finally {
+    pageStates.done.loading = false;
+  }
 };
 
 // 加载我申请的列表
-const loadApplyList = async () => {
-  const params = {
-    ...queryParams.apply
-  };
-  const result = await getProcessInstanceMyPage(params);
-  applyList.value = result.list || [];
+const loadApplyList = async (isLoadMore = false) => {
+  if (pageStates.apply.loading) return;
+
+  pageStates.apply.loading = true;
+  try {
+    const params = {
+      ...queryParams.apply
+    };
+    const result = await getProcessInstanceMyPage(params);
+    const newList = result.list || [];
+
+    if (isLoadMore) {
+      applyList.value = [...applyList.value, ...newList];
+    } else {
+      applyList.value = newList;
+    }
+
+    pageStates.apply.hasMore = newList.length === queryParams.apply.pageSize;
+
+    if (pageStates.apply.hasMore) {
+      queryParams.apply.pageNo++;
+    }
+
+    if (isLoadMore) {
+      calculateNewItems();
+    }
+  } finally {
+    pageStates.apply.loading = false;
+  }
 };
 
 // 加载抄送我的列表
-const loadCopyList = async () => {
-  const params = {
-    ...queryParams.copy
-  };
-  // 使用正确的API获取抄送数据
-  const result = await getProcessInstanceCopyPage(params);
-  copyList.value = result.list || [];
+const loadCopyList = async (isLoadMore = false) => {
+  if (pageStates.copy.loading) return;
 
-  // 计算新数据数量
-  calculateNewItems();
+  pageStates.copy.loading = true;
+  try {
+    const params = {
+      ...queryParams.copy
+    };
+    const result = await getProcessInstanceCopyPage(params);
+    const newList = result.list || [];
+
+    if (isLoadMore) {
+      copyList.value = [...copyList.value, ...newList];
+    } else {
+      copyList.value = newList;
+    }
+
+    pageStates.copy.hasMore = newList.length === queryParams.copy.pageSize;
+
+    if (pageStates.copy.hasMore) {
+      queryParams.copy.pageNo++;
+    }
+
+    // 计算新数据数量
+    calculateNewItems();
+  } finally {
+    pageStates.copy.loading = false;
+  }
 };
 
 // 加载被驳回的列表
-const loadRejectedList = async () => {
-  const params = {
-    ...queryParams.rejected
-  };
-  // 使用被驳回的API获取数据
-  const result = await getProcessInstanceRejectedPage(params);
-  rejectedList.value = result.list || [];
+const loadRejectedList = async (isLoadMore = false) => {
+  if (pageStates.rejected.loading) return;
+
+  pageStates.rejected.loading = true;
+  try {
+    const params = {
+      ...queryParams.rejected
+    };
+    const result = await getProcessInstanceRejectedPage(params);
+    const newList = result.list || [];
+
+    if (isLoadMore) {
+      rejectedList.value = [...rejectedList.value, ...newList];
+    } else {
+      rejectedList.value = newList;
+    }
+
+    pageStates.rejected.hasMore = newList.length === queryParams.rejected.pageSize;
+
+    if (pageStates.rejected.hasMore) {
+      queryParams.rejected.pageNo++;
+    }
+
+    if (isLoadMore) {
+      calculateNewItems();
+    }
+  } finally {
+    pageStates.rejected.loading = false;
+  }
 };
 
 // 处理卡片选择
@@ -353,8 +540,22 @@ watch(activeCategory, () => {
 // 获取路由参数
 const route = useRoute();
 
+// 滑动监听
+const handleScroll = (event) => {
+  const { scrollTop, scrollHeight, clientHeight } = event.target;
+  // 当滚动到底部附近时加载更多
+  if (scrollTop + clientHeight >= scrollHeight - 100) {
+    loadMoreData();
+  }
+};
+
 // 初始化
 onMounted(async () => {
+  // 默认显示待审批，如果没有路由参数的话
+  if (!route.query.category) {
+    activeCategory.value = 'waiting';
+  }
+
   // 检查路由参数，如果有category参数则设置对应的分类
   if (route.query.category) {
     const category = route.query.category as string;
@@ -481,6 +682,26 @@ onMounted(async () => {
   height: 100%;
   padding: 0;
   animation: fadeIn 0.3s ease;
+  overflow-y: auto;
+}
+
+.loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #909399;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.no-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #c0c4cc;
+  font-size: 14px;
 }
 
 @keyframes fadeIn {
