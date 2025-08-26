@@ -26,7 +26,7 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="企业简称" prop="shortName">
+      <!-- <el-form-item label="企业简称" prop="shortName">
         <el-input
           v-model="queryParams.shortName"
           placeholder="请输入企业简称"
@@ -34,7 +34,7 @@
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
-      </el-form-item>
+      </el-form-item> -->
       <!-- <el-form-item label="地址" prop="address">
         <el-input
           v-model="queryParams.address"
@@ -44,7 +44,7 @@
           class="!w-240px"
         />
       </el-form-item> -->
-      <el-form-item label="法定代表人" prop="legalRepresentative">
+      <!-- <el-form-item label="法定代表人" prop="legalRepresentative">
         <el-input
           v-model="queryParams.legalRepresentative"
           placeholder="请输入法定代表人"
@@ -52,8 +52,8 @@
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
-      </el-form-item>
-      <el-form-item label="所属行业" prop="industry">
+      </el-form-item> -->
+      <!-- <el-form-item label="所属行业" prop="industry">
         <el-input
           v-model="queryParams.industry"
           placeholder="请输入所属行业"
@@ -70,7 +70,7 @@
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="企业性质" prop="companyNature">
         <el-input
           v-model="queryParams.companyNature"

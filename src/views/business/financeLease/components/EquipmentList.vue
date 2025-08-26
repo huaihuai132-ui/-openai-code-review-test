@@ -8,7 +8,7 @@
     </div>
 
     <!-- 设备列表表格 -->
-    <el-table :data="equipmentList" :stripe="true" :show-overflow-tooltip="true" v-loading="loading">
+    <el-table :data="equipmentList.filter(item => !item._deleted)" :stripe="true" :show-overflow-tooltip="true" v-loading="loading">
       <el-table-column label="设备名称" align="center" prop="deviceName" />
       <el-table-column label="规格型号" align="center" prop="deviceSpecification" />
       <el-table-column label="生产厂家" align="center" prop="deviceManufacturers" />
@@ -128,6 +128,7 @@ interface Equipment {
   netWorth: number
   originalWorth: number
   deviceStatus: number
+  _deleted?: boolean // 添加删除标记
 }
 
 // 定义组件属性
@@ -235,10 +236,35 @@ const handleDelete = async (id: number) => {
       type: 'warning'
     })
     
-    const newList = equipmentList.value.filter(item => item.id !== id)
-    equipmentList.value = newList
+    // 打印当前设备列表和要删除的ID，帮助调试
+    console.log('当前设备列表:', equipmentList.value)
+    console.log('要删除的ID:', id, typeof id)
+    
+    // 检查是否是新增的设备（临时ID）
+    const currentTime = Date.now()
+    const oneHourAgo = currentTime - 60 * 60 * 1000
+    const isTemporaryId = id && id > oneHourAgo && id <= currentTime
+    
+    if (isTemporaryId) {
+      // 如果是临时ID（新增的设备），直接从列表中移除
+      const newList = equipmentList.value.filter(item => {
+        return item.id !== id && item.id !== String(id) && String(item.id) !== String(id)
+      })
+      emit('update:modelValue', [...newList])
+    } else {
+      // 如果是已存在的设备，标记为删除而不是直接移除
+      const newList = equipmentList.value.map(item => {
+        if (item.id === id || item.id === String(id) || String(item.id) === String(id)) {
+          return { ...item, _deleted: true }
+        }
+        return item
+      })
+      emit('update:modelValue', [...newList])
+    }
+    
     ElMessage.success('删除成功')
-  } catch {
+  } catch (error) {
+    console.error('删除设备失败:', error)
     // 用户取消删除
   }
 }

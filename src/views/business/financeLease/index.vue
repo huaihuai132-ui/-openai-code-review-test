@@ -199,7 +199,7 @@
           <el-button
             link
             type="primary"
-            @click="handleDelete(scope.row.id)"
+            @click="queryDeviceList(scope.row.id)"
             v-hasPermi="['business:finance-device:query']"
           >
             查看设备清单
@@ -216,6 +216,20 @@
     />
   </ContentWrap>
 
+  <!-- 设备清单对话框 -->
+  <el-dialog
+    v-model="deviceDialogVisible"
+    title="设备清单"
+    width="80%"
+    :close-on-click-modal="false"
+  >
+    <EquipmentList v-model="deviceList" ref="equipmentListRef" />
+    <template #footer>
+      <el-button @click="saveDeviceList" type="primary">确 定</el-button>
+      <el-button @click="deviceDialogVisible = false">取 消</el-button>
+    </template>
+  </el-dialog>
+  
   <!-- 表单弹窗：添加/修改 -->
   <FinanceLeaseForm ref="formRef" @success="getList" />
 </template>
@@ -225,7 +239,9 @@ import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { FinanceLeaseApi, FinanceLeaseVO } from '@/api/business/financelease'
+import { FinanceDeviceApi } from '@/api/business/financedevice'
 import FinanceLeaseForm from './FinanceLeaseForm.vue'
+import EquipmentList from './components/EquipmentList.vue'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
 
 /** 融资租赁 列表 */
@@ -260,6 +276,12 @@ const exportLoading = ref(false) // 导出的加载中
 const selectedIds = ref<number[]>([]) // 表格的选中 ID 数组
 const selectedRows = ref<FinanceLeaseVO[]>([]) // 表格的选中 数据 数组
 const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
+
+// 设备清单相关变量
+const deviceDialogVisible = ref(false)
+const deviceList = ref([])
+const equipmentListRef = ref()
+const currentLeaseId = ref(0)
 /** 表格选中事件 */
 const handleSelectionChange = (rows: FinanceLeaseVO[]) => {
   selectedIds.value = rows.map((row) => row.id)
@@ -307,6 +329,57 @@ const handleDelete = async (id: number) => {
     // 刷新列表
     await getList()
   } catch {}
+}
+
+/** 查看设备清单按钮操作 */
+const queryDeviceList = async (id: number) => {
+  currentLeaseId.value = id
+  deviceDialogVisible.value = true
+  
+  try {
+    const data = await FinanceLeaseApi.getFinanceDeviceList(id)
+    if (data && Array.isArray(data)) {
+      deviceList.value = data
+    } else {
+      deviceList.value = []
+    }
+  } catch (error) {
+    console.error('获取设备清单失败', error)
+    deviceList.value = []
+    message.error('获取设备清单失败')
+  }
+}
+
+/** 保存设备清单 */
+const saveDeviceList = async () => {
+  try {
+    // 从组件中获取最新的设备列表
+    const updatedDeviceList = equipmentListRef.value?.getEquipmentList() || deviceList.value
+    
+    // 检查是否有设备数据
+    if (!updatedDeviceList || updatedDeviceList.length === 0) {
+      message.warning('没有设备数据需要保存')
+      return
+    }
+    
+    // 确保每个设备都有leaseId
+    const devicesToSave = updatedDeviceList.map(device => ({
+      ...device,
+      leaseId: currentLeaseId.value
+    }))
+    
+    // 调用批量保存API
+    await FinanceDeviceApi.batchSaveFinanceDevice(currentLeaseId.value, devicesToSave)
+    
+    message.success('设备清单保存成功')
+    deviceDialogVisible.value = false
+    
+    // 刷新列表
+    await getList()
+  } catch (error) {
+    console.error('保存设备清单失败', error)
+    message.error(`保存设备清单失败: ${error.message || '未知错误'}`)
+  }
 }
 
 /** 送审按钮操作 */

@@ -69,4 +69,9 @@ export const FinanceLeaseApi = {
   exportFinanceLeaseDeviceDoc: async (leaseId: number) => {
     return await request.download({ url: `/business/finance-device/fill-word-template?leaseId=` + leaseId })
   },
+
+  // 获取leaseId下的所有设备
+  getFinanceDeviceList: async (id: number) => {
+    return await request.get({ url: `/business/finance-device/get-by-lease-id?leaseId=` + id })
+  },
 }
