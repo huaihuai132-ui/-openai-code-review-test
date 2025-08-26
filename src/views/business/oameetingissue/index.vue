@@ -173,6 +173,7 @@
             type="info"
             @click="openDetail(scope.row.id)"
             v-hasPermi="['business:oa-meeting-issue:query']"
+            :disabled="sendApproveLoading[scope.row.id]"
           >
             详情
           </el-button>
@@ -182,12 +183,14 @@
               type="primary"
               @click="openForm('update', scope.row.id)"
               v-hasPermi="['business:oa-meeting-issue:update']"
+              :disabled="sendApproveLoading[scope.row.id]"
             >
               编辑
             </el-button>
             <el-button
               link
               type="primary"
+              :loading="sendApproveLoading[scope.row.id]"
               @click="sendApprove(scope.row.id)"
               v-hasPermi="['business:oa-meeting-issue:sendApprove']"
             >
@@ -198,6 +201,7 @@
               type="danger"
               @click="handleDelete(scope.row.id)"
               v-hasPermi="['business:oa-meeting-issue:delete']"
+              :disabled="sendApproveLoading[scope.row.id]"
             >
               删除
             </el-button>
@@ -253,6 +257,7 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+const sendApproveLoading = ref<Record<number, boolean>>({}) // 送审的加载中状态
 
 /** 查询列表 */
 const getList = async () => {
@@ -309,13 +314,14 @@ const sendApprove = async (id: number) => {
     // 送审的二次确认
     await message.sendApproveConfirm()
     // 发起删除
+    sendApproveLoading.value[id] = true
     await OaMeetingIssueApi.sendApprove(id)
     message.success(t('common.sendApproveSuccess'))
     // 刷新列表
     await getList()
   } catch {
   } finally {
-
+    sendApproveLoading.value[id] = false
   }
 }
 
