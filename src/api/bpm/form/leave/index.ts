@@ -9,6 +9,8 @@ export type LeaveVO = {
   startTime: string
   endTime: string
   createTime: string
+  fileList: string
+  sequenceCode: string
   startUserSelectAssignees?: Record<string, number[]> // 发起人自选审批人
 }
 

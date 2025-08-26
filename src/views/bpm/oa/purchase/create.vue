@@ -54,7 +54,7 @@
                     </el-form-item>
                     <el-form-item label="附件" prop="fileList">
                         <BatchFileUpload ref="fileUploadRef" v-model:fileList="formData.fileList" mode="create"
-                            :max-files="10" directory="purchase" :file-size="10" tip="支持上传多个文件，每个文件不超过10MB" />
+                            :max-files="10" directory="business" :file-size="10" tip="支持上传多个文件，每个文件不超过10MB" />
                     </el-form-item>
                     <el-form-item>
                         <el-button :disabled="formLoading" type="primary" @click="submitForm">
@@ -101,7 +101,7 @@ const formData = ref({
     purchaseDate: new Date().toISOString().split('T')[0], // 默认当前日期
     itemList: [] as PurchaseApi.ItemListVO[],
     totalPrice: 0,
-    fileList: [] as number[],
+    fileList: [] as string[],
     sequenceCode: ''
 })
 const formRules = reactive({

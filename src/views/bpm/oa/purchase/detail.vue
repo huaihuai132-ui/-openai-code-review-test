@@ -24,7 +24,7 @@
                 {{ detailData.totalPrice }}
             </el-descriptions-item>
             <el-descriptions-item label="附件" v-if="fileIdList && fileIdList.length > 0">
-                <BatchFileUpload v-model:fileList="fileIdList" mode="view" directory="purchase" />
+                <BatchFileUpload v-model:fileList="fileIdList" mode="view" directory="business" />
             </el-descriptions-item>
             <el-descriptions-item label="附件" v-else>
                 <span>无附件</span>
