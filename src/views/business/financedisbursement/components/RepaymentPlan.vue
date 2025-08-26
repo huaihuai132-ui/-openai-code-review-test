@@ -1,42 +1,43 @@
 <template>
   <div class="py-3">
     <div class="mb-3 border-b border-gray-200">
-      <el-tooltip content="请先保存放款信息" placement="top">
-        <el-button 
-          type="primary" 
+      <el-tooltip
+        :content="!props.disbursementId ? '请先保存放款信息' : !canGenerate ? '已有正式的还款计划，无法重新生成' : '生成还款计划'"
+        placement="bottom"
+      >
+        <el-button
+          type="primary"
           @click="generateRepaymentPlan"
           :loading="repaymentLoading"
-          :disabled="!props.disbursementId"
+          :disabled="!props.disbursementId || !canGenerate"
         >
           {{ repaymentPlans.length > 0 ? '重新生成还款计划' : '生成还款计划' }}
         </el-button>
       </el-tooltip>
     </div>
     <div v-if="repaymentPlans.length > 0" class="mt-3">
-      <el-table v-loading="loading" :data="repaymentPlans" :stripe="true" :show-overflow-tooltip="true">
-        <el-table-column type="index" label="期数" align="center" width="80" :index="index => (queryParams.pageNo - 1) * queryParams.pageSize + index + 1" />
-        <el-table-column 
-          prop="repaymentDate" 
-          label="还款时间" 
-          align="center" 
-          width="180px"
-        >
+      <el-table
+        v-loading="loading"
+        :data="repaymentPlans"
+        :stripe="true"
+        :show-overflow-tooltip="true"
+      >
+        <el-table-column
+          type="index"
+          label="期数"
+          align="center"
+          width="80"
+          :index="(index) => (queryParams.pageNo - 1) * queryParams.pageSize + index + 1"
+        />
+        <el-table-column prop="repaymentDate" label="还款时间" align="center" width="180px">
           <template #default="{ row }">
             {{ dayjs(row.repaymentDate).format('YYYY-MM-DD') }}
           </template>
         </el-table-column>
         <el-table-column prop="rent" label="租金" align="center" />
         <el-table-column prop="interestRate" label="利率" align="center" />
-        <el-table-column 
-          prop="capital" 
-          label="还款本金" 
-          align="center"
-        />
-        <el-table-column 
-          prop="interest" 
-          label="还款利息" 
-          align="center"
-        />
+        <el-table-column prop="capital" label="还款本金" align="center" />
+        <el-table-column prop="interest" label="还款利息" align="center" />
       </el-table>
       <!-- 分页 -->
       <Pagination
@@ -53,7 +54,11 @@
 </template>
 
 <script setup lang="ts">
-import { FinanceRepaymentApi, FinanceRepaymentVO, GenerateRepaymentPlanReqVO } from '@/api/business/financerepayment'
+import {
+  FinanceRepaymentApi,
+  FinanceRepaymentVO,
+  GenerateRepaymentPlanReqVO
+} from '@/api/business/financerepayment'
 import dayjs from 'dayjs'
 
 interface Props {
@@ -85,7 +90,7 @@ const loadExistingPlans = async () => {
   if (!props.disbursementId) {
     return
   }
-  
+
   loading.value = true
   try {
     queryParams.disbursementId = props.disbursementId
@@ -99,7 +104,14 @@ const loadExistingPlans = async () => {
   }
 }
 
+const canGenerate = computed(() => repaymentPlans.value.some((item) => item.temporaryFlag))
+
 const generateRepaymentPlan = async () => {
+  if (!canGenerate.value) {
+    message.error('已有正式的还款计划，无法重新生成')
+    return
+  }
+
   if (!props.leaseAmount) {
     message.error('请先填写租赁本金')
     return
@@ -120,7 +132,7 @@ const generateRepaymentPlan = async () => {
     message.error('企业信息不完整')
     return
   }
-  
+
   repaymentLoading.value = true
   try {
     const repaymentData: GenerateRepaymentPlanReqVO = {
@@ -132,7 +144,7 @@ const generateRepaymentPlan = async () => {
       interestRate: parseFloat(String(props.interestRate)),
       repaymentMode: props.repaymentMode
     }
-    
+
     const result = await FinanceRepaymentApi.generateRepaymentPlan(repaymentData)
     if (result) {
       loadExistingPlans()
