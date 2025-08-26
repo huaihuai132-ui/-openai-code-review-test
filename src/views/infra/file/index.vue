@@ -265,9 +265,11 @@ const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
 const userStore = useUserStore()
 
-// 固定域名配置
-const FIXED_DOMAIN = 'http://182.109.52.126:49090'
-// const currentDomain = `${window.location.protocol}//${window.location.host}`
+// 导入域名配置工具
+import { getDomainUrl } from '@/utils/domainConfig'
+
+// 获取配置的域名
+const FIXED_DOMAIN = getDomainUrl()
 
 const loading = ref(true) // 列表的加载中
 const total = ref(0) // 列表的总页数
@@ -558,7 +560,7 @@ const safeDateFormatter = (row, column, cellValue) => {
 onMounted(() => {
   getList()
   // 跳转文件预览页面   todo  加上nickname  &nickname=anan
-  // window.open('http://182.109.52.126:49090/preview/onlinePreview?url='+encodeURIComponent(base64Encode('http://172.25.169.236:9000/oafile/20250731/1%E6%88%91%E7%94%A8%E5%8F%8C%E6%89%8B%E6%88%90%E5%B0%B1%E4%BD%A0%E7%9A%84%E6%A2%A6%E6%83%B3_1753930379819.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20250731T025448Z&X-Amz-SignedHeaders=host&X-Amz-Credential=minioadmin%2F20250731%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Expires=7200&X-Amz-Signature=4f8faa5222a523345ee1cc81de4c185a8db8f132e645412f3870738fa5498825')))
+  // window.open(`${FIXED_DOMAIN}/preview/onlinePreview?url=`+encodeURIComponent(base64Encode('http://172.25.169.236:9000/oafile/20250731/1%E6%88%91%E7%94%A8%E5%8F%8C%E6%89%8B%E6%88%90%E5%B0%B1%E4%BD%A0%E7%9A%84%E6%A2%A6%E6%83%B3_1753930379819.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20250731T025448Z&X-Amz-SignedHeaders=host&X-Amz-Credential=minioadmin%2F20250731%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Expires=7200&X-Amz-Signature=4f8faa5222a523345ee1cc81de4c185a8db8f132e645412f3870738fa5498825')))
   // window.open('http://127.0.0.1:8012//onlinePreview?url='+encodeURIComponent(base64Encode('http://172.25.169.236:9000/oafile/20250731/1%E6%88%91%E7%94%A8%E5%8F%8C%E6%89%8B%E6%88%90%E5%B0%B1%E4%BD%A0%E7%9A%84%E6%A2%A6%E6%83%B3_1753930379819.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20250731T025448Z&X-Amz-SignedHeaders=host&X-Amz-Credential=minioadmin%2F20250731%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Expires=7200&X-Amz-Signature=4f8faa5222a523345ee1cc81de4c185a8db8f132e645412f3870738fa5498825&nickname=anan')))
 })
 

@@ -539,10 +539,13 @@ export const subString = (str: string, start: number, end: number) => {
 
 /**
  * 将字符串转换为 base64 编码
- * 
+ *
  * @param str 需要编码的字符串
  * @returns base64 编码后的字符串
  */
 export const base64Encode = (str: string): string => {
   return window.btoa(unescape(encodeURIComponent(str)))
 }
+
+// 导出域名配置相关工具函数
+export { getDomainUrl, getFileUrl } from './domainConfig'

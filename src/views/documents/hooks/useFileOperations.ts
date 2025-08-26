@@ -2,9 +2,10 @@ import { useMessage } from '@/hooks/web/useMessage'
 import { useUserStore } from '@/store/modules/user'
 import * as FileApi from '@/api/infra/file/index'
 import { openPreviewWindow } from '@/utils/previewWindow'
+import { getDomainUrl } from '@/utils/domainConfig'
 
-// 常量配置
-const FIXED_DOMAIN = 'http://182.109.52.126:49090'
+// 获取配置的域名
+const FIXED_DOMAIN = getDomainUrl()
 
 // 工具函数
 const base64Encode = (str: string) => {

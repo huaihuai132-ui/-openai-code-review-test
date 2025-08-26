@@ -128,8 +128,11 @@ defineOptions({ name: 'UploadFile' })
 const message = useMessage() // 消息弹窗
 const userStore = useUserStore() // 用户信息
 
-// 固定域名配置
-const FIXED_DOMAIN = 'http://182.109.52.126:49090'
+// 导入域名配置工具
+import { getDomainUrl } from '@/utils/domainConfig'
+
+// 获取配置的域名
+const FIXED_DOMAIN = getDomainUrl()
 
 // 组件事件
 const emit = defineEmits([

@@ -111,8 +111,8 @@
         </ContentWrap>
       </el-tab-pane>
 
-      <!-- 公共文件柜 -->
-      <el-tab-pane label="公共文件柜" name="public">
+      <!-- 公司文件柜 -->
+      <el-tab-pane label="公司文件柜" name="public">
         <ContentWrap>
           <div class="toolbar">
             <el-button type="primary" @click="handlePublicUpload">

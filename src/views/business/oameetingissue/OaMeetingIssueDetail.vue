@@ -89,8 +89,11 @@ const loading = ref(false) // 数据加载状态
 const formData = ref<Partial<OaMeetingIssueVO>>({}) // 表单数据
 const fileList = ref<Array<{ id: number; name: string; url: string }>>([]) // 附件列表
 
-// 固定域名配置
-const FIXED_DOMAIN = 'http://182.109.52.126:49090'
+// 导入域名配置工具
+import { getDomainUrl } from '@/utils/domainConfig'
+
+// 获取配置的域名
+const FIXED_DOMAIN = getDomainUrl()
 
 /** 获取文件类型图标 */
 const getFileTypeIcon = (fileName: string): string => {
