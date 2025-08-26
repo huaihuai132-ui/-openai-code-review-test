@@ -148,7 +148,7 @@ const emit = defineEmits([
 
 // 组件属性
 const props = withDefaults(defineProps<{
-  fileList: (number | string)[] // 支持数字或字符串ID
+  fileList: (number | string)[] | string // 支持数字或字符串ID数组，或逗号分隔的字符串
   mode?: 'create' | 'view' | 'edit'
   sequenceCode?: string
   maxFiles?: number
@@ -273,17 +273,31 @@ const createEmptyFileBox = () => ({
 // 加载已有文件
 const loadExistingFiles = async () => {
   try {
+    // debugger;
     // 将文件ID转换为合适的格式传递给后端
-    const fileIds = props.fileList.map(id => {
-      if (typeof id === 'string') {
-        // 对于字符串ID，直接传递给后端
-        return id
-      }
-      return id
-    })
+    console.log("====fileList", props.fileList)
+    
+    // 处理fileList，可能是数组或逗号分隔的字符串
+    let fileIds: (number | string)[] = []
+    if (typeof props.fileList === 'string') {
+      // 如果是字符串，按逗号分割
+      fileIds = props.fileList.split(',').filter(id => id.trim() !== '')
+    } else if (Array.isArray(props.fileList)) {
+      // 如果是数组，直接使用
+      fileIds = props.fileList
+    } else {
+      // 如果都不是，返回空数组
+      fileIds = []
+    }
+    
+    console.log("====处理后的fileIds", fileIds)
+    
+    if (fileIds.length === 0) {
+      return
+    }
 
     const files = await FileApi.getFilesByIds(fileIds as any)
-    const fileData = files.data || files
+    const fileData = Array.isArray(files) ? files : (Array.isArray(files?.data) ? files.data : [])
 
     // 确保有足够的文件框来显示所有文件
     while (fileBoxes.value.length < fileData.length) {
@@ -306,11 +320,11 @@ const loadExistingFiles = async () => {
       .map(box => box.fileInfo.id)
     uploadedFileIds.value = ids
 
-
   } catch (error) {
     console.error('加载已有文件失败:', error)
   }
 }
+
 
 // ========== 事件处理 ==========
 // 点击文件框
@@ -846,7 +860,7 @@ watch(
     }
 
     // 深度比较数组内容，如果内容相同则不处理
-    if (oldFileList && newFileList &&
+    if (oldFileList && newFileList && Array.isArray(oldFileList) && Array.isArray(newFileList) &&
         oldFileList.length === newFileList.length &&
         oldFileList.every((item, index) => item === newFileList[index])) {
       return
