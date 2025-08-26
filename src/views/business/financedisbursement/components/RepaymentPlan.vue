@@ -1,13 +1,16 @@
 <template>
   <div class="py-3">
     <div class="mb-3 border-b border-gray-200">
-      <el-button 
-        type="primary" 
-        @click="generateRepaymentPlan"
-        :loading="repaymentLoading"
-      >
-        {{ repaymentPlans.length > 0 ? '重新生成还款计划' : '生成还款计划' }}
-      </el-button>
+      <el-tooltip content="请先保存放款信息" placement="top">
+        <el-button 
+          type="primary" 
+          @click="generateRepaymentPlan"
+          :loading="repaymentLoading"
+          :disabled="!props.disbursementId"
+        >
+          {{ repaymentPlans.length > 0 ? '重新生成还款计划' : '生成还款计划' }}
+        </el-button>
+      </el-tooltip>
     </div>
     <div v-if="repaymentPlans.length > 0" class="mt-3">
       <el-table v-loading="loading" :data="repaymentPlans" :stripe="true" :show-overflow-tooltip="true">
