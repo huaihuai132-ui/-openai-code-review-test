@@ -17,7 +17,7 @@
             {{ erpPriceInputFormatter(receivablePlan.price) }}
           </el-descriptions-item>
           <el-descriptions-item label="计划回款日期">
-            {{ formatDate(receivablePlan.returnTime, 'YYYY-MM-DD') }}
+            {{ receivablePlan.returnTime ? formatDate(new Date(receivablePlan.returnTime), 'YYYY-MM-DD') : '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="计划回款方式">
             <dict-tag
@@ -26,7 +26,7 @@
             />
           </el-descriptions-item>
           <el-descriptions-item label="提前几天提醒">
-            {{ receivablePlan.remindDays }}
+            {{ receivablePlan.remindDays || 0 }} 天
           </el-descriptions-item>
           <el-descriptions-item label="备注">{{ receivablePlan.remark }}</el-descriptions-item>
           <el-descriptions-item label="实际回款金额">
@@ -42,7 +42,7 @@
             <el-text v-else>{{ erpPriceInputFormatter(receivablePlan.price) }}</el-text>
           </el-descriptions-item>
           <el-descriptions-item label="实际回款日期">
-            {{ formatDate(receivablePlan.receivable?.returnTime, 'YYYY-MM-DD') }}
+            {{ receivablePlan.receivable?.returnTime ? formatDate(new Date(receivablePlan.receivable.returnTime), 'YYYY-MM-DD') : '-' }}
           </el-descriptions-item>
         </el-descriptions>
       </el-collapse-item>
@@ -58,10 +58,10 @@
             {{ receivablePlan.creatorName }}
           </el-descriptions-item>
           <el-descriptions-item label="创建时间">
-            {{ formatDate(receivablePlan.createTime) }}
+            {{ receivablePlan.createTime ? formatDate(new Date(receivablePlan.createTime)) : '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="更新时间">
-            {{ formatDate(receivablePlan.updateTime) }}
+            {{ receivablePlan.updateTime ? formatDate(new Date(receivablePlan.updateTime)) : '-' }}
           </el-descriptions-item>
         </el-descriptions>
       </el-collapse-item>

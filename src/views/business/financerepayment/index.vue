@@ -90,29 +90,15 @@
               <span>{{ companyList.find((item) => item.id === scope.row.companyId)?.enterpriseName }}</span>
             </template>
           </el-table-column>      
-          <el-table-column
-            label="还款时间"
-            align="center"
-            prop="repaymentDate"
-            :formatter="dateFormatter"
-            width="180px"
-          />
+          <el-table-column label="还款时间" align="center" prop="repaymentDate" width="180px">
+            <template #default="{ row }">
+              {{ dayjs(row.repaymentDate).format('YYYY-MM-DD') }}
+            </template>
+          </el-table-column>
           <el-table-column label="租金" align="center" prop="rent" />
           <el-table-column label="利率" align="center" prop="interestRate" />
-          <el-table-column
-            label="还款本金"
-            align="center"
-            prop="capital"
-            :formatter="dateFormatter"
-            width="180px"
-          />
-          <el-table-column
-            label="还款利息"
-            align="center"
-            prop="interest"
-            :formatter="dateFormatter"
-            width="180px"
-          />
+      <el-table-column label="还款本金" align="center" prop="capital" />
+      <el-table-column label="还款利息" align="center" prop="interest" />
           <el-table-column label="还款状态" align="center" prop="repaymentStatus" />
           <el-table-column label="操作" align="center" min-width="120px">
             <template #default="scope">
@@ -159,7 +145,7 @@
 </template>
 
 <script setup lang="ts">
-import { dateFormatter } from '@/utils/formatTime'
+import dayjs from 'dayjs'
 import download from '@/utils/download'
 import { FinanceRepaymentApi, FinanceRepaymentVO } from '@/api/business/financerepayment'
 import FinanceRepaymentForm from './FinanceRepaymentForm.vue'
@@ -190,7 +176,7 @@ const queryParams = reactive({
   repaymentStatus: undefined,
   fileList: undefined,
   createTime: [],
-  deptId: undefined,
+  deptId: undefined
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中

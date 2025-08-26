@@ -149,151 +149,19 @@
               </el-form-item>
             </div>
           </el-tab-pane>
-          
-          <!-- 还款计划维护 tab -->
-          <el-tab-pane label="还款计划维护" name="repaymentPlan">
-            <div class="repayment-plan-content">
-              <!-- 操作栏 -->
-              <div class="operation-bar">
-                <el-button type="primary" @click="addRepaymentPlan">
-                  <Icon icon="ep:plus" class="mr-5px" />
-                  新增还款计划
-                </el-button>
-                <!-- <el-button type="success" @click="addRepaymentRecord" class="ml-10px">
-                  <Icon icon="ep:plus" class="mr-5px" />
-                  新增还款记录
-                </el-button> -->
-              </div>
-              
-              <!-- 还款计划列表 -->
-              <el-table 
-                :data="repaymentPlanList" 
-                :stripe="true" 
-                :show-overflow-tooltip="true"
-                class="repayment-plan-table"
-              >
-                <el-table-column label="期数" align="center" prop="period" width="80" />
-                <el-table-column label="计划还款时间" align="center" prop="plannedRepaymentDate" width="150">
-                  <template #default="scope">
-                    <span>{{ formatDate(scope.row.plannedRepaymentDate) }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column label="计划租金" align="center" prop="plannedRent" width="120">
-                  <template #default="scope">
-                    <span>{{ scope.row.plannedRent }}元</span>
-                  </template>
-                </el-table-column>
-                <el-table-column label="计划利率" align="center" prop="plannedInterestRate" width="120">
-                  <template #default="scope">
-                    <span>{{ scope.row.plannedInterestRate }}%</span>
-                  </template>
-                </el-table-column>
-                <el-table-column label="计划还款本金" align="center" prop="plannedCapital" width="150">
-                  <template #default="scope">
-                    <span>{{ scope.row.plannedCapital }}元</span>
-                  </template>
-                </el-table-column>
-                <el-table-column label="计划还款利息" align="center" prop="plannedInterest" width="150">
-                  <template #default="scope">
-                    <span>{{ scope.row.plannedInterest }}元</span>
-                  </template>
-                </el-table-column>
-                <el-table-column label="计划状态" align="center" prop="planStatus" width="120">
-                  <template #default="scope">
-                    <el-tag :type="getPlanStatusType(scope.row.planStatus)">
-                      {{ getPlanStatusText(scope.row.planStatus) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column label="备注" align="center" prop="remark" />
-                <el-table-column label="操作" align="center" fixed="right" width="200">
-                  <template #default="scope">
-                    <el-button
-                      link
-                      type="primary"
-                      @click="editRepaymentPlan(scope.row)"
-                    >
-                      编辑
-                    </el-button>
-                    <el-button
-                      link
-                      type="success"
-                      @click="executeRepaymentPlan(scope.row)"
-                      :disabled="scope.row.planStatus === 2"
-                    >
-                      执行计划
-                    </el-button>
-                    <el-button
-                      link
-                      type="danger"
-                      @click="deleteRepaymentPlan(scope.row.id)"
-                    >
-                      删除
-                    </el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-              
-              <!-- 还款计划表单弹窗 -->
-              <Dialog 
-                :title="repaymentPlanDialogTitle" 
-                v-model="repaymentPlanDialogVisible" 
-                width="800px"
-              >
-                <el-form
-                  ref="repaymentPlanFormRef"
-                  :model="repaymentPlanFormData"
-                  :rules="repaymentPlanFormRules"
-                  label-width="120px"
-                >
-                  <el-form-item label="期数" prop="period">
-                    <el-input v-model="repaymentPlanFormData.period" placeholder="请输入期数" />
-                  </el-form-item>
-                  <el-form-item label="计划还款时间" prop="plannedRepaymentDate">
-                    <el-date-picker
-                      v-model="repaymentPlanFormData.plannedRepaymentDate"
-                      type="date"
-                      value-format="x"
-                      placeholder="选择计划还款时间"
-                    />
-                  </el-form-item>
-                  <el-form-item label="计划租金" prop="plannedRent">
-                    <el-input v-model="repaymentPlanFormData.plannedRent" placeholder="请输入计划租金" type="number">
-                      <template #append>元</template>
-                    </el-input>
-                  </el-form-item>
-                  <el-form-item label="计划利率" prop="plannedInterestRate">
-                    <el-input v-model="repaymentPlanFormData.plannedInterestRate" placeholder="请输入计划利率" type="number">
-                      <template #append>%</template>
-                    </el-input>
-                  </el-form-item>
-                  <el-form-item label="计划还款本金" prop="plannedCapital">
-                    <el-input v-model="repaymentPlanFormData.plannedCapital" placeholder="请输入计划还款本金" type="number">
-                      <template #append>元</template>
-                    </el-input>
-                  </el-form-item>
-                  <el-form-item label="计划还款利息" prop="plannedInterest">
-                    <el-input v-model="repaymentPlanFormData.plannedInterest" placeholder="请输入计划还款利息" type="number">
-                      <template #append>元</template>
-                    </el-input>
-                  </el-form-item>
-                  <el-form-item label="计划状态" prop="planStatus">
-                    <el-select v-model="repaymentPlanFormData.planStatus" placeholder="请选择计划状态">
-                      <el-option label="未执行" :value="1" />
-                      <el-option label="已执行" :value="2" />
-                      <el-option label="已取消" :value="3" />
-                    </el-select>
-                  </el-form-item>
-                  <el-form-item label="备注" prop="remark">
-                    <el-input v-model="repaymentPlanFormData.remark" placeholder="请输入备注" type="textarea" />
-                  </el-form-item>
-                </el-form>
-                <template #footer>
-                  <el-button @click="submitRepaymentPlan" type="primary">确 定</el-button>
-                  <el-button @click="repaymentPlanDialogVisible = false">取 消</el-button>
-                </template>
-              </Dialog>
-            </div>
+          <!-- 还款计划 tab -->
+          <el-tab-pane label="还款计划" name="repayment">
+            <RepaymentPlan 
+              ref="repaymentPlanRef"
+              :lease-amount="formData.leaseAmount"
+              :lease-term="formData.leaseTerm"
+              :interest-rate="formData.interestRate"
+              :repayment-mode="formData.repaymentMode"
+              :project-name="formData.projectName"
+              :company-id="formData.companyId"
+              :dept-id="formData.deptId"
+              :disbursement-id="formData.id"
+            />
           </el-tab-pane>
         </el-tabs>
       </div>
@@ -303,25 +171,19 @@
       <el-button @click="dialogVisible = false">取 消</el-button>
     </template>
   </Dialog>
-  
-  <!-- 还款表单弹窗 -->
-  <RepaymentForm 
-    ref="repaymentFormRef"
-    :company-list="companyList"
-    @success="handleRepaymentSuccess"
-  />
 </template>
 
 <script setup lang="ts">
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { FinanceDisbursementApi, FinanceDisbursementVO } from '@/api/business/financedisbursement'
-import { BatchFileUpload } from '@/components/UploadFile'
-import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany"
-import RepaymentForm from './components/RepaymentForm.vue'
-import { useUserStore } from '@/store/modules/user'
+import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
+import RepaymentPlan from './components/RepaymentPlan.vue'
+import { useUserStore } from '@/store/modules/user';
 
 /** 融资租赁放款 表单 */
 defineOptions({ name: 'FinanceDisbursementForm' })
+
+const userStore = useUserStore()
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
@@ -337,7 +199,6 @@ const getUploadMode = () => {
   if (formType.value === 'update' || formType.value === 'edit') return 'edit'
   return 'view'
 }
-const userStore = useUserStore()
 const formData = ref({
   id: undefined,
   leaseId: undefined,
@@ -398,36 +259,7 @@ const formRules = reactive({
 const formRef = ref() // 表单 Ref
 const activeTab = ref('lease') // 当前激活的tab
 const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
-const repaymentFormRef = ref() // 还款表单引用
-
-// 还款计划相关
-const repaymentPlanList = ref<any[]>([]) // 还款计划列表
-const repaymentPlanDialogVisible = ref(false) // 还款计划弹窗显示状态
-const repaymentPlanDialogTitle = ref('') // 还款计划弹窗标题
-const repaymentPlanFormRef = ref() // 还款计划表单引用
-const repaymentPlanFormType = ref('') // 还款计划表单类型：create - 新增；update - 修改
-
-const repaymentPlanFormData = ref({
-  id: undefined,
-  period: undefined,
-  plannedRepaymentDate: undefined,
-  plannedRent: undefined,
-  plannedInterestRate: undefined,
-  plannedCapital: undefined,
-  plannedInterest: undefined,
-  planStatus: 1,
-  remark: undefined
-})
-
-const repaymentPlanFormRules = reactive({
-  period: [{ required: true, message: '期数不能为空', trigger: 'blur' }],
-  plannedRepaymentDate: [{ required: true, message: '计划还款时间不能为空', trigger: 'change' }],
-  plannedRent: [{ required: true, message: '计划租金不能为空', trigger: 'blur' }],
-  plannedInterestRate: [{ required: true, message: '计划利率不能为空', trigger: 'blur' }],
-  plannedCapital: [{ required: true, message: '计划还款本金不能为空', trigger: 'blur' }],
-  plannedInterest: [{ required: true, message: '计划还款利息不能为空', trigger: 'blur' }],
-  planStatus: [{ required: true, message: '计划状态不能为空', trigger: 'change' }]
-})
+const repaymentPlanRef = ref() // 还款计划组件ref
 
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
@@ -435,7 +267,6 @@ const open = async (type: string, id?: number) => {
   dialogTitle.value = t('action.' + type)
   formType.value = type
   resetForm()
-  formData.value.userId = userStore.getUser?.id
   // 修改时，设置数据
   if (id) {
     formLoading.value = true
@@ -450,6 +281,7 @@ const open = async (type: string, id?: number) => {
     }
   }
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
+  companyList.value = response
   companyList.value = response
 }
 
@@ -490,7 +322,7 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     leaseId: undefined,
-    userId: undefined,
+    userId: userStore.getUser?.id,
     companyId: undefined,
     disbursementCode: undefined,
     projectName: undefined,
@@ -517,146 +349,9 @@ const resetForm = () => {
     processInstanceId: undefined,
     deptId: undefined,
   }
+  // 重置还款计划
+  repaymentPlanRef.value?.resetPlans()
   formRef.value?.resetFields()
-  
-  // 重置还款计划列表
-  repaymentPlanList.value = []
-}
-
-// 还款计划相关方法
-/** 新增还款计划 */
-const addRepaymentPlan = () => {
-  repaymentPlanDialogVisible.value = true
-  repaymentPlanDialogTitle.value = '新增还款计划'
-  repaymentPlanFormType.value = 'create'
-  resetRepaymentPlanForm()
-}
-
-/** 编辑还款计划 */
-const editRepaymentPlan = (row: any) => {
-  repaymentPlanDialogVisible.value = true
-  repaymentPlanDialogTitle.value = '编辑还款计划'
-  repaymentPlanFormType.value = 'update'
-  repaymentPlanFormData.value = { ...row }
-}
-
-/** 执行还款计划 */
-const executeRepaymentPlan = async (row: any) => {
-  try {
-    await message.confirm('确定要执行这个还款计划吗？')
-    // 这里应该调用执行还款计划的API
-    message.success('还款计划执行成功')
-    // 更新状态
-    row.planStatus = 2
-  } catch {}
-}
-
-/** 删除还款计划 */
-const deleteRepaymentPlan = async (id: number) => {
-  try {
-    await message.delConfirm()
-    // 这里应该调用删除还款计划的API
-    const index = repaymentPlanList.value.findIndex(item => item.id === id)
-    if (index > -1) {
-      repaymentPlanList.value.splice(index, 1)
-    }
-    message.success('还款计划删除成功')
-  } catch {}
-}
-
-/** 提交还款计划表单 */
-const submitRepaymentPlan = async () => {
-  await repaymentPlanFormRef.value.validate()
-  
-  try {
-    if (repaymentPlanFormType.value === 'create') {
-      // 创建还款计划
-      const newPlan = {
-        ...repaymentPlanFormData.value,
-        id: Date.now() // 临时ID，实际应该由后端生成
-      }
-      repaymentPlanList.value.push(newPlan)
-      message.success('还款计划创建成功')
-    } else {
-      // 更新还款计划
-      const index = repaymentPlanList.value.findIndex(item => item.id === repaymentPlanFormData.value.id)
-      if (index > -1) {
-        repaymentPlanList.value[index] = { ...repaymentPlanFormData.value }
-      }
-      message.success('还款计划更新成功')
-    }
-    
-    repaymentPlanDialogVisible.value = false
-  } catch {}
-}
-
-/** 重置还款计划表单 */
-const resetRepaymentPlanForm = () => {
-  repaymentPlanFormData.value = {
-    id: undefined,
-    period: undefined,
-    plannedRepaymentDate: undefined,
-    plannedRent: undefined,
-    plannedInterestRate: undefined,
-    plannedCapital: undefined,
-    plannedInterest: undefined,
-    planStatus: 1,
-    remark: undefined
-  }
-  repaymentPlanFormRef.value?.resetFields()
-}
-
-/** 获取计划状态类型 */
-const getPlanStatusType = (status: number) => {
-  switch (status) {
-    case 1: return 'warning'
-    case 2: return 'success'
-    case 3: return 'info'
-    default: return 'info'
-  }
-}
-
-/** 获取计划状态文本 */
-const getPlanStatusText = (status: number) => {
-  switch (status) {
-    case 1: return '未执行'
-    case 2: return '已执行'
-    case 3: return '已取消'
-    default: return '未知'
-  }
-}
-
-/** 格式化日期 */
-const formatDate = (date: any) => {
-  if (!date) return '-'
-  try {
-    return new Date(date).toLocaleDateString('zh-CN')
-  } catch {
-    return '-'
-  }
-}
-
-/** 获取还租方式文本 */
-const getRepaymentModeText = (mode: number) => {
-  switch (mode) {
-    case 1: return '每月'
-    case 2: return '每三个月'
-    case 3: return '每半年'
-    case 4: return '每年'
-    default: return '未知'
-  }
-}
-
-// 还款记录相关方法
-/** 新增还款记录 */
-const addRepaymentRecord = () => {
-  repaymentFormRef.value?.open('create')
-}
-
-/** 处理还款表单成功提交 */
-const handleRepaymentSuccess = (data: any) => {
-  message.success('还款记录操作成功')
-  // 这里可以添加其他逻辑，比如刷新还款计划列表等
 }
 </script>
 
@@ -693,22 +388,9 @@ const handleRepaymentSuccess = (data: any) => {
 }
 
 .tab-content,
-.upload-content {
+.upload-content,
+.repayment-content {
   padding: 20px 0;
-}
-
-/* 还款计划维护样式 */
-.repayment-plan-content {
-  padding: 20px 0;
-}
-
-.operation-bar {
-  margin-bottom: 20px;
-  text-align: left;
-}
-
-.repayment-plan-table {
-  margin-bottom: 20px;
 }
 
 /* 自定义对话框样式，占满除左侧导航栏以外的部分 */
