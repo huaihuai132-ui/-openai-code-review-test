@@ -59,9 +59,7 @@ const handelUpload = async ({ data, filename }) => {
     await updateUserProfile({ avatar })
 
     // 关闭弹窗，并更新 userStore
-    if (cropperRef.value && typeof cropperRef.value.close === 'function') {
-      cropperRef.value.close()
-    }
+    cropperRef.value.closeModal()
     await userStore.setUserAvatarAction(avatar)
 
     ElMessage.success('头像上传成功')
