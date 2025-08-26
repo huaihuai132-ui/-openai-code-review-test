@@ -53,7 +53,19 @@
         label-width="100px"
       >
         <el-form-item label="设备名称" prop="deviceName">
-          <el-input v-model="equipmentForm.deviceName" placeholder="请输入设备名称" />
+          <el-select 
+            v-model="equipmentForm.deviceName" 
+            placeholder="请选择设备名称" 
+            style="width: 100%"
+            @change="handleDeviceChange"
+          >
+            <el-option
+              v-for="item in deviceList"
+              :key="item.id"
+              :label="item.deviceName"
+              :value="item.deviceName"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="规格型号" prop="deviceSpecification">
           <el-input v-model="equipmentForm.deviceSpecification" placeholder="请输入规格型号" />
@@ -116,6 +128,7 @@
 
 <script setup lang="ts">
 import { formatDate } from '@/utils/formatTime'
+import { FinanceDeviceApi, FinanceDeviceVO } from '@/api/business/financedevice'
 
 // 定义设备数据结构
 interface Equipment {
@@ -149,6 +162,7 @@ const emit = defineEmits<Emits>()
 
 // 响应式数据
 const loading = ref(false)
+const deviceList = ref<FinanceDeviceVO[]>([]) // 设备列表
 const equipmentList = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)
@@ -202,6 +216,35 @@ const getStatusText = (status: number) => {
     4: '闲置'
   }
   return statusMap[status] || '未知'
+}
+
+// 获取设备列表
+const getDeviceList = async () => {
+  try {
+    const data = await FinanceDeviceApi.getFinanceDevicePage({ pageSize: 100 }) // 获取所有设备
+    deviceList.value = data.list
+  } catch (error) {
+    console.error('Error loading device list:', error)
+    ElMessage.error('加载设备列表失败')
+  }
+}
+
+// 设备选择变化处理
+const handleDeviceChange = (deviceName: string) => {
+  if (deviceName) {
+    // 根据选择的设备名称找到对应的设备信息
+    const selectedDevice = deviceList.value.find(item => item.deviceName === deviceName)
+    if (selectedDevice) {
+      // 自动填充其他字段
+      equipmentForm.value.deviceSpecification = selectedDevice.deviceSpecification || ''
+      equipmentForm.value.deviceManufacturers = selectedDevice.deviceManufacturers || ''
+      equipmentForm.value.buyDate = selectedDevice.buyDate ? new Date(selectedDevice.buyDate).getTime() : undefined
+      equipmentForm.value.quantity = selectedDevice.quantity || 1
+      equipmentForm.value.netWorth = selectedDevice.netWorth || 0
+      equipmentForm.value.originalWorth = selectedDevice.originalWorth || 0
+      equipmentForm.value.deviceStatus = selectedDevice.deviceStatus || 1
+    }
+  }
 }
 
 // 新增设备
@@ -305,6 +348,11 @@ defineExpose({
   setEquipmentList: (list: Equipment[]) => {
     equipmentList.value = list
   }
+})
+
+// 组件挂载时获取设备列表
+onMounted(() => {
+  getDeviceList()
 })
 </script>
 
