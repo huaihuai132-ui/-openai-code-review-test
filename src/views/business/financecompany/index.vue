@@ -71,7 +71,7 @@
           class="!w-240px"
         />
       </el-form-item> -->
-      <el-form-item label="企业性质" prop="companyNature">
+      <!-- <el-form-item label="企业性质" prop="companyNature">
         <el-input
           v-model="queryParams.companyNature"
           placeholder="请输入企业性质"
@@ -87,8 +87,8 @@
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
-        />
-      </el-form-item>
+        /> -->
+      <!-- </el-form-item> -->
       <!-- <el-form-item label="主要产品" prop="mainProducts">
         <el-input
           v-model="queryParams.mainProducts"
@@ -107,7 +107,7 @@
           class="!w-240px"
         />
       </el-form-item> -->
-      <!-- <el-form-item label="创建时间" prop="createTime">
+      <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
           value-format="YYYY-MM-DD HH:mm:ss"
@@ -117,8 +117,8 @@
           :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
           class="!w-220px"
         />
-      </el-form-item> -->
-      <el-form-item label="部门编号" prop="deptId">
+      </el-form-item>
+      <!-- <el-form-item label="部门编号" prop="deptId">
         <el-input
           v-model="queryParams.deptId"
           placeholder="请输入部门编号"
@@ -126,7 +126,7 @@
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="企业联系电话" prop="phone">
         <el-input
           v-model="queryParams.phone"
@@ -166,9 +166,9 @@
       <!-- <el-table-column label="主键ID" align="center" prop="id" /> -->
       <el-table-column label="企业全称" align="center" prop="enterpriseName" />
       <el-table-column label="统一社会信用代码" align="center" prop="creditCode" />
-      <el-table-column label="企业简称" align="center" prop="shortName" />
+      <!-- <el-table-column label="企业简称" align="center" prop="shortName" /> -->
       <el-table-column label="地址" align="center" prop="address" />
-      <el-table-column label="法定代表人" align="center" prop="legalRepresentative" />
+      <!-- <el-table-column label="法定代表人" align="center" prop="legalRepresentative" /> -->
       <el-table-column label="所属行业" align="center" prop="industry" />
       <el-table-column label="注册资本(万)" align="center" prop="registeredCapital" />
       <el-table-column label="企业联系电话" align="center" prop="phone" />

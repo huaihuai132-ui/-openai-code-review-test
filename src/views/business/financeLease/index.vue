@@ -418,6 +418,20 @@ const handleDeviceExport = async () => {
       return
     }
     let vo = selectedRows.value[0];
+    
+    // 前端校验：检查该租赁项目是否有设备信息
+    try {
+      const deviceData = await FinanceLeaseApi.getFinanceDeviceList(vo.id)
+      if (!deviceData || !Array.isArray(deviceData) || deviceData.length === 0) {
+        message.warning('该租赁项目下没有设备信息，无法导出设备清单')
+        return
+      }
+    } catch (error) {
+      console.error('检查设备信息失败:', error)
+      message.error('检查设备信息失败，请稍后重试')
+      return
+    }
+    
     // 导出的二次确认
     await message.exportConfirm()
     // 发起导出
