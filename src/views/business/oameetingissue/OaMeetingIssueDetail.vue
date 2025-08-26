@@ -31,19 +31,19 @@
           </div>
         </el-descriptions-item>
         <el-descriptions-item label="议题附件" :span="2">
-          <div v-if="fileList.length > 0" class="flex flex-wrap gap-2">
-            <el-link
-              v-for="file in fileList"
+          <div v-if="fileList.length > 0" class="flex flex-col gap-2">
+            <div 
+              v-for="file in fileList" 
               :key="file.id"
-              :href="file.url"
-              target="_blank"
-              type="primary"
-              :underline="false"
-              class="inline-flex items-center bg-blue-50 px-2 py-1 rounded"
+              class="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer"
+              @click="previewFile(file)"
             >
-              <el-icon class="mr-1"><Document /></el-icon>
-              {{ file.name }}
-            </el-link>
+              <div class="flex items-center justify-center w-8 h-8 rounded bg-blue-100 text-blue-500">
+                {{ getFileTypeIcon(file.name) }}
+              </div>
+              <span class="text-sm text-gray-700 truncate flex-1">{{ file.name }}</span>
+              <el-icon class="text-gray-400"><View /></el-icon>
+            </div>
           </div>
           <span v-else>-</span>
         </el-descriptions-item> 
@@ -71,18 +71,124 @@ import { DICT_TYPE } from '@/utils/dict'
 import DictTag from '@/components/DictTag/src/DictTag.vue'
 import { OaMeetingIssueApi, OaMeetingIssueVO } from '@/api/business/oameetingissue'
 import { formatDate } from '@/utils/formatTime'
-import { Document } from '@element-plus/icons-vue'
+import { View } from '@element-plus/icons-vue'
+import * as FileApi from '@/api/infra/file'
+import { base64Encode } from '@/utils'
+import { useUserStore } from '@/store/modules/user'
+import { openPreviewWindow } from '@/utils/previewWindow'
 
 /** 会议议题 详情 */
 defineOptions({ name: 'OaMeetingIssueDetail' })
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
+const userStore = useUserStore() // 用户信息
 
 const dialogVisible = ref(false) // 弹窗的是否展示
 const loading = ref(false) // 数据加载状态
 const formData = ref<Partial<OaMeetingIssueVO>>({}) // 表单数据
 const fileList = ref<Array<{ id: number; name: string; url: string }>>([]) // 附件列表
+
+// 固定域名配置
+const FIXED_DOMAIN = 'http://182.109.52.126:49090'
+
+/** 获取文件类型图标 */
+const getFileTypeIcon = (fileName: string): string => {
+  if (!fileName) return '📄'
+
+  const extension = fileName.toLowerCase().split('.').pop() || ''
+
+  // 图片文件
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tiff', 'tif'].includes(extension)) {
+    return '🖼️'
+  }
+
+  // PDF文件
+  if (extension === 'pdf') {
+    return '📕'
+  }
+
+  // Word文档
+  if (['doc', 'docx'].includes(extension)) {
+    return '📘'
+  }
+
+  // Excel文档
+  if (['xls', 'xlsx', 'xlsm', 'xlsb'].includes(extension)) {
+    return '📗'
+  }
+
+  // PowerPoint文档
+  if (['ppt', 'pptx', 'pps', 'ppsx'].includes(extension)) {
+    return '📙'
+  }
+
+  // 压缩文件
+  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(extension)) {
+    return '🗜️'
+  }
+
+  // 视频文件
+  if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', '3gp'].includes(extension)) {
+    return '🎬'
+  }
+
+  // 音频文件
+  if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma', 'm4a', 'opus'].includes(extension)) {
+    return '🎵'
+  }
+
+  // 代码文件
+  if (['js', 'jsx', 'ts', 'tsx', 'html', 'css', 'php', 'py', 'java', 'cpp', 'c', 'go', 'rs'].includes(extension)) {
+    return '💻'
+  }
+
+  // 文本文件
+  if (['txt', 'md', 'log', 'rtf'].includes(extension)) {
+    return '📝'
+  }
+
+  // 数据文件
+  if (['json', 'xml', 'csv', 'sql', 'yaml', 'yml'].includes(extension)) {
+    return '📊'
+  }
+
+  // 字体文件
+  if (['ttf', 'otf', 'woff', 'woff2', 'eot'].includes(extension)) {
+    return '🔤'
+  }
+
+  // 可执行文件
+  if (['exe', 'msi', 'dmg', 'deb', 'rpm', 'app'].includes(extension)) {
+    return '⚙️'
+  }
+
+  // 默认文档图标
+  return '📄'
+}
+
+/** 预览文件 */
+const previewFile = async (file: { id: number; name: string; url: string }) => {
+  try {
+    // 添加用户昵称参数
+    const nickname = userStore.getUser?.nickname || ''
+
+    // 获取文件下载URL
+    const signedUrl = await FileApi.getDownloadUrl(file.id)
+    // 构建文件访问URL，保持签名完整性
+    const fileUrl = signedUrl + `&nickname=${nickname}`
+
+    // 构建预览URL
+    const encodedUrl = encodeURIComponent(base64Encode(fileUrl))
+    const previewUrl = `${FIXED_DOMAIN}/preview/onlinePreview?url=${encodedUrl}`
+
+    // 使用预览工具类打开窗口
+    openPreviewWindow(previewUrl, file.name)
+  } catch (error) {
+    console.error('预览文件失败:', error)
+    message.error('预览文件失败')
+  }
+}
 
 /** 打开详情弹窗 */
 const open = async (id: number) => {
@@ -93,22 +199,29 @@ const open = async (id: number) => {
     
     // 处理附件列表 - 安全地处理 fileList
     try {
-      if (data.fileList && Array.isArray(data.fileList) && data.fileList.length > 0) {
-        // 检查 fileList 是否为数组，如果是文件ID数组，则转换为文件对象
-        if (typeof data.fileList[0] === 'number' || typeof data.fileList[0] === 'string') {
-          // 如果是ID数组，转换为文件对象
-          fileList.value = data.fileList.map((fileId, index) => ({
-            id: fileId,
-            name: `附件${index + 1}`,
-            url: `/api/file/download?id=${fileId}` // 假设的下载URL，需要根据实际情况调整
-          }))
-        } else if (typeof data.fileList[0] === 'object' && data.fileList[0] !== null) {
-          // 如果已经是文件对象数组，直接使用
-          fileList.value = data.fileList.map((file) => ({
-            id: file.id || file.fileId || file.file_id,
-            name: file.name || file.fileName || file.file_name || '未知文件',
-            url: file.url || file.downloadUrl || file.download_url || `/api/file/download?id=${file.id || file.fileId || file.file_id}`
-          }))
+      if (data.fileList) {
+        let fileIds: (number | string)[] = []
+        
+        // 如果fileList是字符串，则按逗号分割并过滤空值
+        if (typeof data.fileList === 'string') {
+          const cleanFileList = data.fileList.replace(/^\[|\]$/g, '')
+          fileIds = cleanFileList.split(',').map(id => id.trim()).filter(id => id !== '')
+        } else if (Array.isArray(data.fileList)) {
+          fileIds = data.fileList
+        }
+        
+        // 如果有文件ID，则获取文件详情
+        if (fileIds.length > 0) {
+          const filesResponse = await FileApi.getFilesByIds(fileIds)
+          const filesData = filesResponse.data || filesResponse
+          
+          if (Array.isArray(filesData)) {
+            fileList.value = filesData.map(file => ({
+              id: file.id,
+              name: file.name,
+              url: file.url
+            }))
+          }
         } else {
           fileList.value = []
         }
