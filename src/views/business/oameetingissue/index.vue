@@ -65,6 +65,25 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="汇报人" prop="reporterId">
+        <el-select
+          v-model="queryParams.reporterId"
+          placeholder="请选择汇报人"
+          clearable
+          filterable
+          remote
+          :remote-method="searchUsers"
+          :loading="userLoading"
+          class="!w-240px"
+        >
+          <el-option
+            v-for="user in filteredUserList"
+            :key="user.id"
+            :label="user.nickname"
+            :value="user.id"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="议题状态" prop="issueStatus">
         <el-select
           v-model="queryParams.issueStatus"
@@ -147,6 +166,16 @@
           <dict-tag :type="DICT_TYPE.MEET_TYPE" :value="scope.row.meetingType" />
         </template>
       </el-table-column>
+      <el-table-column label="汇报人" align="center" prop="reporterId">
+        <template #default="scope">
+          {{ getUserName(scope.row.reporterId) || '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="相关部门" align="center" prop="relevantDept">
+        <template #default="scope">
+          {{ getDeptNames(scope.row.relevantDept) }}
+        </template>
+      </el-table-column>
 <!--      <el-table-column label="议题详细内容" align="center" prop="issueContent" />-->
       <el-table-column label="议题概述" align="center" prop="description" />
       <el-table-column label="议题状态" align="center" prop="issueStatus">
@@ -159,13 +188,13 @@
           <dict-tag :type="DICT_TYPE.ISSUE_AUDIT_STATUS" :value="scope.row.status || 0" />
         </template>
       </el-table-column>
-      <el-table-column
-        label="创建时间"
-        align="center"
-        prop="createTime"
-        :formatter="dateFormatter"
-        width="180px"
-      />
+<!--      <el-table-column-->
+<!--        label="创建时间"-->
+<!--        align="center"-->
+<!--        prop="createTime"-->
+<!--        :formatter="dateFormatter"-->
+<!--        width="180px"-->
+<!--      />-->
       <el-table-column label="操作" align="center" min-width="180px">
         <template #default="scope">
           <el-button
@@ -231,6 +260,9 @@ import download from '@/utils/download'
 import { OaMeetingIssueApi, OaMeetingIssueVO } from '@/api/business/oameetingissue'
 import OaMeetingIssueForm from './OaMeetingIssueForm.vue'
 import OaMeetingIssueDetail from './OaMeetingIssueDetail.vue'
+import * as UserApi from '@/api/system/user'
+import * as DeptApi from '@/api/system/dept'
+import { handleTree } from '@/utils/tree'
 
 /** 会议议题 列表 */
 defineOptions({ name: 'OaMeetingIssue' })
@@ -241,6 +273,10 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<OaMeetingIssueVO[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
+const userLoading = ref(false) // 用户列表加载状态
+const userList = ref<any[]>([]) // 用户列表
+const filteredUserList = ref<any[]>([]) // 筛选后的用户列表
+const deptList = ref<Tree[]>([]) // 部门列表
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -249,6 +285,7 @@ const queryParams = reactive({
   issueTitle: undefined,
   issueType: undefined,
   meetingType: undefined,
+  reporterId: undefined,
   issueContent: undefined,
   description: undefined,
   issueStatus: undefined,
@@ -258,6 +295,88 @@ const queryParams = reactive({
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 const sendApproveLoading = ref<Record<number, boolean>>({}) // 送审的加载中状态
+
+/** 搜索用户 */
+const searchUsers = (query: string) => {
+  if (query) {
+    filteredUserList.value = userList.value.filter(user => 
+      user.nickname && user.nickname.toLowerCase().includes(query.toLowerCase())
+    )
+  } else {
+    filteredUserList.value = [...userList.value]
+  }
+}
+
+/** 获取用户列表 */
+const getUserList = async () => {
+  try {
+    userLoading.value = true
+    const data = await UserApi.getSimpleUserList()
+    userList.value = data
+    filteredUserList.value = [...data]
+  } catch (error) {
+    console.error('获取用户列表失败:', error)
+  } finally {
+    userLoading.value = false
+  }
+}
+
+/** 获取部门列表 */
+const getDeptList = async () => {
+  try {
+    const data = await DeptApi.getSimpleDeptList()
+    deptList.value = handleTree(data)
+  } catch (error) {
+    console.error('获取部门列表失败:', error)
+  }
+}
+
+/** 根据用户ID获取用户名称 */
+const getUserName = (userId: number | undefined) => {
+  if (!userId) return ''
+  const user = userList.value.find(u => u.id === userId)
+  return user ? user.nickname : ''
+}
+
+/** 根据部门ID获取部门名称（支持多个部门） */
+const getDeptNames = (deptIds: string | string[] | undefined) => {
+  if (!deptIds) return '-'
+
+  let ids: string[] = []
+
+  // 统一处理输入为字符串或数组的情况
+  if (typeof deptIds === 'string') {
+    // 去除两边的方括号并按逗号分割
+    ids = deptIds.replace(/[\[\]]/g, '').split(',').map(id => id.trim()).filter(Boolean)
+  } else if (Array.isArray(deptIds)) {
+    ids = deptIds.map(id => String(id))
+  }
+
+  if (ids.length === 0) return '-'
+
+  // 递归查找树中的部门
+  const findDeptInTree = (tree: Tree[], id: string): Tree | undefined => {
+    for (const node of tree) {
+      if (String(node.id) === id) {
+        return node
+      }
+      if (node.children && node.children.length > 0) {
+        const found = findDeptInTree(node.children, id)
+        if (found) {
+          return found
+        }
+      }
+    }
+  }
+
+  const deptNames = ids.map(id => {
+    // 在树形结构中查找部门
+    const dept = findDeptInTree(deptList.value, id)
+    return dept ? dept.name : `未知部门(${id})`
+  })
+
+  return deptNames.join(', ')
+}
 
 /** 查询列表 */
 const getList = async () => {
@@ -356,5 +475,7 @@ const handleExport = async () => {
 /** 初始化 **/
 onMounted(() => {
   getList()
+  getUserList()
+  getDeptList()
 })
 </script>

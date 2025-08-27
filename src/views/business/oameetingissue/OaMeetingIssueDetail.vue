@@ -14,6 +14,12 @@
         <el-descriptions-item label="上会类型">
           <dict-tag :type="DICT_TYPE.MEET_TYPE" :value="formData.meetingType" />
         </el-descriptions-item>
+        <el-descriptions-item label="汇报人">
+          {{ getUserName((formData as any).reporterId) || '-' }}
+        </el-descriptions-item>
+        <el-descriptions-item label="相关部门">
+          {{ getDeptNames((formData as any).relevantDept) || '-' }}
+        </el-descriptions-item>
         <el-descriptions-item label="议题状态">
           <dict-tag :type="DICT_TYPE.ISSUE_STATUS" :value="$attrs.issueStatus || formData.issueStatus" />
         </el-descriptions-item>
@@ -30,10 +36,17 @@
             {{ formData.issueContent || '-' }}
           </div>
         </el-descriptions-item>
+
+        <el-descriptions-item label="创建时间"> 
+          {{ (formData as any).createTime ? formatDate((formData as any).createTime) : '-' }}
+        </el-descriptions-item>
+        <el-descriptions-item label="创建人">
+          {{ (formData as any).userName || '-' }}
+        </el-descriptions-item>
         <el-descriptions-item label="议题附件" :span="2">
           <div v-if="fileList.length > 0" class="flex flex-col gap-2">
-            <div 
-              v-for="file in fileList" 
+            <div
+              v-for="file in fileList"
               :key="file.id"
               class="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer"
               @click="previewFile(file)"
@@ -46,12 +59,6 @@
             </div>
           </div>
           <span v-else>-</span>
-        </el-descriptions-item> 
-        <el-descriptions-item label="创建时间"> 
-          {{ (formData as any).createTime ? formatDate((formData as any).createTime) : '-' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="创建人">
-          {{ (formData as any).userName || '-' }}
         </el-descriptions-item>
         <!-- <el-descriptions-item label="更新时间">
           {{ formData.updateTime ? dateFormatter(formData.updateTime) : '-' }}
@@ -76,6 +83,10 @@ import * as FileApi from '@/api/infra/file'
 import { base64Encode } from '@/utils'
 import { useUserStore } from '@/store/modules/user'
 import { openPreviewWindow } from '@/utils/previewWindow'
+import * as UserApi from '@/api/system/user'
+import * as DeptApi from '@/api/system/dept'
+import { handleTree } from '@/utils/tree'
+
 
 /** 会议议题 详情 */
 defineOptions({ name: 'OaMeetingIssueDetail' })
@@ -89,11 +100,85 @@ const loading = ref(false) // 数据加载状态
 const formData = ref<Partial<OaMeetingIssueVO>>({}) // 表单数据
 const fileList = ref<Array<{ id: number; name: string; url: string }>>([]) // 附件列表
 
+// 用户列表
+const userList = ref<any[]>([])
+
+// 部门列表
+const deptList = ref<Tree[]>([])
+
 // 导入域名配置工具
 import { getDomainUrl } from '@/utils/domainConfig'
 
 // 获取配置的域名
 const FIXED_DOMAIN = getDomainUrl()
+
+/** 获取用户列表 */
+const getUserList = async () => {
+  try {
+    const data = await UserApi.getSimpleUserList()
+    userList.value = data
+  } catch (error) {
+    console.error('获取用户列表失败:', error)
+  }
+}
+
+/** 获取部门树 */
+const getDeptList = async () => {
+  try {
+    const data = await DeptApi.getSimpleDeptList()
+    deptList.value = handleTree(data)
+    console.log(deptList.value)
+  } catch (error) {
+    console.error('获取部门列表失败:', error)
+  }
+}
+
+/** 根据用户ID获取用户昵称 */
+const getUserName = (userId: number | undefined) => {
+  if (!userId) return ''
+  const user = userList.value.find(u => u.id === userId)
+  return user ? user.nickname : ''
+}
+
+/** 根据部门ID获取部门名称（支持多个部门） */
+const getDeptNames = (deptIds: string | string[] | undefined) => {
+  if (!deptIds) return '-'
+
+  let ids: string[] = []
+
+  // 统一处理输入为字符串或数组的情况
+  if (typeof deptIds === 'string') {
+    // 去除两边的方括号并按逗号分割
+    ids = deptIds.replace(/[\[\]]/g, '').split(',').map(id => id.trim()).filter(Boolean)
+  } else if (Array.isArray(deptIds)) {
+    ids = deptIds.map(id => String(id))
+  }
+
+  if (ids.length === 0) return '-'
+
+  // 递归查找树中的部门
+  const findDeptInTree = (tree: Tree[], id: string): Tree | undefined => {
+    for (const node of tree) {
+      if (String(node.id) === id) {
+        return node
+      }
+      if (node.children && node.children.length > 0) {
+        const found = findDeptInTree(node.children, id)
+        if (found) {
+          return found
+        }
+      }
+    }
+    return undefined
+  }
+
+  const deptNames = ids.map(id => {
+    const dept = findDeptInTree(deptList.value, id)
+    return dept ? dept.name : `未知部门(${id})`
+  })
+
+  return deptNames.join(', ')
+}
 
 /** 获取文件类型图标 */
 const getFileTypeIcon = (fileName: string): string => {
@@ -197,6 +282,9 @@ const previewFile = async (file: { id: number; name: string; url: string }) => {
 const open = async (id: number) => {
   loading.value = true
   try {
+    // 获取用户列表和部门列表
+    await Promise.all([getUserList(), getDeptList()])
+    
     const data = await OaMeetingIssueApi.getOaMeetingIssue(id)
     formData.value = data
     

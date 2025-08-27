@@ -26,6 +26,46 @@
                             />
                         </el-select>
                     </el-form-item>
+                    <!-- 添加汇报人字段 -->
+                    <el-form-item label="汇报人" prop="reporterId">
+                        <el-select 
+                            v-model="formData.reporterId" 
+                            placeholder="请选择汇报人" 
+                            clearable
+                            filterable
+                            remote
+                            :remote-method="searchUsers"
+                            :loading="userLoading"
+                        >
+                            <el-option
+                                v-for="user in filteredUserList"
+                                :key="user.id"
+                                :label="user.nickname"
+                                :value="user.id"
+                            />
+                        </el-select>
+                    </el-form-item>
+                    <!-- 添加相关部门字段 -->
+                    <el-form-item label="相关部门" prop="relevantDept">
+                        <el-tree-select
+                            v-model="formData.relevantDept"
+                            :data="deptList"
+                            :props="{ 
+                                value: 'id',
+                                label: 'name',
+                                children: 'children',
+                                disabled: 'disabled'
+                            }"
+                            value-key="id"
+                            check-strictly
+                            node-key="id"
+                            placeholder="请选择相关部门"
+                            clearable
+                            filterable
+                            multiple
+                            :default-expand-all="true"
+                        />
+                    </el-form-item>
                     <el-form-item label="议题概述" prop="description">
                         <el-input 
                             v-model="formData.description" 
@@ -44,14 +84,15 @@
                             style="width: 500px;" 
                         />
                     </el-form-item>
-                    <el-form-item label="议题附件" prop="issueAttachment">
-                        <UploadFile
-                            v-model="uploadFileUrls"
-                            :limit="10"
-                            :file-type="['jpg', 'png', 'pdf', 'doc', 'docx']"
-                            :file-size="10"
-                            :drag="true"
-                            directory="uploads"
+                    <el-form-item label="议题附件" prop="fileList">
+                        <BatchFileUpload 
+                            ref="fileUploadRef"
+                            v-model:fileList="formData.fileList"
+                            mode="create"
+                            directory="business"
+                            :max-files="5" 
+                            :concurrent="2" 
+                            :drag="true" 
                         />
                     </el-form-item>
                     <el-form-item>
@@ -76,8 +117,11 @@ ref="timelineRef" :activity-nodes="activityNodes" :show-status-icon="false"
 <script lang="ts" setup>
 import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { OaMeetingIssueApi, OaMeetingIssueVO, FileAttachmentVO } from 'src/api/business/oameetingissue/index.ts'
-import { UploadFile } from '@/components/UploadFile'
+import { BatchFileUpload } from '@/components/UploadFile'
 import { useTagsViewStore } from '@/store/modules/tagsView'
+import * as UserApi from '@/api/system/user'
+import * as DeptApi from '@/api/system/dept'
+import { handleTree } from '@/utils/tree'
 
 // 审批相关：import
 import * as DefinitionApi from '@/api/bpm/definition'
@@ -97,6 +141,15 @@ const { delView } = useTagsViewStore() // 视图操作
 const { push, currentRoute } = useRouter() // 路由
 
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
+const userLoading = ref(false) // 用户列表加载状态
+
+// 用户列表
+const userList = ref<any[]>([])
+const filteredUserList = ref<any[]>([])
+
+// 部门相关
+const deptList = ref<Tree[]>([]) // 树形结构
+
 const formData = ref({
   id: undefined,
   userId: undefined,
@@ -104,19 +157,22 @@ const formData = ref({
   issueTitle: undefined,
   issueType: undefined,
   meetingType: undefined,
+  reporterId: undefined, // 添加汇报人字段
+  relevantDept: [] as number[], // 添加相关部门字段，使用number数组类型
   issueContent: undefined,
   description: undefined,
-  issueAttachment: [] as FileAttachmentVO[],
+  fileList: [] as (number | string)[], // 修改为支持数字或字符串ID的数组
 })
 const formRules = reactive({
   issueTitle: [{ required: true, message: '议题标题不能为空', trigger: 'blur' }],
   issueType: [{ required: true, message: '议题类型不能为空', trigger: 'change' }],
   meetingType: [{ required: true, message: '上会类型不能为空', trigger: 'change' }],
+  reporterId: [{ required: true, message: '汇报人不能为空', trigger: 'change' }], // 添加汇报人校验规则
 })
 const formRef = ref() // 表单 Ref
 
-// 上传文件 URL 数组，用于与 UploadFile 组件绑定
-const uploadFileUrls = ref<string[]>([])
+// 上传组件引用
+const fileUploadRef = ref()
 
 // 审批相关：变量
 const processDefineKey = 'oa_meet_issue' // 流程定义 Key
@@ -126,21 +182,42 @@ const tempStartUserSelectAssignees = ref<Record<string, number[]>>({}) // 历史
 const activityNodes = ref<ProcessInstanceApi.ApprovalNodeInfo[]>([]) // 审批节点信息
 const processDefinitionId = ref('')
 
-// 监听文件 URL 变化，转换为 FileAttachmentVO 对象
-watch(uploadFileUrls, (newUrls: string[]) => {
-  formData.value.issueAttachment = newUrls.map(url => {
-    // 从 URL 中提取文件名
-    const fileName = url.substring(url.lastIndexOf('/') + 1)
-    const originalFileName = fileName.split('_').slice(1).join('_') || fileName // 去掉时间戳前缀
-    
-    return {
-      name: originalFileName,
-      path: fileName,
-      url: url,
-      businessCode: 'MEETING_ISSUE'
-    } as FileAttachmentVO
-  })
-}, { deep: true })
+/** 搜索用户 */
+const searchUsers = (query: string) => {
+  if (query) {
+    filteredUserList.value = userList.value.filter(user => 
+      user.nickname && user.nickname.toLowerCase().includes(query.toLowerCase())
+    )
+  } else {
+    filteredUserList.value = [...userList.value]
+  }
+}
+
+/** 获取用户列表 */
+const getUserList = async () => {
+  try {
+    userLoading.value = true
+    const data = await UserApi.getSimpleUserList()
+    userList.value = data
+    filteredUserList.value = [...data]
+  } catch (error) {
+    console.error('获取用户列表失败:', error)
+    message.error('获取用户列表失败')
+  } finally {
+    userLoading.value = false
+  }
+}
+
+/** 获取部门树 */
+const getDeptList = async () => {
+  try {
+    const data = await DeptApi.getSimpleDeptList()
+    deptList.value = handleTree(data)
+  } catch (error) {
+    console.error('获取部门列表失败:', error)
+    message.error('获取部门列表失败')
+  }
+}
 
 /** 提交表单 */
 const submitForm = async () => {
@@ -163,11 +240,23 @@ const submitForm = async () => {
   // 2. 提交请求
   formLoading.value = true
   try {
-    const data = { ...formData.value } as unknown as OaMeetingIssueVO
+    // 创建一个新的数据对象，将fileList转换为字符串格式
+    const data = {
+      ...formData.value,
+      fileList: Array.isArray(formData.value.fileList) && formData.value.fileList.length > 0
+        ? formData.value.fileList.join(',')  // 直接使用字符串避免精度丢失
+        : '',
+      // 处理相关部门数据，转换为逗号分隔的字符串
+      relevantDept: Array.isArray(formData.value.relevantDept) && formData.value.relevantDept.length > 0
+        ? formData.value.relevantDept.join(',')
+        : ''
+    } as unknown as OaMeetingIssueVO
+    
     // 审批相关：设置指定审批人
     if (startUserSelectTasks.value?.length > 0) {
       data.startUserSelectAssignees = startUserSelectAssignees.value
     }
+    
     await OaMeetingIssueApi.createOaMeetingIssue(data)
     message.success('发起成功')
     // 发送成功事件
@@ -233,6 +322,9 @@ const selectUserConfirm = (id: string, userList: any[]) => {
 
 /** 初始化 */
 onMounted(async () => {
+  // 获取用户列表和部门列表
+  await Promise.all([getUserList(), getDeptList()])
+  
   const processDefinitionDetail = await DefinitionApi.getProcessDefinition(
     undefined,
     processDefineKey
