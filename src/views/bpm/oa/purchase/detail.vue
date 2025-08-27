@@ -1,5 +1,11 @@
 <template>
     <ContentWrap>
+        <template #extra>
+            <el-button type="info" @click="showPrintPreview" v-if="detailData.id">
+                <Icon icon="ep:view" class="mr-5px" />
+                打印预览
+            </el-button>
+        </template>
         <el-descriptions :column="1" border>
             <el-descriptions-item label="采购事由">
                 {{ detailData.reason }}
@@ -31,12 +37,16 @@
             </el-descriptions-item>
         </el-descriptions>
     </ContentWrap>
+
+    <!-- 打印预览弹窗 -->
+    <PrintPreview v-model="printPreviewVisible" :purchase-data="detailData" />
 </template>
 <script lang="ts" setup>
 import { formatDate } from '@/utils/formatTime'
 import { propTypes } from '@/utils/propTypes'
 import * as PurchaseApi from '@/api/bpm/form/purchase/purchase'
 import { BatchFileUpload } from '@/components/UploadFile'
+import PrintPreview from './components/PrintPreview.vue'
 
 defineOptions({ name: 'BpmOAPurchaseDetail' })
 
@@ -52,6 +62,7 @@ const detailLoading = ref(false) // 表单的加载中
 const detailData = ref<any>({}) // 详情数据
 const queryId = query.id as unknown as number // 从 URL 传递过来的 id 编号
 const fileIdList = ref<string[]>([]) // 文件ID列表（使用字符串避免精度丢失）
+const printPreviewVisible = ref(false) // 打印预览弹窗显示状态
 
 /** 解析文件ID列表 */
 const parseFileIdList = (fileList: string): string[] => {
@@ -85,6 +96,11 @@ const getInfo = async () => {
     }
 }
 defineExpose({ open: getInfo }) // 提供 open 方法，用于打开弹窗
+
+/** 显示打印预览 */
+const showPrintPreview = () => {
+    printPreviewVisible.value = true
+}
 
 /** 初始化 **/
 onMounted(() => {

@@ -60,6 +60,10 @@
                         <el-button :disabled="formLoading" type="primary" @click="submitForm">
                             确 定
                         </el-button>
+                        <el-button type="info" @click="showPrintPreview" :disabled="!canPreview">
+                            <Icon icon="ep:view" class="mr-5px" />
+                            打印预览
+                        </el-button>
                     </el-form-item>
                 </el-form>
             </ContentWrap>
@@ -73,11 +77,16 @@
             </ContentWrap>
         </el-col>
     </el-row>
+
+    <!-- 打印预览弹窗 -->
+    <PrintPreview v-model="printPreviewVisible" :purchase-data="previewData" />
 </template>
 <script lang="ts" setup>
 import * as PurchaseApi from '@/api/bpm/form/purchase'
 import { useTagsViewStore } from '@/store/modules/tagsView'
 import { BatchFileUpload } from '@/components/UploadFile'
+import PrintPreview from './components/PrintPreview.vue'
+import { useUserStore } from '@/store/modules/user'
 
 // 审批相关：import
 import * as DefinitionApi from '@/api/bpm/definition'
@@ -91,6 +100,7 @@ defineOptions({ name: 'BpmOAPurchaseCreate' })
 const message = useMessage() // 消息弹窗
 const { delView } = useTagsViewStore() // 视图操作
 const { push, currentRoute } = useRouter() // 路由
+const userStore = useUserStore() // 用户信息
 
 // 定义 emit 事件
 const emit = defineEmits(['success'])
@@ -111,6 +121,8 @@ const formRules = reactive({
 const formRef = ref() // 表单 Ref
 const fileUploadRef = ref() // 文件上传组件 Ref
 const items = ref<PurchaseApi.ItemListVO[]>([]) // 物品清单
+const printPreviewVisible = ref(false) // 打印预览弹窗显示状态
+const previewData = ref({}) // 预览数据
 
 // 审批相关：变量
 const processDefineKey = 'oa_form_purchase' // 流程定义 Key
@@ -271,4 +283,23 @@ watch(
     },
     { deep: true }
 )
+
+// 计算属性：是否可以预览
+const canPreview = computed(() => {
+    return formData.value.reason && items.value.length > 0
+})
+
+/** 显示打印预览 */
+const showPrintPreview = () => {
+    // 准备预览数据
+    previewData.value = {
+        creator: userStore.getUser?.nickname || '当前用户',
+        createTime: new Date(),
+        purchaseDate: formData.value.purchaseDate,
+        reason: formData.value.reason,
+        itemList: items.value,
+        totalPrice: formData.value.totalPrice
+    }
+    printPreviewVisible.value = true
+}
 </script>
