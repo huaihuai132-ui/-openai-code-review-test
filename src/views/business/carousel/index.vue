@@ -65,7 +65,16 @@
             :preview-src-list="[scope.row.bannerImage]"
             fit="cover"
             style="width: 80px; height: 50px; border-radius: 4px;"
-          />
+            :hide-on-click-modal="true"
+            :preview-teleported="true"
+            :z-index="3000"
+          >
+            <template #error>
+              <div class="image-slot">
+                <Icon icon="ep:picture" />
+              </div>
+            </template>
+          </el-image>
         </template>
       </el-table-column>
       <el-table-column label="跳转链接" align="center" prop="jumpLink" min-width="150" show-overflow-tooltip />
