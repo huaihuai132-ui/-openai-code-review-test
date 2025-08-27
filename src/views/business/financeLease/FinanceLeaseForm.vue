@@ -293,7 +293,6 @@ const fileStatus = computed(() => {
   return 'view'
 })
 
-console.log("====被调用")
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
 

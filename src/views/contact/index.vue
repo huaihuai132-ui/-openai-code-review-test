@@ -83,15 +83,13 @@
               <el-input v-model="contactForm.subject" placeholder="请输入留言主题" />
             </el-form-item>
             
-            <el-form-item label="留言内容" prop="message">
-              <Editor 
-                v-model="contactForm.message" 
-                :height="300"
-                :editor-config="{
-                  placeholder: '请输入您的留言内容...'
-                }"
-              />
-            </el-form-item>
+            <el-form-item label="输入你的留言内容" prop="message">
+            <el-input v-model="contactForm.message" placeholder="请输入输入你的留言内容" type="textarea" />
+          </el-form-item>
+          <el-form-item label="附件" prop="fileList">
+            <BatchFileUpload ref="fileUploadRef" v-model:fileList="contactForm.fileList" mode="create"
+                :max-files="10" directory="business" :file-size="10" tip="支持上传多个文件，每个文件不超过10MB" />
+          </el-form-item>
             
             <el-form-item>
               <el-button type="primary" @click="submitForm" :loading="submitting">
@@ -132,16 +130,15 @@
 import { ref, reactive } from 'vue'
 import { useMessage } from '@/hooks/web/useMessage'
 import { Editor } from '@/components/Editor'
+import { BatchFileUpload } from '@/components/UploadFile'
 
 defineOptions({ name: 'Contact' })
+
 
 const message = useMessage()
 const formRef = ref()
 const submitting = ref(false)
 
-// 全屏图片相关
-const fullscreenVisible = ref(false)
-const fullscreenImageSrc = ref('')
 
 // 表单数据
 const contactForm = reactive({
@@ -150,7 +147,8 @@ const contactForm = reactive({
   wechat: '',
   phone: '',
   subject: '',
-  message: ''
+  message: '',
+  fileList:[]
 })
 
 // 表单验证规则
@@ -184,8 +182,21 @@ const formRules = {
     { min: 5, max: 100, message: '主题长度在 5 到 100 个字符', trigger: 'blur' }
   ],
   message: [
-    { required: true, message: '请输入留言内容', trigger: 'blur' },
-    { min: 10, message: '留言内容至少 10 个字符', trigger: 'blur' }
+    { 
+      required: true, 
+      validator: (rule: any, value: any, callback: any) => {
+        // 去除HTML标签后检查纯文本长度
+        const plainText = value.replace(/<[^>]*>/g, '').trim()
+        if (!plainText) {
+          callback(new Error('请输入留言内容'))
+        } else if (plainText.length < 10) {
+          callback(new Error('留言内容至少 10 个字符'))
+        } else {
+          callback()
+        }
+      }, 
+      trigger: 'blur' 
+    }
   ]
 }
 
@@ -194,22 +205,11 @@ const submitForm = async () => {
   try {
     await formRef.value.validate()
     submitting.value = true
-    
-    // 这里可以调用API提交表单数据
-    console.log('提交的表单数据:', contactForm)
-    
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    message.success('留言提交成功！我们会尽快回复您')
-    resetForm()
-    
   } catch (error) {
     console.error('表单验证失败:', error)
-  } finally {
-    submitting.value = false
   }
 }
+
 
 // 重置表单
 const resetForm = () => {
@@ -226,16 +226,7 @@ const handleImageError = (event: Event) => {
   console.warn('微信二维码图片加载失败，请检查图片路径')
 }
 
-// 全屏展示图片
-const showFullscreenImage = (event: Event) => {
-  event.preventDefault()
-  event.stopPropagation()
-  
-  const target = event.target as HTMLImageElement
-  
-  fullscreenImageSrc.value = target.src
-  fullscreenVisible.value = true
-}
+
 
 // 显示覆盖层
 const showOverlay = (event: Event) => {

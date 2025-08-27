@@ -60,51 +60,11 @@
         </el-skeleton>
       </el-card>
       <!-- 常用系统入口 -->
-      <el-card shadow="never">
-        <template #header>
-          <div class="h-3 flex justify-between">
-            <span>
-              <Icon icon="ion:grid-outline" class="mr-8px" />常用系统入口
-            </span>
-          </div>
-        </template>
-        <el-skeleton :loading="loading" animated>
-          <el-row :gutter="16">
-            <el-col
-              v-for="item in shortcut"
-              :key="`team-${item.name}`"
-              :xl="8"
-              :lg="8"
-              :md="12"
-              :sm="24"
-              :xs="24"
-              class="mb-8px">
-              <el-card shadow="hover" class="cursor-pointer">
-                <div class="flex items-center">
-                  <Icon :icon="item.icon" class="mr-8px" :style="{ color: item.color }" />
-                  <el-link type="default" :underline="false" @click="handleShortcutClick(item.url)">
-                    {{ item.name }}
-                  </el-link>
-                </div>
-              </el-card>
-            </el-col>
-            <el-col
-              :xl="8"
-              :lg="8"
-              :md="12"
-              :sm="24"
-              :xs="24"
-              class="mb-8px">
-              <el-card shadow="hover" class="cursor-pointer">
-                <div class="flex items-center">
-                  <Icon icon="ion:grid-outline" class="mr-8px" />
-                  <el-link type="default" :underline="false">查看全部</el-link>
-                </div>
-              </el-card>
-            </el-col>
-          </el-row>
-        </el-skeleton>
-      </el-card>
+      <SystemShortcuts 
+        :loading="loading"
+        :shortcut="shortcut"
+        @shortcut-change="handleShortcutChange"
+      />
     </el-col>
 
     <!-- 右侧区域：占 1/3 宽度 -->
@@ -160,13 +120,15 @@ import { set } from 'lodash-es'
 import { EChartsOption } from 'echarts'
 
 import { useUserStore } from '@/store/modules/user'
-import MessageModule from './components/MessageModule.vue'
+import MessageModule from './components/MessageModule/index.vue'
 import { BannerCarousel } from '@/components/BannerCarousel'
-import type { Shortcut } from './types'
+import SystemShortcuts from './components/SystemShortcuts/index.vue'
+import type { Shortcut } from './components/SystemShortcuts/types'
 import { pieOptions, barOptions } from './echarts-data'
 import { useRouter } from 'vue-router'
 import { getTaskCenterTags } from '@/api/bpm/task'
 import { getEnabledCarouselList } from '@/api/business/carousel/index'
+import { getMenu } from '@/api/system/entrances/index'
 
 defineOptions({ name: 'Index' })
 
@@ -197,63 +159,119 @@ const pieOptionsData = reactive<EChartsOption>(pieOptions) as EChartsOption
 let shortcut = reactive<Shortcut[]>([])
 
 const getShortcut = async () => {
-  const data = [
+  try {
+    // 获取当前用户ID
+    const userId = userStore.getUser.id
+    console.log('当前用户ID:', userId)
+    
+    // 调用getMenu接口获取数据
+    const response = await getMenu(userId)
+    console.log('getMenu接口返回数据:', response)
+    
+    if (response && response.code === 0 && response.data) {
+      // 确保数据是数组并且有内容
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        // 按照order字段排序
+        const sortedData = response.data.sort((a: any, b: any) => a.order - b.order)
+        console.log('排序后的数据:', sortedData)
+        shortcut = Object.assign(shortcut, sortedData)
+      } else {
+        console.log('getMenu返回的数据不是数组或为空')
+        // 如果接口返回的数据有问题，使用默认数据
+        useDefaultShortcutData()
+      }
+    } else {
+      console.log('getMenu接口返回状态码不是0或没有data字段')
+      // 如果接口返回状态有问题，使用默认数据
+      useDefaultShortcutData()
+    }
+  } catch (error) {
+    console.error('调用getMenu接口失败:', error)
+    // 如果接口调用失败，使用默认数据
+    useDefaultShortcutData()
+  }
+}
+
+// 使用默认快捷入口数据的函数
+const useDefaultShortcutData = () => {
+  const defaultData = [
     {
+      id: 1,
+      order: 1,
       name: '项目管理',
       icon: 'ep:document',
       url: '/project/manage',
       color: '#409EFF'
     },
     {
+      id: 2,
+      order: 2,
       name: '客户管理',
       icon: 'ep:office-building',
       url: '/beisen/system',
       color: '#67C23A'
     },
     {
+      id: 3,
+      order: 3,
       name: '审批中心',
       icon: 'ep:message',
       url: '/timesheet/manage',
       color: '#E6A23C'
     },
     {
+      id: 4,
+      order: 4,
       name: '邮箱',
       icon: 'ep:message',
       url: '/mail/box',
       color: '#F56C6C'
     },
     {
+      id: 5,
+      order: 5,
       name: '报销系统',
       icon: 'ep:money',
       url: '/expense/system',
       color: '#909399'
     },
     {
+      id: 6,
+      order: 6,
       name: '档案系统',
       icon: 'ep:folder',
       url: '/archive/system',
       color: '#409EFF'
     },
     {
+      id: 7,
+      order: 7,
       name: 'HR系统',
       icon: 'ep:user',
       url: '/hr/system',
       color: '#67C23A'
     },
     {
+      id: 8,
+      order: 8,
       name: '考勤系统',
       icon: 'ep:calendar',
       url: '/attendance/system',
       color: '#E6A23C'
     },
     {
+      id: 9,
+      order: 9,
       name: '资产管理',
       icon: 'ep:box',
       url: '/asset/manage',
       color: '#F56C6C'
     }
   ]
-  shortcut = Object.assign(shortcut, data)
+  
+  // 按照order字段排序
+  const sortedData = defaultData.sort((a, b) => a.order - b.order)
+  shortcut = Object.assign(shortcut, sortedData)
 }
 
 // 用户来源
@@ -353,9 +371,7 @@ const getAllApi = async () => {
   loading.value = false
 }
 
-const handleShortcutClick = (url: string) => {
-  router.push(url)
-}
+
 
   const goApproval = (category: 'waiting' | 'done' | 'apply' | 'copy') => {
   // 根据首页的分类名称映射到审批页面的分类
@@ -386,6 +402,15 @@ const handleBannerClick = (item: any) => {
       router.push(item.link)
     }
   }
+}
+
+// 处理快捷入口变化
+const handleShortcutChange = (newShortcuts: Shortcut[]) => {
+  // 按照order字段排序
+  const sortedShortcuts = newShortcuts.sort((a, b) => a.order - b.order)
+  shortcut = Object.assign(shortcut, sortedShortcuts)
+  // 这里可以调用API保存新的排序到后端
+  console.log('快捷入口顺序已更新:', sortedShortcuts)
 }
 
 getAllApi()

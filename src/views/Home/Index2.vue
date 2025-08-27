@@ -145,7 +145,7 @@ import { set } from 'lodash-es'
 import { EChartsOption } from 'echarts'
 
 import { useDesign } from '@/hooks/web/useDesign'
-import type { AnalysisTotalTypes } from './types'
+import type { AnalysisTotalTypes } from './components/SystemShortcuts/types'
 import { barOptions, lineOptions, pieOptions } from './echarts-data'
 
 defineOptions({ name: 'Home2' })
