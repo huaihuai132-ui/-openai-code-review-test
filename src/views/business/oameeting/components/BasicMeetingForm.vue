@@ -74,19 +74,7 @@
           <el-input v-model="formData.reason" placeholder="请输入会议事由" />
         </el-form-item>
       </el-col>
-      <el-col :span="16">
-        <el-form-item label="会议状态" prop="status">
-          <el-radio-group v-model="formData.status">
-            <el-radio
-              v-for="dict in getIntDictOptions(DICT_TYPE.MEET_STATUS)"
-              :key="dict.value"
-              :label="dict.value"
-            >
-              {{ dict.label }}
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-col>
+      <!-- 会议状态字段在新增和编辑时都隐藏，仅在详情页面显示 -->
     </el-row>
 
     <el-row :gutter="20">

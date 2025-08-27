@@ -52,90 +52,6 @@
           class="!w-220px"
         />
       </el-form-item>
-      <el-form-item label="开始时间" prop="startTime">
-        <el-date-picker
-          v-model="queryParams.startTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
-        />
-      </el-form-item>
-      <el-form-item label="结束时间" prop="endTime">
-        <el-date-picker
-          v-model="queryParams.endTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
-        />
-      </el-form-item>
-      <el-form-item label="会议室ID" prop="meetRoomId">
-        <el-input
-          v-model="queryParams.meetRoomId"
-          placeholder="请输入会议室ID"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="会议事由" prop="reason">
-        <el-input
-          v-model="queryParams.reason"
-          placeholder="请输入会议事由"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="会议状态" prop="status">
-        <el-select
-          v-model="queryParams.status"
-          placeholder="请选择会议状态"
-          clearable
-          class="!w-240px"
-        >
-          <el-option
-            v-for="dict in getIntDictOptions(DICT_TYPE.MEET_STATUS)"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
-        <el-date-picker
-          v-model="queryParams.createTime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
-        />
-      </el-form-item>
-<!--      <el-form-item label="文件id列表" prop="fileList">-->
-<!--        <el-input-->
-<!--          v-model="queryParams.fileList"-->
-<!--          placeholder="请输入文件id列表"-->
-<!--          clearable-->
-<!--          @keyup.enter="handleQuery"-->
-<!--          class="!w-240px"-->
-<!--        />-->
-<!--      </el-form-item>-->
-<!--      <el-form-item label="文件序列编码" prop="sequenceCode">-->
-<!--        <el-input-->
-<!--          v-model="queryParams.sequenceCode"-->
-<!--          placeholder="请输入文件序列编码"-->
-<!--          clearable-->
-<!--          @keyup.enter="handleQuery"-->
-<!--          class="!w-240px"-->
-<!--        />-->
-<!--      </el-form-item>-->
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
@@ -191,8 +107,16 @@
       />
 <!--      <el-table-column label="文件id列表" align="center" prop="fileList" />-->
 <!--      <el-table-column label="文件序列编码" align="center" prop="sequenceCode" />-->
-      <el-table-column label="操作" align="center" min-width="120px">
+      <el-table-column label="操作" align="center" min-width="180px">
         <template #default="scope">
+          <el-button
+            link
+            type="info"
+            @click="openDetail(scope.row.id)"
+            v-hasPermi="['business:oa-meeting:query']"
+          >
+            详情
+          </el-button>
           <el-button
             link
             type="primary"
@@ -203,12 +127,23 @@
           </el-button>
           <el-button
             link
+            type="warning"
+            @click="sendApprove(scope.row.id)"
+            v-hasPermi="['business:oa-meeting:sendApprove']"
+            :disabled="sendApproveLoading[scope.row.id]"
+            :loading="sendApproveLoading[scope.row.id]"
+          >
+            送审
+          </el-button>
+          <el-button
+            link
             type="danger"
             @click="handleDelete(scope.row.id)"
             v-hasPermi="['business:oa-meeting:delete']"
           >
             删除
           </el-button>
+
         </template>
       </el-table-column>
     </el-table>
@@ -223,6 +158,8 @@
 
   <!-- 表单弹窗：添加/修改 -->
   <OaMeetingForm ref="formRef" @success="getList" />
+  <!-- 详情弹窗 -->
+  <OaMeetingDetail ref="detailRef" />
 </template>
 
 <script setup lang="ts">
@@ -231,6 +168,7 @@ import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { OaMeetingApi, OaMeetingVO } from '@/api/business/oameeting'
 import OaMeetingForm from './OaMeetingForm.vue'
+import OaMeetingDetail from './OaMeetingDetail.vue'
 
 /** 会议 列表 */
 defineOptions({ name: 'OaMeeting' })
@@ -260,6 +198,7 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
+const sendApproveLoading = ref<Record<number, boolean>>({}) // 送审的加载中状态
 
 /** 查询列表 */
 const getList = async () => {
@@ -291,6 +230,12 @@ const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
 }
 
+/** 详情操作 */
+const detailRef = ref()
+const openDetail = (id: number) => {
+  detailRef.value.open(id)
+}
+
 /** 删除按钮操作 */
 const handleDelete = async (id: number) => {
   try {
@@ -302,6 +247,26 @@ const handleDelete = async (id: number) => {
     // 刷新列表
     await getList()
   } catch {}
+}
+
+/** 送审按钮操作 */
+const sendApprove = async (id: number) => {
+  try {
+    // 送审的二次确认
+    await message.sendApproveConfirm()
+    // 发起送审
+    sendApproveLoading.value[id] = true
+    await OaMeetingApi.updateOaMeeting({
+      id,
+      needApproval: true
+    } as unknown as OaMeetingVO)
+    message.success(t('common.sendApproveSuccess'))
+    // 刷新列表
+    await getList()
+  } catch {
+  } finally {
+    sendApproveLoading.value[id] = false
+  }
 }
 
 /** 导出按钮操作 */

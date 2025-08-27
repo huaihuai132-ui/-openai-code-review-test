@@ -189,7 +189,7 @@
             </el-button>
             <el-button
               link
-              type="primary"
+              type="warning"
               :loading="sendApproveLoading[scope.row.id]"
               @click="sendApprove(scope.row.id)"
               v-hasPermi="['business:oa-meeting-issue:sendApprove']"

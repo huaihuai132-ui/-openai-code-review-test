@@ -15,7 +15,7 @@ export interface MeetingFormData {
   reason?: string
   description?: string
   status?: number
-  fileList: string[]
+  fileList: (number | string)[] | string
   sequenceCode?: string
   attendeeList: AttendeeWithUserInfo[]
   issueList: OaMeetingIssueVO[]

@@ -13,7 +13,10 @@
       <!-- 标签页 -->
       <el-tabs v-model="activeTab" class="form-tabs">
         <el-tab-pane label="附件上传" name="file">
-          <AttachmentManager v-model:file-list="formData.fileList" ref="attachmentManagerRef" />
+          <AttachmentManager 
+            v-model:file-list="formData.fileList" 
+            ref="attachmentManagerRef"
+            :mode="formType === 'update' ? 'edit' : formType" />
         </el-tab-pane>
         <el-tab-pane label="参会人员" name="participant">
           <AttendeeManager v-model:attendees="formData.attendeeList" />
@@ -26,7 +29,6 @@
 
     <template #footer>
       <el-button @click="submitForm" type="primary" :disabled="formLoading">确 定</el-button>
-      <el-button @click="submitForApproval" type="warning" :disabled="formLoading">送 审</el-button>
       <el-button @click="dialogVisible = false">取 消</el-button>
     </template>
   </Dialog>
@@ -73,7 +75,7 @@ const formData = ref<MeetingFormData>({
   reason: undefined,
   description: undefined,
   status: undefined,
-  fileList: [],
+  fileList: [] as string[], // 明确指定为字符串数组
   sequenceCode: undefined,
   attendeeList: [],
   issueList: []
@@ -132,7 +134,40 @@ const open = async (type: string, id?: number) => {
       processedData.meetDate = processTimestamp(processedData.meetDate)
       processedData.startTime = processTimestamp(processedData.startTime)
       processedData.endTime = processTimestamp(processedData.endTime)
-      processedData.fileList = processedData.fileList && JSON.parse(processedData.fileList) || []
+      
+      // 处理文件列表字段
+      if (processedData.fileList) {
+        if (typeof processedData.fileList === 'string') {
+          // 处理字符串格式的文件列表
+          let cleanFileList = processedData.fileList.trim();
+          
+          // 移除可能存在的方括号和引号
+          cleanFileList = cleanFileList
+            .replace(/^\[["']?/, '')  // 移除开头的 [ 和可能的引号
+            .replace(/["']?]$/, ''); // 移除结尾的引号和 ]
+
+          // 分割并处理每个文件ID
+          if (cleanFileList) {
+            processedData.fileList = cleanFileList
+              .split(',')
+              .map(id => id.trim().replace(/^["']|["']$/g, '')) // 移除每个ID的首尾空格和引号
+              .filter(Boolean); // 过滤空值
+          } else {
+            processedData.fileList = [];
+          }
+        } else if (Array.isArray(processedData.fileList)) {
+          // 如果已经是数组，清理无效值
+          processedData.fileList = processedData.fileList
+            .map(id => (typeof id === 'string' ? id.trim().replace(/^["']|["']$/g, '') : id))
+            .filter(Boolean);
+        } else {
+          // 其他情况初始化为空数组
+          processedData.fileList = [];
+        }
+      } else {
+        processedData.fileList = [];
+      }
+      
       processedData.participants = processedData.participants || []
       processedData.agendaTopics = processedData.agendaTopics || []
 
@@ -167,11 +202,13 @@ const submitForm = async () => {
       attendeeList: formData.value.attendeeList.map((v) => ({ ...v, id: undefined })),
     } as unknown as OaMeetingVO
 
-    // 处理文件列表
+    // 修复文件列表字段处理逻辑
+    // 确保fileList是数组格式，并正确转换为字符串格式传递给后端
     if (data.fileList && Array.isArray(data.fileList) && data.fileList.length > 0) {
-      data.fileList = JSON.stringify(data.fileList) as any
+      // 直接使用数组的join方法，避免JSON.stringify可能带来的格式问题
+      data.fileList = data.fileList.join(',') as any
     } else {
-      data.fileList = '[]' as any
+      data.fileList = '' as any
     }
 
     if (formType.value === 'create') {
@@ -194,49 +231,6 @@ const submitForm = async () => {
   }
 }
 
-/** 送审表单 */
-const submitForApproval = async () => {
-  try {
-    await ElMessageBox.confirm('确定要送审该会议吗？送审后将进入审批流程。', '确认送审', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-
-    await formRef.value.validate()
-
-    formLoading.value = true
-    try {
-      const data = {
-        ...formData.value,
-        needApproval: true
-      } as unknown as OaMeetingVO
-
-      if (data.fileList && Array.isArray(data.fileList) && data.fileList.length > 0) {
-        data.fileList = JSON.stringify(data.fileList) as any
-      } else {
-        data.fileList = '[]' as any
-      }
-
-      if (formType.value === 'create') {
-        await OaMeetingApi.createOaMeeting(data)
-      } else {
-        await OaMeetingApi.updateOaMeeting(data)
-      }
-
-      message.success('送审成功！')
-      dialogVisible.value = false
-      emit('success')
-    } finally {
-      formLoading.value = false
-    }
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('送审失败:', error)
-      message.error('送审失败，请重试')
-    }
-  }
-}
 
 /** 重置表单 */
 const resetForm = async () => {

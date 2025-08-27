@@ -4,7 +4,7 @@
       <BatchFileUpload
         ref="batchUploadRef"
         v-model:fileList="files"
-        mode="create"
+        :mode="mode"
         file-type="common"
         directory="meeting"
         :max-files="5"
@@ -19,7 +19,8 @@ import { BatchFileUpload } from '@/components/UploadFile'
 import { computed, ref } from 'vue'
 
 interface Props {
-  fileList: string[]
+  fileList: (number | string)[] | string
+  mode?: 'create' | 'edit'
 }
 
 const props = defineProps<Props>()
