@@ -29,10 +29,10 @@
                 </div>
                 <!-- 正文 -->
                 <div class="message-body text-13px text-gray-600 leading-5 mb-2">
-                  <span v-html="formatContentWithEmphasis(item.templateContent, item.emphasisWord)"></span>
-                  <div class="text-10px text-gray-400 mt-1">
+                  <span v-html="formatContentWithEmphasis(item.content, item.emphasisWord)"></span>
+                  <!-- <div class="text-10px text-gray-400 mt-1">
                     强调词: {{ JSON.stringify(item.emphasisWord) }}
-                  </div>
+                  </div> -->
                 </div>
                 <!-- 时间 -->
                 <div class="message-time text-11px text-gray-400">
