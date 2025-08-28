@@ -137,7 +137,7 @@ const calculateDays = (startTime, endTime) => {
   
   // 计算天数差（向上取整，包含开始和结束当天）
   const diffTime = end.getTime() - start.getTime()
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
   
   return diffDays > 0 ? diffDays.toString() : ''
 }
