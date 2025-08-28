@@ -14,11 +14,11 @@
           <div class="flex items-start">
                           <!-- 左侧头像和发件人名称区域 -->
               <div class="sender-info flex-shrink-0">
-                <el-avatar :src="item.avatar || avatar" :size="50" class="mb-2" shape="square">
+                <el-avatar :src="item.avatar" :size="50" class="mb-2" shape="square">
                   <img src="@/assets/imgs/avatar.gif" alt="" style="object-fit: cover;" />
                 </el-avatar>
                 <div class="sender-name text-12px text-center text-gray-600">
-                  {{ item.name || '系统通知' }}
+                  {{ item.sendNickname || '系统通知' }}
                 </div>
               </div>
               <!-- 右侧消息内容区域 -->
@@ -29,10 +29,10 @@
                 </div>
                 <!-- 正文 -->
                 <div class="message-body text-13px text-gray-600 leading-5 mb-2">
-                  <span v-html="formatContentWithEmphasis(item.content, item.emphasisWord)"></span>
-                  <!-- <div class="text-10px text-gray-400 mt-1">
+                  <span v-html="formatContentWithEmphasis(item.templateContent, item.emphasisWord)"></span>
+                  <div class="text-10px text-gray-400 mt-1">
                     强调词: {{ JSON.stringify(item.emphasisWord) }}
-                  </div> -->
+                  </div>
                 </div>
                 <!-- 时间 -->
                 <div class="message-time text-11px text-gray-400">
@@ -62,8 +62,8 @@ const { t } = useI18n()
 const { push } = useRouter()
 const userStore = useUserStore()
 const loading = ref(true)
-const avatar = userStore.getUser.avatar
-const name = userStore.getUser.nickname
+// const avatar = userStore.getUser.avatar
+// const name = userStore.getUser.nickname
 
 let notice = reactive<any[]>([])
 
@@ -109,6 +109,7 @@ const formatContentWithEmphasis = (content: string, emphasisWord?: string | stri
 const getNotice = async () => {
   try {
     const data = await NotifyMessageApi.getUnreadNotifyMessageList()
+    console.log("data",data)
     // const data = []       
     // 确保数据是数组并且有内容
     if (Array.isArray(data) && data.length > 0) {

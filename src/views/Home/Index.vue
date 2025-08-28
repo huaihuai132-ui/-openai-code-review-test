@@ -118,17 +118,18 @@
 <script lang="ts" setup>
 import { set } from 'lodash-es'
 import { EChartsOption } from 'echarts'
+import { ElMessage } from 'element-plus'
 
 import { useUserStore } from '@/store/modules/user'
 import MessageModule from './components/MessageModule/index.vue'
 import { BannerCarousel } from '@/components/BannerCarousel'
 import SystemShortcuts from './components/SystemShortcuts/index.vue'
-import type { Shortcut } from './components/SystemShortcuts/types'
+import type { Shortcut } from '@/api/system/entrances/types'
 import { pieOptions, barOptions } from './echarts-data'
 import { useRouter } from 'vue-router'
 import { getTaskCenterTags } from '@/api/bpm/task'
 import { getEnabledCarouselList } from '@/api/business/carousel/index'
-import { getMenu } from '@/api/system/entrances/index'
+import { getMenu, updateMenu } from '@/api/system/entrances/index'
 
 defineOptions({ name: 'Index' })
 
@@ -168,21 +169,15 @@ const getShortcut = async () => {
     const response = await getMenu(userId)
     console.log('getMenu接口返回数据:', response)
     
-    if (response && response.code === 0 && response.data) {
-      // 确保数据是数组并且有内容
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        // 按照order字段排序
-        const sortedData = response.data.sort((a: any, b: any) => a.order - b.order)
-        console.log('排序后的数据:', sortedData)
-        shortcut = Object.assign(shortcut, sortedData)
-      } else {
-        console.log('getMenu返回的数据不是数组或为空')
-        // 如果接口返回的数据有问题，使用默认数据
-        useDefaultShortcutData()
-      }
+    // 由于request.get()自动返回res.data，所以response直接就是data数组
+    if (response && Array.isArray(response) && response.length > 0) {
+      // 按照order字段排序
+      const sortedData = response.sort((a: any, b: any) => a.order - b.order)
+      console.log('排序后的数据:', sortedData)
+      shortcut = Object.assign(shortcut, sortedData)
     } else {
-      console.log('getMenu接口返回状态码不是0或没有data字段')
-      // 如果接口返回状态有问题，使用默认数据
+      console.log('getMenu返回的数据不是数组或为空')
+      // 如果接口返回的数据有问题，使用默认数据
       useDefaultShortcutData()
     }
   } catch (error) {
@@ -405,12 +400,32 @@ const handleBannerClick = (item: any) => {
 }
 
 // 处理快捷入口变化
-const handleShortcutChange = (newShortcuts: Shortcut[]) => {
-  // 按照order字段排序
-  const sortedShortcuts = newShortcuts.sort((a, b) => a.order - b.order)
-  shortcut = Object.assign(shortcut, sortedShortcuts)
-  // 这里可以调用API保存新的排序到后端
-  console.log('快捷入口顺序已更新:', sortedShortcuts)
+const handleShortcutChange = async (newShortcuts: Shortcut[]) => {
+  try {
+    // 按照order字段排序
+    const sortedShortcuts = newShortcuts.sort((a, b) => a.order - b.order)
+    shortcut = Object.assign(shortcut, sortedShortcuts)
+    
+    // 调用API保存新的排序到后端
+    console.log('准备保存到后端的快捷入口数据:', sortedShortcuts)
+    
+    // 获取当前用户ID
+    const userId = userStore.getUser.id
+    console.log('当前用户ID:', userId)
+    
+    console.log('发送给后端的数据结构:', sortedShortcuts)
+    
+    // 调用updateMenu接口保存数据
+    const response = await updateMenu(sortedShortcuts)
+    console.log('updateMenu接口返回:', response)
+    
+    console.log('快捷入口顺序已更新并保存到后端:', sortedShortcuts)
+    ElMessage.success('快捷入口顺序保存成功')
+  } catch (error) {
+    console.error('保存快捷入口顺序失败:', error)
+    // 如果保存失败，可以显示错误提示
+    ElMessage.error('保存失败，请重试')
+  }
 }
 
 getAllApi()
