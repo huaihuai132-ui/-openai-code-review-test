@@ -176,6 +176,86 @@ const getList = async () => {
 
 /** 搜索按钮操作 */
 const handleQuery = () => {
+  // 处理用户名称到userId的转换
+  if (queryParams.userId && isNaN(Number(queryParams.userId))) {
+    // 如果输入的不是数字，则认为是用户名称，需要转换为userId
+    const userName = queryParams.userId
+    
+    // 如果当前列表为空，先获取数据
+    if (list.value.length === 0) {
+      message.info('正在获取用户数据，请稍后再试...')
+      getList().then(() => {
+        // 数据加载完成后重新执行搜索
+        setTimeout(() => handleQuery(), 100)
+      })
+      return
+    }
+    
+    // 支持模糊匹配
+    const user = list.value.find(item => 
+      item.userName === userName || item.userName.includes(userName)
+    )
+    if (user) {
+      queryParams.userId = user.userId
+      if (user.userName !== userName) {
+        message.success(`已匹配到用户：${user.userName}`)
+      }
+    } else {
+      // 提供可能的匹配建议
+      const suggestions = list.value
+        .filter(item => item.userName.includes(userName))
+        .map(item => item.userName)
+        .slice(0, 3)
+      
+      if (suggestions.length > 0) {
+        message.warning(`未找到完全匹配的用户"${userName}"，您是否要找：${suggestions.join('、')}？`)
+      } else {
+        message.warning(`未找到用户名称包含"${userName}"的用户`)
+      }
+      return
+    }
+  }
+  
+  // 处理部门名称到deptId的转换
+  if (queryParams.deptId && isNaN(Number(queryParams.deptId))) {
+    // 如果输入的不是数字，则认为是部门名称，需要转换为deptId
+    const deptName = queryParams.deptId
+    
+    // 如果当前列表为空，先获取数据
+    if (list.value.length === 0) {
+      message.info('正在获取部门数据，请稍后再试...')
+      getList().then(() => {
+        // 数据加载完成后重新执行搜索
+        setTimeout(() => handleQuery(), 100)
+      })
+      return
+    }
+    
+    // 支持模糊匹配
+    const dept = list.value.find(item => 
+      item.deptName === deptName || item.deptName.includes(deptName)
+    )
+    if (dept) {
+      queryParams.deptId = dept.deptId
+      if (dept.deptName !== deptName) {
+        message.success(`已匹配到部门：${dept.deptName}`)
+      }
+    } else {
+      // 提供可能的匹配建议
+      const suggestions = list.value
+        .filter(item => item.deptName.includes(deptName))
+        .map(item => item.deptName)
+        .slice(0, 3)
+      
+      if (suggestions.length > 0) {
+        message.warning(`未找到完全匹配的部门"${deptName}"，您是否要找：${suggestions.join('、')}？`)
+      } else {
+        message.warning(`未找到部门名称包含"${deptName}"的部门`)
+      }
+      return
+    }
+  }
+  
   queryParams.pageNo = 1
   getList()
 }
