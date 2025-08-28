@@ -84,9 +84,9 @@
       </el-table-column>
     </el-table>
   </el-form>
-  <el-row justify="center" class="mt-3">
+  <!-- <el-row justify="center" class="mt-3">
     <el-button @click="handleAdd" round>+ 添加OA 请假申请表单</el-button>
-  </el-row>
+  </el-row> -->
 </template>
 <script setup lang="ts">
 import { OaAnnualLeaveApi } from '@/api/business/oaannualleave'
@@ -157,22 +157,22 @@ watch(
   { deep: true }
 )
 
-/** 新增按钮操作 */
-const handleAdd = () => {
-  const row = {
-    id: undefined,
-    userId: undefined,
-    type: undefined,
-    reason: undefined,
-    startTime: undefined,
-    endTime: undefined,
-    day: undefined,
-    status: undefined,
-    processInstanceId: undefined,
-  }
-  row.userId = props.userId
-  formData.value.push(row)
-}
+// /** 新增按钮操作 */
+// const handleAdd = () => {
+//   const row = {
+//     id: undefined,
+//     userId: undefined,
+//     type: undefined,
+//     reason: undefined,
+//     startTime: undefined,
+//     endTime: undefined,
+//     day: undefined,
+//     status: undefined,
+//     processInstanceId: undefined,
+//   }
+//   row.userId = props.userId
+//   formData.value.push(row)
+// }
 
 /** 删除按钮操作 */
 const handleDelete = (index) => {

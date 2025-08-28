@@ -7,8 +7,11 @@
       label-width="100px"
       v-loading="formLoading"
     >
-      <el-form-item label="用户ID" prop="userId">
+      <!-- <el-form-item label="用户ID" prop="userId">
         <el-input v-model="formData.userId" placeholder="请输入用户ID" />
+      </el-form-item> -->
+      <el-form-item label="用户名" prop="userId">
+        <el-input v-model="formData.userName" placeholder="请输入用户名" />
       </el-form-item>
       <el-form-item label="年假总天数" prop="totalDays">
         <el-input v-model="formData.totalDays" placeholder="请输入年假总天数" />
@@ -16,8 +19,11 @@
       <el-form-item label="已使用年假天数" prop="usedDays">
         <el-input v-model="formData.usedDays" placeholder="请输入已使用年假天数" />
       </el-form-item>
-      <el-form-item label="部门编号" prop="deptId">
+      <!-- <el-form-item label="部门编号" prop="deptId">
         <el-input v-model="formData.deptId" placeholder="请输入部门编号" />
+      </el-form-item> -->
+      <el-form-item label="部门名" prop="deptId">
+        <el-input v-model="formData.deptName" placeholder="请输入部门名" />
       </el-form-item>
     </el-form>
     <!-- 子表的表单 -->
