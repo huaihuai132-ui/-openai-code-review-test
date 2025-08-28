@@ -8,10 +8,10 @@
       :inline="true"
       label-width="110px"
     >
-      <el-form-item label="用户ID" prop="userId">
+      <el-form-item label="用户名称" prop="userId">
         <el-input
           v-model="queryParams.userId"
-          placeholder="请输入用户ID"
+          placeholder="请输入用户名称"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -43,10 +43,10 @@
           class="!w-220px"
         />
       </el-form-item> -->
-      <el-form-item label="部门编号" prop="deptId">
+      <el-form-item label="部门名称" prop="deptId">
         <el-input
           v-model="queryParams.deptId"
-          placeholder="请输入部门编号"
+          placeholder="请输入部门名称"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -89,7 +89,7 @@
         </template>
       </el-table-column>
       <!-- <el-table-column label="主键ID" align="center" prop="id" /> -->
-      <el-table-column label="用户ID" align="center" prop="userId" />
+      <el-table-column label="用户名称" align="center" prop="userName" />
       <el-table-column label="已使用年假天数" align="center" prop="usedDays" />
       <el-table-column label="年假总天数" align="center" prop="totalDays" />
       <!-- <el-table-column
@@ -99,7 +99,7 @@
         :formatter="dateFormatter"
         width="180px"
       /> -->
-      <el-table-column label="部门编号" align="center" prop="deptId" />
+      <el-table-column label="部门名称" align="center" prop="deptName" />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
           <el-button
