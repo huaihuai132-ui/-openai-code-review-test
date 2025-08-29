@@ -2,6 +2,9 @@
   <Dialog title="会议详情" v-model="dialogVisible" width="800px">
     <div v-loading="loading" class="py-10">
       <el-descriptions :column="2" border :size="'small'">
+        <el-descriptions-item label="会议编号" :span="2">
+          {{ formData.meetNo || '-' }}
+        </el-descriptions-item>
         <el-descriptions-item label="会议名称" :span="2">
           {{ formData.meetName || '-' }}
         </el-descriptions-item>
@@ -96,18 +99,18 @@
 </template>
 
 <script setup lang="ts">
-import { DICT_TYPE } from '@/utils/dict'
+import {DICT_TYPE} from '@/utils/dict'
 import DictTag from '@/components/DictTag/src/DictTag.vue'
-import { OaMeetingApi, OaMeetingVO } from '@/api/business/oameeting'
-import { OaMeetingRoomApi } from '@/api/business/oameetingroom'
-import { formatDate } from '@/utils/formatTime'
-import { View } from '@element-plus/icons-vue'
+import {OaMeetingApi, OaMeetingVO} from '@/api/business/oameeting'
+import {OaMeetingRoomApi} from '@/api/business/oameetingroom'
+import {formatDate} from '@/utils/formatTime'
+import {View} from '@element-plus/icons-vue'
 import * as FileApi from '@/api/infra/file'
-import { base64Encode } from '@/utils'
-import { useUserStore } from '@/store/modules/user'
-import { openPreviewWindow } from '@/utils/previewWindow'
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import {base64Encode} from '@/utils'
+import {useUserStore} from '@/store/modules/user'
+import {openPreviewWindow} from '@/utils/previewWindow'
+import {ref} from 'vue'
+import {useRouter} from 'vue-router'
 import OaMeetingIssueDetail from '@/views/business/oameetingissue/OaMeetingIssueDetail.vue'
 
 /** 会议详情 */

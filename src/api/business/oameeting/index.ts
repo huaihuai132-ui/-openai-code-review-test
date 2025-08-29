@@ -1,11 +1,12 @@
 import request from '@/config/axios'
-import { OaMeetingAttendeeVO } from '../oameetingattendee'
-import { OaMeetingIssueVO } from '../oameetingissue'
+import {OaMeetingAttendeeVO} from '../oameetingattendee'
+import {OaMeetingIssueVO} from '../oameetingissue'
 
 // 会议 VO
 export interface OaMeetingVO {
   id: number // 会议ID
   userId: number // 会议发起人ID
+  meetNo?: string // 会议编号
   meetName: string // 会议名称
   meetType: string // 会议类型
   meetDate: Date // 会议日期
@@ -51,5 +52,9 @@ export const OaMeetingApi = {
   // 导出会议 Excel
   exportOaMeeting: async (params) => {
     return await request.download({ url: `/business/oa-meeting/export-excel`, params })
-  }
+  },
+  // 发送审批
+  sendApprove: async (id: number) => {
+    return await request.post({ url: `/business/oa-meeting/sendApprove?id=` + id })
+  },
 }

@@ -81,6 +81,7 @@
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
 <!--      <el-table-column label="会议ID" align="center" prop="id" />-->
 <!--      <el-table-column label="会议发起人ID" align="center" prop="userId" />-->
+<!--      <el-table-column label="会议编号" align="center" prop="meetNo" />-->
       <el-table-column label="会议名称" align="center" prop="meetName" />
       <el-table-column label="会议类型" align="center" prop="meetType">
         <template #default="scope">
@@ -118,6 +119,7 @@
             type="info"
             @click="openDetail(scope.row.id)"
             v-hasPermi="['business:oa-meeting:query']"
+            :disabled="sendApproveLoading[scope.row.id]"
           >
             详情
           </el-button>
@@ -126,6 +128,8 @@
             type="primary"
             @click="openForm('update', scope.row.id)"
             v-hasPermi="['business:oa-meeting:update']"
+            v-if="scope.row.status === -1"
+            :disabled="sendApproveLoading[scope.row.id]"
           >
             编辑
           </el-button>
@@ -136,6 +140,7 @@
             v-hasPermi="['business:oa-meeting:sendApprove']"
             :disabled="sendApproveLoading[scope.row.id]"
             :loading="sendApproveLoading[scope.row.id]"
+            v-if="scope.row.status === -1"
           >
             送审
           </el-button>
@@ -144,6 +149,8 @@
             type="danger"
             @click="handleDelete(scope.row.id)"
             v-hasPermi="['business:oa-meeting:delete']"
+            v-if="scope.row.status === -1"
+            :disabled="sendApproveLoading[scope.row.id]"
           >
             删除
           </el-button>
@@ -260,10 +267,7 @@ const sendApprove = async (id: number) => {
     await message.sendApproveConfirm()
     // 发起送审
     sendApproveLoading.value[id] = true
-    await OaMeetingApi.updateOaMeeting({
-      id,
-      needApproval: true
-    } as unknown as OaMeetingVO)
+    await OaMeetingApi.sendApprove(id)
     message.success(t('common.sendApproveSuccess'))
     // 刷新列表
     await getList()
