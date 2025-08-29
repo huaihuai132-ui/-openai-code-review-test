@@ -205,30 +205,37 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .initiate-application {
-  padding: 20px;
+  padding: 16px;
   background-color: #f5f7fa;
   height: 100%;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
 }
 
 .search-container {
   background-color: #fff;
   padding: 15px;
-  border-radius: 5px;
-  margin-bottom: 20px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .category-container {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-height: 300px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  align-items: stretch;
 }
 
 .category-card {
   background-color: #fff;
-  border-radius: 5px;
+  border-radius: 8px;
   padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .category-header {
@@ -250,43 +257,60 @@ onMounted(() => {
 }
 
 .card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
 }
 
 .card-item {
   display: flex;
+  flex-direction: row;
   align-items: center;
   border: 1px solid #ebeef5;
-  border-radius: 5px;
-  padding: 15px;
+  border-radius: 8px;
+  padding: 12px;
   cursor: pointer;
   transition: all 0.3s;
   background: #fff;
+  text-align: left;
+  min-height: 100px;
+  justify-content: flex-start;
+  gap: 12px;
 }
 
 .card-item:hover {
   box-shadow: 0 4px 16px 0 rgba(64, 158, 255, 0.12);
   border-color: #409EFF;
-  transform: translateY(-2px) scale(1.03);
+  transform: translateY(-2px) scale(1.02);
 }
 
 .flow-icon {
   display: flex;
-  width: 38px;
-  height: 38px;
-  margin-right: 10px;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 0;
   background-color: var(--el-color-primary);
-  border-radius: 4px;
+  border-radius: 6px;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 12px;
+  font-size: 18px;
+  font-weight: 500;
+  flex-shrink: 0;
 }
 
 .card-text {
   color: #606266;
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-all;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .loading-container {
