@@ -1,6 +1,6 @@
 <template>
-  <Dialog title="议题详情" v-model="dialogVisible" width="700px">
-    <div v-loading="loading" class="py-10">
+  <Dialog title="议题详情" v-model="dialogVisible" width="600px" top="50px">
+    <div v-loading="loading" class="py-6">
       <el-descriptions :column="2" border :size="'small'">
         <el-descriptions-item label="议题编号" :span="2">
           {{ formData.issueNo || '-' }}
@@ -74,18 +74,20 @@
   </Dialog>
 </template>
 <script setup lang="ts">
-import { DICT_TYPE } from '@/utils/dict'
+import {DICT_TYPE} from '@/utils/dict'
 import DictTag from '@/components/DictTag/src/DictTag.vue'
-import { OaMeetingIssueApi, OaMeetingIssueVO } from '@/api/business/oameetingissue'
-import { formatDate } from '@/utils/formatTime'
-import { View } from '@element-plus/icons-vue'
+import {OaMeetingIssueApi, OaMeetingIssueVO} from '@/api/business/oameetingissue'
+import {formatDate} from '@/utils/formatTime'
+import {View} from '@element-plus/icons-vue'
 import * as FileApi from '@/api/infra/file'
-import { base64Encode } from '@/utils'
-import { useUserStore } from '@/store/modules/user'
-import { openPreviewWindow } from '@/utils/previewWindow'
+import {base64Encode} from '@/utils'
+import {useUserStore} from '@/store/modules/user'
+import {openPreviewWindow} from '@/utils/previewWindow'
 import * as UserApi from '@/api/system/user'
 import * as DeptApi from '@/api/system/dept'
-import { handleTree } from '@/utils/tree'
+import {handleTree} from '@/utils/tree'
+// 导入域名配置工具
+import {getDomainUrl} from '@/utils/domainConfig'
 
 
 /** 会议议题 详情 */
@@ -105,9 +107,6 @@ const userList = ref<any[]>([])
 
 // 部门列表
 const deptList = ref<Tree[]>([])
-
-// 导入域名配置工具
-import { getDomainUrl } from '@/utils/domainConfig'
 
 // 获取配置的域名
 const FIXED_DOMAIN = getDomainUrl()

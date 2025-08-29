@@ -19,33 +19,37 @@
             :mode="formType === 'update' ? 'edit' : formType" />
         </el-tab-pane>
         <el-tab-pane label="参会人员" name="participant">
-          <AttendeeManager v-model:attendees="formData.attendeeList" />
+          <AttendeeManager v-model:attendees="formData.attendeeList" ref="attendeeManagerRef" />
         </el-tab-pane>
         <el-tab-pane label="会议议题" name="issue">
-          <IssueManager v-model:issues="formData.issueList" />
+          <IssueManager 
+            v-model:issues="formData.issueList" 
+            @add-attendee="handleAddAttendee"
+          />
         </el-tab-pane>
       </el-tabs>
     </el-form>
 
     <template #footer>
       <el-button @click="submitForm" type="primary" :disabled="formLoading">确 定</el-button>
+<!--      <el-button @click="submitForApproval" type="warning" :disabled="formLoading">送 审</el-button>-->
       <el-button @click="dialogVisible = false">取 消</el-button>
     </template>
   </Dialog>
 </template>
 
 <script setup lang="ts">
-import { OaMeetingApi, OaMeetingVO } from '@/api/business/oameeting'
-import { OaMeetingRoomApi } from '@/api/business/oameetingroom'
+import {OaMeetingApi, OaMeetingVO} from '@/api/business/oameeting'
+import {OaMeetingRoomApi} from '@/api/business/oameetingroom'
 import BasicMeetingForm from './BasicMeetingForm.vue'
 import AttendeeManager from './AttendeeManager.vue'
 import IssueManager from './IssueManager.vue'
 import AttachmentManager from './AttachmentManager.vue'
-import type { MeetingFormData, MeetingRoom } from './types'
-import { ref, reactive } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useMessage } from '@/hooks/web/useMessage'
-import { ElMessageBox } from 'element-plus'
+import type {MeetingFormData, MeetingRoom} from './types'
+import {reactive, ref} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useMessage} from '@/hooks/web/useMessage'
+import {ElMessageBox} from 'element-plus'
 
 /** 会议表单容器 */
 defineOptions({ name: 'MeetingFormContainer' })
@@ -80,6 +84,8 @@ const formData = ref<MeetingFormData>({
   attendeeList: [],
   issueList: []
 })
+
+const attendeeManagerRef = ref<typeof AttendeeManager>()
 
 // 会议室列表
 const meetingRooms = ref<MeetingRoom[]>([])
@@ -231,6 +237,49 @@ const submitForm = async () => {
   }
 }
 
+/** 送审表单 */
+const submitForApproval = async () => {
+  try {
+    await ElMessageBox.confirm('确定要送审该会议吗？送审后将进入审批流程。', '确认送审', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+
+    await formRef.value.validate()
+
+    formLoading.value = true
+    try {
+      const data = {
+        ...formData.value,
+        needApproval: true
+      } as unknown as OaMeetingVO
+
+      if (data.fileList && Array.isArray(data.fileList) && data.fileList.length > 0) {
+        data.fileList = JSON.stringify(data.fileList) as any
+      } else {
+        data.fileList = '[]' as any
+      }
+
+      if (formType.value === 'create') {
+        await OaMeetingApi.createOaMeeting(data)
+      } else {
+        await OaMeetingApi.updateOaMeeting(data)
+      }
+
+      message.success('送审成功！')
+      dialogVisible.value = false
+      emit('success')
+    } finally {
+      formLoading.value = false
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('送审失败:', error)
+      message.error('送审失败，请重试')
+    }
+  }
+}
 
 /** 重置表单 */
 const resetForm = async () => {
@@ -260,6 +309,17 @@ const resetForm = async () => {
   }
 
   formRef.value?.resetFields()
+}
+
+/** 处理添加参会人员事件 */
+const handleAddAttendee = (attendee: any) => {
+  // 检查该参会人是否已存在于列表中
+  const exists = formData.value.attendeeList.some(item => item.userId === attendee.userId);
+  
+  // 如果不存在，则添加到参会人员列表
+  if (!exists) {
+    formData.value.attendeeList.push(attendee);
+  }
 }
 
 defineExpose({ open })

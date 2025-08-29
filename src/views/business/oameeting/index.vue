@@ -87,7 +87,11 @@
           <dict-tag :type="DICT_TYPE.MEET_TYPE" :value="scope.row.meetType" />
         </template>
       </el-table-column>
-      <el-table-column label="会议日期" align="center" prop="meetDate" :formatter="dateFormatter" width="180px" />
+      <el-table-column label="会议日期" align="center" prop="meetDate" width="180px">
+        <template #default="scope">
+          {{ formatDate(scope.row.meetDate, 'YYYY-MM-DD') }}
+        </template>
+      </el-table-column>
       <el-table-column label="开始时间" align="center" prop="startTime" :formatter="dateFormatter" width="180px" />
       <el-table-column label="结束时间" align="center" prop="endTime" :formatter="dateFormatter" width="180px" />
 <!--      <el-table-column label="会议室ID" align="center" prop="meetRoomId" />-->
@@ -163,10 +167,10 @@
 </template>
 
 <script setup lang="ts">
-import { getIntDictOptions, getStrDictOptions, DICT_TYPE } from '@/utils/dict'
-import { dateFormatter } from '@/utils/formatTime'
+import {DICT_TYPE, getStrDictOptions} from '@/utils/dict'
+import {dateFormatter, formatDate} from '@/utils/formatTime'
 import download from '@/utils/download'
-import { OaMeetingApi, OaMeetingVO } from '@/api/business/oameeting'
+import {OaMeetingApi, OaMeetingVO} from '@/api/business/oameeting'
 import OaMeetingForm from './OaMeetingForm.vue'
 import OaMeetingDetail from './OaMeetingDetail.vue'
 
