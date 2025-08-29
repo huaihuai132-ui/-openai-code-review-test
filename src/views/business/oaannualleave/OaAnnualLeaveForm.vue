@@ -10,19 +10,19 @@
       <!-- <el-form-item label="用户ID" prop="userId">
         <el-input v-model="formData.userId" placeholder="请输入用户ID" />
       </el-form-item> -->
-      <el-form-item label="用户名" prop="userId">
+      <el-form-item label="用户名" prop="userName">
         <el-input v-model="formData.userName" placeholder="请输入用户名" />
-      </el-form-item>
-      <el-form-item label="年假总天数" prop="totalDays">
-        <el-input v-model="formData.totalDays" placeholder="请输入年假总天数" />
       </el-form-item>
       <el-form-item label="已使用年假天数" prop="usedDays">
         <el-input v-model="formData.usedDays" placeholder="请输入已使用年假天数" />
       </el-form-item>
+      <el-form-item label="年假总天数" prop="totalDays">
+        <el-input v-model="formData.totalDays" placeholder="请输入年假总天数" />
+      </el-form-item>
       <!-- <el-form-item label="部门编号" prop="deptId">
         <el-input v-model="formData.deptId" placeholder="请输入部门编号" />
       </el-form-item> -->
-      <el-form-item label="部门名" prop="deptId">
+      <el-form-item label="部门名" prop="deptName">
         <el-input v-model="formData.deptName" placeholder="请输入部门名" />
       </el-form-item>
     </el-form>
@@ -60,10 +60,10 @@ const formData = ref({
   deptId: undefined,
 })
 const formRules = reactive({
-  userId: [{ required: true, message: '用户ID不能为空', trigger: 'blur' }],
+  userName: [{ required: true, message: '用户名称不能为空', trigger: 'blur' }],
   totalDays: [{ required: true, message: '年假总天数不能为空', trigger: 'blur' }],
   usedDays: [{ required: true, message: '已使用年假天数不能为空', trigger: 'blur' }],
-  deptId: [{ required: true, message: '部门编号不能为空', trigger: 'blur' }],
+  deptName: [{ required: true, message: '部门名称不能为空', trigger: 'blur' }],
 })
 const formRef = ref() // 表单 Ref
 

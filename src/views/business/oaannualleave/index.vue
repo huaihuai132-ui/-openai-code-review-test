@@ -170,7 +170,7 @@ const getList = async () => {
     list.value = data.list
     total.value = data.total
   } finally {
-    loading.value = false
+    loading.value = false 
   }
 }
 

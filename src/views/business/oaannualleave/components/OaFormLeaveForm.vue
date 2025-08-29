@@ -130,15 +130,15 @@ watch(
 /** 计算两个日期之间的天数差 */
 const calculateDays = (startTime, endTime) => {
   if (!startTime || !endTime) return ''
-  
+
   // 将时间戳转换为毫秒
   const start = new Date(parseInt(startTime))
   const end = new Date(parseInt(endTime))
-  
+
   // 计算天数差（向上取整，包含开始和结束当天）
   const diffTime = end.getTime() - start.getTime()
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  
+
   return diffDays > 0 ? diffDays.toString() : ''
 }
 
@@ -147,7 +147,7 @@ watch(
   () => formData.value,
   (rows) => {
     if (!rows || rows.length === 0) return
-    
+
     rows.forEach(row => {
       if (row.startTime && row.endTime) {
         row.day = calculateDays(row.startTime, row.endTime)
