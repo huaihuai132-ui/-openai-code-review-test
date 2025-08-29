@@ -98,8 +98,9 @@ const getList = async () => {
     // 尝试按照分类名称匹配
     for (const category of categoryList) {
       const categoryModels = modelList.filter(model =>
-        model.categoryId === category.id ||
-        model.categoryName === category.name
+        (model.categoryId === category.id ||
+        model.categoryName === category.name) &&
+        model.visible === true  // 只显示visible为true的申请
       );
 
       if (categoryModels && categoryModels.length > 0) {
@@ -110,12 +111,15 @@ const getList = async () => {
       }
     }
 
-    // 如果没有找到任何匹配，则将所有模型放入第一个分类
+    // 如果没有找到任何匹配，则将所有可见模型放入第一个分类
     if (result.length === 0 && categoryList.length > 0 && modelList.length > 0) {
-      result.push({
-        ...categoryList[0],
-        modelList: modelList
-      });
+      const visibleModels = modelList.filter(model => model.visible === true);
+      if (visibleModels.length > 0) {
+        result.push({
+          ...categoryList[0],
+          modelList: visibleModels
+        });
+      }
     }
 
     // 直接赋值
@@ -175,12 +179,13 @@ function handleFormSuccess() {
 // 监听搜索文本变化
 watch(searchText, (newVal) => {
   if (newVal) {
-    // 过滤已加载的数据
+    // 过滤已加载的数据，同时确保只显示可见的申请
     const filtered = categoryGroup.value.map(category => {
       return {
         ...category,
         modelList: category.modelList.filter((model: any) =>
-          model.name.toLowerCase().includes(newVal.toLowerCase())
+          model.name.toLowerCase().includes(newVal.toLowerCase()) &&
+          model.visible === true  // 搜索结果也只显示visible为true的申请
         )
       };
     }).filter(category => category.modelList.length > 0);
