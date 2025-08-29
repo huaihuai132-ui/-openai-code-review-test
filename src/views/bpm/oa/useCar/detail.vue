@@ -68,7 +68,7 @@ const getInfo = async () => {
   detailLoading.value = true
   try {
     const id = props.id || queryId
-    detailData.value = await UseCarApi.getUseCar(Number(id))
+    detailData.value = await UseCarApi.getUseCar(id)
     // 处理文件列表，如果字段不存在则设为空字符串
     fileIdList.value = parseFileIdList(detailData.value.fileList || '')
   } finally {

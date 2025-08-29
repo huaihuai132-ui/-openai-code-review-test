@@ -19,7 +19,7 @@ export const createUseCar = async (data: UseCarVO) => {
 }
 
 // 获得用车申请
-export const getUseCar = async (id: number) => {
+export const getUseCar = async (id: number | string) => {
   return await request.get({ url: '/bpm/oa/form/useCar/get?id=' + id })
 }
 

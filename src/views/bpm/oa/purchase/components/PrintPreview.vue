@@ -81,12 +81,6 @@
             <span>日期：</span>
             <div class="signature-line"></div>
           </div>
-          <div class="signature-item">
-            <span>财务审核：</span>
-            <div class="signature-line"></div>
-            <span>日期：</span>
-            <div class="signature-line"></div>
-          </div>
         </div>
       </div>
     </div>

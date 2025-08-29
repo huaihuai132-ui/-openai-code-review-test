@@ -53,7 +53,7 @@ const getInfo = async () => {
   detailLoading.value = true
   try {
     const id = props.id || queryId
-    detailData.value = await MaintenanceApi.getMaintenance(Number(id))
+    detailData.value = await MaintenanceApi.getMaintenance(id)
     // 处理文件列表，如果字段不存在则设为空字符串
     fileIdList.value = parseFileIdList(detailData.value.fileList || '')
   } finally {

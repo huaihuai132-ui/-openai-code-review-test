@@ -17,7 +17,7 @@ export const createMaintenance = async (data: MaintenanceVO) => {
 }
 
 // 获得报修申请
-export const getMaintenance = async (id: number) => {
+export const getMaintenance = async (id: number | string) => {
   return await request.get({ url: '/bpm/oa/form/maintenance/get?id=' + id })
 }
 
