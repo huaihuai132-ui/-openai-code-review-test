@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import CommonList from './category/CommonList.vue';
 import ProcessInstanceDetail from '@/views/bpm/processInstance/detail/index.vue';
 import { getTaskTodoPage, getTaskDonePage } from '@/api/bpm/task';
@@ -134,6 +134,9 @@ import { useTagsViewStoreWithOut } from '@/store/modules/tagsView'
 const route = useRoute();
 const router = useRouter();
 const activeCategory = ref('');
+
+// 定时器管理
+const timers = ref<number[]>([]);
 const waitingList = ref([]);
 const doneList = ref([]);
 const applyList = ref([]);
@@ -635,14 +638,16 @@ const forceSetPageTitle = (category: string) => {
   document.title = newTitle;
   
   // 延迟执行标题更新，确保标签页已经创建
-  setTimeout(() => {
+  const timer1 = setTimeout(() => {
     updateTagTitle(category);
   }, 100);
+  timers.value.push(timer1);
   
   // 再次延迟执行，确保更新生效
-  setTimeout(() => {
+  const timer2 = setTimeout(() => {
     updateTagTitle(category);
   }, 500);
+  timers.value.push(timer2);
 };
 
 // 初始化
@@ -678,9 +683,19 @@ onMounted(async () => {
   calculateNewItems();
   
   // 最后再次确保标题正确
-  setTimeout(() => {
+  const timer3 = setTimeout(() => {
     forceSetPageTitle(activeCategory.value);
   }, 1000);
+  timers.value.push(timer3);
+});
+
+// 组件卸载时清理定时器
+onUnmounted(() => {
+  console.log('=== ApprovalCenter 组件卸载，清理定时器 ===');
+  timers.value.forEach(timer => {
+    clearTimeout(timer);
+  });
+  timers.value = [];
 });
 </script>
 
