@@ -57,4 +57,18 @@ export const OaMeetingApi = {
   sendApprove: async (id: number) => {
     return await request.post({ url: `/business/oa-meeting/sendApprove?id=` + id })
   },
+  // 结束会议
+  endMeeting: async (data) => {
+    return await request.post({ url: `/business/oa-meeting/endMeeting`, data })
+  },
+  // 归档会议
+  archiveMeeting: async (data) => {
+    return await request.post({ url: `/business/oa-meeting/archiveMeeting`, data})
+  },
+  // 会议签到
+  confirmSignin: async (id: number) => {
+    return await request.post({ url: `/business/oa-meeting/confirmSignin?id=` + id })
+  },
+
+
 }

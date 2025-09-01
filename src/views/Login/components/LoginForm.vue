@@ -16,25 +16,6 @@
         </el-form-item>
       </el-col>
       <el-col :span="24" style="padding-right: 10px; padding-left: 10px">
-        <el-form-item v-if="loginData.tenantEnable === 'true'" prop="tenantName">
-          <el-select
-            v-model="loginData.loginForm.tenantName"
-            :placeholder="t('login.tenantNamePlaceholder')"
-            class="w-[100%]"
-            :prefix-icon="iconHouse"
-            filterable
-            @change="handleTenantChange"
-          >
-            <el-option
-              v-for="tenant in tenantList"
-              :key="tenant.id"
-              :label="tenant.name"
-              :value="tenant.name"
-            />
-          </el-select>
-        </el-form-item>
-      </el-col>
-      <el-col :span="24" style="padding-right: 10px; padding-left: 10px">
         <el-form-item prop="username">
           <el-input
             v-model="loginData.loginForm.username"

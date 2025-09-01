@@ -14,6 +14,24 @@
       <el-form-item label="议题标题" prop="issueTitle">
         <el-input v-model="formData.issueTitle" placeholder="请输入议题标题" />
       </el-form-item> 
+      <el-form-item label="关联会议" prop="meetingId">
+        <el-select 
+          v-model="formData.meetingId" 
+          placeholder="请选择关联会议" 
+          clearable
+          filterable
+          remote
+          :remote-method="searchMeetings"
+          :loading="meetingLoading"
+        >
+          <el-option
+            v-for="meeting in filteredMeetingList"
+            :key="meeting.id"
+            :label="meeting.meetName"
+            :value="meeting.id"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="议题类型" prop="issueType">  
         <el-select v-model="formData.issueType" placeholder="请选择议题类型">
           <el-option
@@ -115,14 +133,14 @@
   </Dialog>
 </template>
 <script setup lang="ts">
-import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
-import { OaMeetingIssueApi, OaMeetingIssueVO } from '@/api/business/oameetingissue'
-import { BatchFileUpload } from '@/components/UploadFile'
-import { nextTick } from 'vue'
+import {DICT_TYPE, getIntDictOptions} from '@/utils/dict'
+import {OaMeetingIssueApi} from '@/api/business/oameetingissue'
+import {BatchFileUpload} from '@/components/UploadFile'
+import {nextTick} from 'vue'
 import * as UserApi from '@/api/system/user'
 import * as DeptApi from '@/api/system/dept'
-import { handleTree } from '@/utils/tree'
-
+import {handleTree} from '@/utils/tree'
+import {OaMeetingApi} from '@/api/business/oameeting'
 
 /** 会议议题 表单 */  
 defineOptions({ name: 'OaMeetingIssueForm' })
@@ -135,10 +153,15 @@ const dialogTitle = ref('') // 弹窗的标题
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const userLoading = ref(false) // 用户列表加载状态
+const meetingLoading = ref(false) // 会议列表加载状态
 
 // 用户列表
 const userList = ref<any[]>([])
 const filteredUserList = ref<any[]>([])
+
+// 会议列表
+const meetingList = ref<any[]>([])
+const filteredMeetingList = ref<any[]>([])
 
 // 部门相关
 const deptList = ref<Tree[]>([]) // 树形结构
@@ -151,6 +174,7 @@ const formData = ref({
   issueType: undefined,
   meetingType: undefined,
   reporterId: undefined,
+  meetingId: undefined, // 添加关联会议ID字段
   relevantDept: [] as number[], // 使用number数组类型
   issueContent: undefined,
   description: undefined,
@@ -163,6 +187,7 @@ const formRules = reactive({
   // userId: [{ required: true, message: '议题发起人ID不能为空', trigger: 'blur' }],
   // issueNo: [{ required: true, message: '议题编号不能为空', trigger: 'blur' }],
   issueTitle: [{ required: true, message: '议题标题不能为空', trigger: 'blur' }],
+  meetingId: [{ required: false, message: '关联会议选择有误', trigger: 'change' }],
   issueType: [{ required: true, message: '议题类型不能为空', trigger: 'change' }],
   meetingType: [{ required: true, message: '上会类型不能为空', trigger: 'change' }],
   reporterId: [{ required: true, message: '汇报人不能为空', trigger: 'change' }],
@@ -180,6 +205,17 @@ const searchUsers = (query: string) => {
     )
   } else {
     filteredUserList.value = [...userList.value]
+  }
+}
+
+/** 搜索会议 */
+const searchMeetings = (query: string) => {
+  if (query) {
+    filteredMeetingList.value = meetingList.value.filter(meeting => 
+      meeting.meetName && meeting.meetName.toLowerCase().includes(query.toLowerCase())
+    )
+  } else {
+    filteredMeetingList.value = [...meetingList.value]
   }
 }
 
@@ -204,6 +240,27 @@ const getDeptList = async () => {
   deptList.value = handleTree(data)
 }
 
+/** 获取会议列表 */
+const getMeetingList = async () => {
+  try {
+    meetingLoading.value = true
+    // 获取会议列表，使用和页面中一样的参数，但设置较大的pageSize
+    const params = { 
+      pageSize: 100,
+      pageNo: 1,
+      status: 2 // 只获取状态为"待开始"的会议
+    }
+    const data = await OaMeetingApi.getOaMeetingPage(params)
+    meetingList.value = data.list
+    filteredMeetingList.value = [...data.list]
+  } catch (error) {
+    console.error('获取会议列表失败:', error)
+    message.error('获取会议列表失败')
+  } finally {
+    meetingLoading.value = false
+  }
+}
+
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
   dialogTitle.value = t('action.' + type)
@@ -211,7 +268,7 @@ const open = async (type: string, id?: number) => {
   resetForm()
   
   // 获取用户列表和部门列表
-  await Promise.all([getUserList(), getDeptList()])
+  await Promise.all([getUserList(), getDeptList(), getMeetingList()])
   
   // 修改时，设置数据
   if (id) {
