@@ -60,10 +60,10 @@
                 ref="fileUploadRef" 
                 v-model:fileList="contactForm.fileList" 
                 mode="create"
-                :max-files="10" 
+                :max-files="1" 
                 directory="business" 
                 :file-size="10" 
-                tip="支持上传多个文件，每个文件不超过10MB" 
+                tip="支持上传1个文件，文件不超过10MB" 
               />
             </el-form-item>
             
@@ -106,11 +106,15 @@
 import { ref, reactive } from 'vue'
 import { useMessage } from '@/hooks/web/useMessage'
 import { BatchFileUpload } from '@/components/UploadFile'
+import { OaContactUsApi } from '@/api/business/oacontactus'
+import * as UserApi from '@/api/system/user'
+import { useUserStore } from '@/store/modules/user'
 
 defineOptions({ name: 'Contact' })
 
 // 消息提示
 const { success, error } = useMessage()
+const userStore = useUserStore()
 const formRef = ref()
 const submitting = ref(false)
 
@@ -159,18 +163,31 @@ const submitForm = async () => {
     await formRef.value.validate()
     submitting.value = true
     
-    // 模拟API调用
-    setTimeout(() => {
-      // 这里应该替换为实际的API调用
-      // 例如: await contactApi.submitFeedback(contactForm)
-      
-      success('留言提交成功，我们会尽快回复您')
-      resetForm()
-      submitting.value = false
-    }, 1000)
+    // 获取当前用户信息
+    const currentUser = userStore.getUser
+    
+    // 准备提交数据
+    const submitData = {
+      userId: currentUser?.id || undefined, // 用户ID
+      messageContent: contactForm.message, // 留言内容
+      name: currentUser?.nickname || '', // 联系人姓名
+      phone: '', // 联系电话，从用户信息获取（如果有mobile字段）
+      email: '', // 联系邮箱，从用户信息获取（如果有email字段）
+      status: 1, // 默认状态：待处理
+      fileId: contactForm.fileList.length > 0 ? contactForm.fileList.map(fileId => fileId).filter(id => id).join(',') : '', // 文件编号，使用上传后返回的文件ID
+      deptId: currentUser?.deptId || 1 // 部门编号
+    }
+    
+    // 调用实际API
+    await OaContactUsApi.createOaContactUs(submitData)
+    
+    success('留言提交成功，我们会尽快回复您')
+    resetForm()
   } catch (err) {
-    console.error('表单验证失败:', err)
-    error('表单验证失败，请检查输入')
+    console.error('提交失败:', err)
+    error('提交失败，请稍后重试')
+  } finally {
+    submitting.value = false
   }
 }
 
