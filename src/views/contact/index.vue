@@ -36,23 +36,7 @@
                     class="qr-code-image"
                     @error="handleImageError"
                     @click="showFullscreenImage"
-                    @mousedown="showFullscreenImage"
                   />
-                  <div 
-                    class="qr-code-overlay"
-                    style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; z-index: 10;"
-                    @mouseenter="showOverlay"
-                    @mouseleave="hideOverlay"
-                  >
-                    <div 
-                      class="zoom-icon"
-                      style="font-size: 24px; margin-bottom: 8px; color: white; display: block;"
-                    >🔍</div>
-                    <span 
-                      class="scan-text"
-                      style="color: white; font-size: 12px; font-weight: 500; display: block;"
-                    >点击放大查看</span>
-                  </div>
                 </div>
               </div>
           </div>
@@ -63,33 +47,25 @@
           <p class="form-description">请填写以下信息，我们会尽快回复您</p>
           
           <el-form :model="contactForm" :rules="formRules" ref="formRef" label-width="80px">
-            <el-form-item label="姓名" prop="name">
-              <el-input v-model="contactForm.name" placeholder="请输入您的姓名" />
+            <el-form-item label="留言内容" prop="message">
+              <el-input 
+                v-model="contactForm.message" 
+                placeholder="请输入留言内容" 
+                type="textarea" 
+                :rows="4"
+              />
             </el-form-item>
-            
-            <el-form-item label="邮箱" prop="email">
-              <el-input v-model="contactForm.email" placeholder="请输入您的邮箱地址（选填）" />
+            <el-form-item label="附件" prop="fileList">
+              <BatchFileUpload 
+                ref="fileUploadRef" 
+                v-model:fileList="contactForm.fileList" 
+                mode="create"
+                :max-files="10" 
+                directory="business" 
+                :file-size="10" 
+                tip="支持上传多个文件，每个文件不超过10MB" 
+              />
             </el-form-item>
-            
-            <el-form-item label="微信号" prop="wechat">
-              <el-input v-model="contactForm.wechat" placeholder="请输入您的微信号" />
-            </el-form-item>
-            
-            <el-form-item label="手机号" prop="phone">
-              <el-input v-model="contactForm.phone" placeholder="请输入您的手机号" />
-            </el-form-item>
-            
-            <el-form-item label="主题" prop="subject">
-              <el-input v-model="contactForm.subject" placeholder="请输入留言主题" />
-            </el-form-item>
-            
-            <el-form-item label="输入你的留言内容" prop="message">
-            <el-input v-model="contactForm.message" placeholder="请输入输入你的留言内容" type="textarea" />
-          </el-form-item>
-          <el-form-item label="附件" prop="fileList">
-            <BatchFileUpload ref="fileUploadRef" v-model:fileList="contactForm.fileList" mode="create"
-                :max-files="10" directory="business" :file-size="10" tip="支持上传多个文件，每个文件不超过10MB" />
-          </el-form-item>
             
             <el-form-item>
               <el-button type="primary" @click="submitForm" :loading="submitting">
@@ -129,68 +105,43 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useMessage } from '@/hooks/web/useMessage'
-import { Editor } from '@/components/Editor'
 import { BatchFileUpload } from '@/components/UploadFile'
 
 defineOptions({ name: 'Contact' })
 
-
-const message = useMessage()
+// 消息提示
+const { success, error } = useMessage()
 const formRef = ref()
 const submitting = ref(false)
 
+// 全屏图片显示相关变量
+const fullscreenVisible = ref(false)
+const fullscreenImageSrc = ref('/src/assets/imgs/wechat-qr.jpg')
+
+// 显示全屏图片
+const showFullscreenImage = () => {
+  fullscreenImageSrc.value = '/src/assets/imgs/wechat-qr.jpg'
+  fullscreenVisible.value = true
+}
 
 // 表单数据
 const contactForm = reactive({
-  name: '',
-  email: '',
-  wechat: '',
-  phone: '',
-  subject: '',
   message: '',
-  fileList:[]
+  fileList: []
 })
 
 // 表单验证规则
-// 自定义验证：微信号和手机号至少填写一个
-const validateContactInfo = (rule: any, value: any, callback: any) => {
-  if (!contactForm.wechat && !contactForm.phone) {
-    callback(new Error('微信号和手机号至少填写一个'))
-  } else {
-    callback()
-  }
-}
-
 const formRules = {
-  name: [
-    { required: true, message: '请输入姓名', trigger: 'blur' },
-    { min: 2, max: 20, message: '姓名长度在 2 到 20 个字符', trigger: 'blur' }
-  ],
-  email: [
-    { type: 'email' as const, message: '请输入正确的邮箱地址', trigger: 'blur' }
-  ],
-  wechat: [
-    { validator: validateContactInfo, trigger: 'blur' },
-    { min: 3, max: 30, message: '微信号长度在 3 到 30 个字符', trigger: 'blur' }
-  ],
-  phone: [
-    { validator: validateContactInfo, trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
-  ],
-  subject: [
-    { required: true, message: '请输入留言主题', trigger: 'blur' },
-    { min: 5, max: 100, message: '主题长度在 5 到 100 个字符', trigger: 'blur' }
-  ],
   message: [
     { 
       required: true, 
-      validator: (rule: any, value: any, callback: any) => {
+      validator: (rule: any, value: string, callback: any) => {
         // 去除HTML标签后检查纯文本长度
         const plainText = value.replace(/<[^>]*>/g, '').trim()
         if (!plainText) {
           callback(new Error('请输入留言内容'))
         } else if (plainText.length < 10) {
-          callback(new Error('留言内容至少 10 个字符'))
+          callback(new Error('留言内容至少需要10个字符'))
         } else {
           callback()
         }
@@ -202,21 +153,33 @@ const formRules = {
 
 // 提交表单
 const submitForm = async () => {
+  if (!formRef.value) return
+  
   try {
     await formRef.value.validate()
     submitting.value = true
-  } catch (error) {
-    console.error('表单验证失败:', error)
+    
+    // 模拟API调用
+    setTimeout(() => {
+      // 这里应该替换为实际的API调用
+      // 例如: await contactApi.submitFeedback(contactForm)
+      
+      success('留言提交成功，我们会尽快回复您')
+      resetForm()
+      submitting.value = false
+    }, 1000)
+  } catch (err) {
+    console.error('表单验证失败:', err)
+    error('表单验证失败，请检查输入')
   }
 }
 
-
 // 重置表单
 const resetForm = () => {
-  formRef.value?.resetFields()
-  contactForm.wechat = ''
-  contactForm.phone = ''
-  contactForm.message = ''
+  if (formRef.value) {
+    formRef.value.resetFields()
+    contactForm.fileList = []
+  }
 }
 
 // 处理图片加载错误
@@ -225,24 +188,6 @@ const handleImageError = (event: Event) => {
   target.style.display = 'none'
   console.warn('微信二维码图片加载失败，请检查图片路径')
 }
-
-
-
-// 显示覆盖层
-const showOverlay = (event: Event) => {
-  const target = event.target as HTMLElement
-  target.style.opacity = '1'
-  target.style.visibility = 'visible'
-}
-
-// 隐藏覆盖层
-const hideOverlay = (event: Event) => {
-  const target = event.target as HTMLElement
-  target.style.opacity = '0'
-  target.style.visibility = 'hidden'
-}
-
-
 </script>
 
 <style scoped lang="scss">
@@ -280,7 +225,7 @@ const hideOverlay = (event: Event) => {
     }
   }
   
-    .contact-info {
+  .contact-info {
     .info-item {
       display: flex;
       align-items: flex-start;
@@ -347,48 +292,6 @@ const hideOverlay = (event: Event) => {
               border-color: #409eff;
               box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
             }
-          }
-          
-          .qr-code-overlay {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            background: rgba(0, 0, 0, 0.6) !important;
-            border-radius: 8px !important;
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            justify-content: center !important;
-            opacity: 0 !important;
-            transition: opacity 0.3s ease !important;
-            pointer-events: none !important;
-            z-index: 10 !important;
-            
-            .zoom-icon {
-              font-size: 24px !important;
-              margin-bottom: 8px !important;
-              color: white !important;
-              display: block !important;
-            }
-            
-            .scan-text {
-              color: white !important;
-              font-size: 12px !important;
-              font-weight: 500 !important;
-              display: block !important;
-            }
-          }
-          
-          &:hover .qr-code-overlay {
-            opacity: 1 !important;
-          }
-          
-          // 确保悬停时覆盖层可见
-          &:hover .qr-code-overlay {
-            opacity: 1 !important;
-            visibility: visible !important;
           }
         }
       }
