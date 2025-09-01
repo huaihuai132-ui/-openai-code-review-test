@@ -140,7 +140,7 @@
                 </template>
               </el-table-column>
             </el-table>
-            
+
             <!-- 用户选择弹窗 -->
             <UserSelectForm ref="userSelectFormRef" @confirm="handleUserSelected" />
           </el-form-item>
@@ -155,8 +155,8 @@
             <el-table :data="formData.issueList" border style="width: 100%" empty-text="暂无会议议题">
               <el-table-column prop="issueTitle" label="议题标题" min-width="200">
                 <template #default="{ row }">
-                  <span 
-                    class="text-blue-500 cursor-pointer hover:underline" 
+                  <span
+                    class="text-blue-500 cursor-pointer hover:underline"
                     @click="openIssueDetail(row.id)"
                   >
                     {{ row.issueTitle }}
@@ -199,18 +199,18 @@
               <div class="px-4 mb-4">
                 <el-form :model="queryForm" label-width="80px" class="flex flex-wrap gap-4">
                   <el-form-item label="议题名称">
-                    <el-input 
-                      v-model="queryForm.issueTitle" 
-                      placeholder="请输入议题名称" 
-                      clearable 
+                    <el-input
+                      v-model="queryForm.issueTitle"
+                      placeholder="请输入议题名称"
+                      clearable
                       class="!w-240px"
                       @keyup.enter="loadAvailableAgendaTopics"
                     />
                   </el-form-item>
                   <el-form-item label="会议类型">
-                    <el-select 
-                      v-model="queryForm.meetingType" 
-                      placeholder="请选择会议类型" 
+                    <el-select
+                      v-model="queryForm.meetingType"
+                      placeholder="请选择会议类型"
                       clearable
                       class="!w-240px"
                     >
@@ -311,7 +311,7 @@ import {OaMeetingRoomApi} from '@/api/business/oameetingroom'
 import {OaMeetingIssueApi} from '@/api/business/oameetingissue'
 import {BatchFileUpload} from '@/components/UploadFile'
 import UserSelectForm from '@/components/UserSelectForm/index.vue'
-import Dialog from '@/components/Dialog/index.vue'
+import Dialog from '@/components/Dialog/src/Dialog.vue'
 import DictTag from '@/components/DictTag/src/DictTag.vue'
 import * as UserApi from '@/api/system/user'
 import * as DeptApi from '@/api/system/dept'
@@ -556,11 +556,11 @@ const openIssueDetail = async (issueId: number) => {
 /** 提交表单 */
 const submitForm = async () => {
   if (!formRef.value) return
-  
+
   try {
     // 验证表单
     await formRef.value.validate()
-    
+
     // 验证文件上传
     const hasFiles = formData.value.fileList && formData.value.fileList.length > 0
     if (hasFiles && batchUploadRef.value) {
@@ -570,27 +570,27 @@ const submitForm = async () => {
         return
       }
     }
-    
+
     // 设置提交状态
     submitLoading.value = true
     isFormDisabled.value = true
-    
+
     // 准备提交数据
     const submitData = {
       ...formData.value,
       // 将文件列表转换为逗号分隔的字符串
       fileList: formData.value.fileList.join(',')
     }
-    
+
     // 提交数据
     await OaMeetingApi.createOaMeeting(submitData)
     message.success('会议申请提交成功')
-    
+
     // 标记文件为已保存
     if (hasFiles && batchUploadRef.value) {
       batchUploadRef.value.markFilesAsSaved?.()
     }
-    
+
     // 返回上一页
     goBack()
   } catch (error) {
@@ -611,7 +611,7 @@ onMounted(async () => {
       getUserList(),
       getDeptList()
     ])
-    
+
     // 获取会议类型选项
     getMeetingTypeOptions()
   } catch (error) {
