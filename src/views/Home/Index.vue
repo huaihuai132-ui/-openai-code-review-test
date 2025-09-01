@@ -40,12 +40,12 @@
                   <div class="text-14px text-gray-500">待我审批</div>
                 </el-col>
                 <el-divider direction="vertical" border-style="dashed" class="h-40px" />
-                <el-col :span="6" class="text-center cursor-pointer" @click="goApproval('done')">
+                <el-col :span="6" class="text-center cursor-pointer" @click="goApproval('apply')">
                   <div class="text-20px">{{ taskCenterTagsData.apply }}</div>
                   <div class="text-14px text-gray-500">我申请的</div>
                 </el-col>
                 <el-divider direction="vertical" border-style="dashed" class="h-40px" />
-              <el-col :span="6" class="text-center cursor-pointer" @click="goApproval('apply')">
+              <el-col :span="6" class="text-center cursor-pointer" @click="goApproval('rejected')">
                   <div class="text-20px">{{ taskCenterTagsData.reject }}</div>
                   <div class="text-14px text-gray-500">驳回我的</div>
                 </el-col>
@@ -368,13 +368,14 @@ const getAllApi = async () => {
 
 
 
-  const goApproval = (category: 'waiting' | 'done' | 'apply' | 'copy') => {
+  const goApproval = (category: 'waiting' | 'done' | 'apply' | 'copy' | 'rejected') => {
   // 根据首页的分类名称映射到审批页面的分类
   const categoryMap = {
     'waiting': 'waiting',    // 待我审批 -> 待审批
-    'done': 'done',          // 我申请的 -> 已审批  
-    'apply': 'apply',        // 驳回我的 -> 我申请的
-    'copy': 'copy'           // 抄送我的 -> 抄送我的
+    'done': 'done',          // 已审批 -> 已审批  
+    'apply': 'apply',        // 我申请的 -> 我申请的
+    'copy': 'copy',          // 抄送我的 -> 抄送我的
+    'rejected': 'rejected'   // 驳回我的 -> 被驳回的
   }
   
   const targetCategory = categoryMap[category]

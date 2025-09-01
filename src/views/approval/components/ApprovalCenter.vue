@@ -127,8 +127,12 @@ import { getProcessInstanceMyPage, getProcessInstanceCopyPage, getProcessInstanc
 import { updateLastReadTime, getLastReadTime } from '@/utils/cache';
 import { Clock, Check, Document, CopyDocument, CloseBold, Loading } from '@element-plus/icons-vue';
 import DetailOverlay from '@/components/DetailOverlay/index.vue';
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useTagsView } from '@/hooks/web/useTagsView'
+import { useTagsViewStoreWithOut } from '@/store/modules/tagsView'
 
+const route = useRoute();
+const router = useRouter();
 const activeCategory = ref('');
 const waitingList = ref([]);
 const doneList = ref([]);
@@ -185,6 +189,16 @@ const pageStates = reactive({
 // 切换分类
 const changeCategory = (category) => {
   activeCategory.value = category;
+  
+  // 更新URL的query参数
+  router.push({
+    path: route.path,
+    query: {
+      ...route.query,
+      category: category
+    }
+  });
+  
   // 重置分页参数
   queryParams[category].pageNo = 1;
   pageStates[category].hasMore = true;
@@ -206,6 +220,8 @@ const changeCategory = (category) => {
       rejectedList.value = [];
       break;
   }
+  // 强制更新标签标题
+  forceSetPageTitle(category);
   // 重新加载数据
   loadCategoryData(category);
   // 计算新数据数量
@@ -530,27 +546,109 @@ const closeDetail = () => {
   }
 };
 
-// 监听分类变化
-watch(activeCategory, () => {
+// 监听分类变化（合并两个监听器）
+watch(activeCategory, (newCategory) => {
   // 关闭详情面板
   showDetail.value = false;
   selectedItemId.value = '';
+  
+  // 更新标签标题
+  updateTagTitle(newCategory);
 });
 
-// 获取路由参数
-const route = useRoute();
+// 引入标签视图钩子
+const { setTitle } = useTagsView();
 
-// 滑动监听
-const handleScroll = (event) => {
-  const { scrollTop, scrollHeight, clientHeight } = event.target;
-  // 当滚动到底部附近时加载更多
-  if (scrollTop + clientHeight >= scrollHeight - 100) {
-    loadMoreData();
+// 分类标题映射
+const categoryTitleMap = {
+  'waiting': '待审批',
+  'done': '已审批',
+  'apply': '我申请的',
+  'copy': '抄送我的',
+  'rejected': '被驳回的'
+};
+
+// 更新标签标题函数
+const updateTagTitle = (category: string) => {
+  if (categoryTitleMap[category]) {
+    const newTitle = `审批中心 - ${categoryTitleMap[category]}`;
+    console.log('=== 开始更新标题 ===');
+    console.log('目标标题:', newTitle);
+    console.log('当前分类:', category);
+    console.log('当前路径:', route.path);
+    console.log('完整路径:', route.fullPath);
+    
+    // 只有当前路径是审批中心页面时才更新标题
+    if (!route.path.includes('/approval')) {
+      console.log('当前不在审批中心页面，跳过标题更新');
+      return;
+    }
+    
+    // 方法1: 使用原始的setTitle方法
+    setTitle(newTitle, route.fullPath);
+    
+    // 方法2: 直接操作visitedViews，但只更新审批中心相关的标签页
+    const tagsViewStore = useTagsViewStoreWithOut();
+    const visitedViews = tagsViewStore.getVisitedViews;
+    console.log('所有标签页:', visitedViews.map(v => ({ path: v.path, fullPath: v.fullPath, title: v.meta?.title })));
+    
+    let found = false;
+    for (const view of visitedViews) {
+      // 只更新当前活动的审批中心标签页标题，使用完整路径精确匹配
+      if (view.fullPath === route.fullPath && view.path.includes('/approval')) {
+        console.log('找到匹配的审批中心标签，更新前标题:', view.meta?.title);
+        view.meta.title = newTitle;
+        console.log('更新后标题:', view.meta?.title);
+        found = true;
+        break;
+      }
+    }
+    
+    if (!found) {
+      console.log('未找到匹配的审批中心标签页');
+    }
+    
+    // 方法3: 强制更新当前路由的meta信息（仅限审批中心页面）
+    if (route.meta && route.path.includes('/approval')) {
+      route.meta.title = newTitle;
+      console.log('已更新当前审批中心路由meta.title:', route.meta.title);
+    }
+    
+    console.log('=== 标题更新完成 ===');
   }
+};
+
+
+
+// 强制设置页面标题的函数
+const forceSetPageTitle = (category: string) => {
+  // 只有在审批中心页面时才强制设置标题
+  if (!route.path.includes('/approval')) {
+    console.log('当前不在审批中心页面，跳过强制标题设置');
+    return;
+  }
+  
+  const newTitle = `审批中心 - ${categoryTitleMap[category] || '待审批'}`;
+  console.log('强制设置页面标题:', newTitle);
+  
+  // 立即更新document.title
+  document.title = newTitle;
+  
+  // 延迟执行标题更新，确保标签页已经创建
+  setTimeout(() => {
+    updateTagTitle(category);
+  }, 100);
+  
+  // 再次延迟执行，确保更新生效
+  setTimeout(() => {
+    updateTagTitle(category);
+  }, 500);
 };
 
 // 初始化
 onMounted(async () => {
+  console.log('=== ApprovalCenter 组件挂载 ===');
+  
   // 默认显示待审批，如果没有路由参数的话
   if (!route.query.category) {
     activeCategory.value = 'waiting';
@@ -563,6 +661,9 @@ onMounted(async () => {
       activeCategory.value = category;
     }
   }
+  
+  // 强制设置页面标题
+  forceSetPageTitle(activeCategory.value);
 
   // 加载所有分类数据
   await Promise.all([
@@ -575,6 +676,11 @@ onMounted(async () => {
 
   // 计算新数据数量
   calculateNewItems();
+  
+  // 最后再次确保标题正确
+  setTimeout(() => {
+    forceSetPageTitle(activeCategory.value);
+  }, 1000);
 });
 </script>
 
