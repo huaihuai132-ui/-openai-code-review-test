@@ -171,6 +171,7 @@
           >
             会议表决
           </el-button>
+          
           <el-button
             link
             type="danger"
@@ -272,61 +273,32 @@
   </Dialog>
   
   <!-- 新增参会人弹窗 -->
-  <Dialog v-model="addAttendeeDialogVisible" title="新增参会人" width="600px">
-    <UserSelectForm ref="userSelectFormRef" @confirm="handleAddAttendees" />
-    
-    <template #footer>
-      <el-button @click="addAttendeeDialogVisible = false">取 消</el-button>
-      <el-button type="primary" @click="confirmAddAttendees">确 定</el-button>
-    </template>
+  <Dialog v-model="addAttendeeDialogVisible" title="新增参会人" width="800px">
+    <AttendeeSelect 
+      v-model="selectedAttendeeIds"
+      :existing-attendees="currentMeetingAttendees"
+      @confirm="handleAddAttendees"
+      @cancel="addAttendeeDialogVisible = false"
+    />
   </Dialog>
   
   <!-- 会议签到弹窗 -->
   <Dialog v-model="signinDialogVisible" title="会议签到" width="800px">
-    <div class="mb-4">
-      <el-button type="primary" @click="openAddAttendeeDialog">
-        <Icon icon="ep:plus" />
-        新增参会人
-      </el-button>
-    </div>
-    
-    <el-table :data="currentMeetingAttendees" border>
-      <el-table-column prop="userName" label="姓名" width="120" />
-      <el-table-column prop="userDepartmentName" label="部门" width="150" />
-      <el-table-column prop="position" label="职务" width="150" />
-      <el-table-column label="签到状态" width="100">
-        <template #default="{ row }">
-          <el-tag :type="row.signed ? 'success' : 'info'">
-            {{ row.signed ? '已签到' : '未签到' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="200">
-        <template #default="{ row }">
-          <el-button 
-            type="primary" 
-            link 
-            @click="signAttendance(row)"
-            :disabled="row.signed"
-          >
-            签到
-          </el-button>
-          <el-button 
-            type="danger" 
-            link 
-            @click="removeAttendee(row)"
-          >
-            移除
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <SigninManager
+      ref="signinManagerRef"
+      :meeting-attendees="currentMeetingAttendees"
+      :meeting-id="currentMeetingId"
+      @add-attendees="handleAddAttendees"
+      @sign-attendance="signAttendance"
+      @remove-attendee="removeAttendee"
+      @confirm-signin="confirmSignin"
+    />
     
     <template #footer>
       <el-button @click="signinDialogVisible = false">取 消</el-button>
       <el-button 
         type="primary" 
-        @click="confirmSignin" 
+        @click="handleConfirmSignin" 
         :loading="signinLoading"
       >
         确认签到并开始会议
@@ -336,84 +308,15 @@
   
   <!-- 会议表决弹窗 -->
   <Dialog v-model="voteDialogVisible" title="会议表决" width="800px">
-<!--    <el-alert -->
-<!--      v-if="!isAllSignedInVote" -->
-<!--      title="请先完成所有参会人员签到，然后才能进行议题表决" -->
-<!--      type="warning" -->
-<!--      show-icon -->
-<!--      class="mb-4"-->
-<!--    />-->
-    
-    <el-table :data="currentMeetingIssues" border>
-      <el-table-column prop="issueTitle" label="议题标题" min-width="200" />
-      <el-table-column prop="issueType" label="议题类型" width="120">
-        <template #default="{ row }">
-          <dict-tag :type="DICT_TYPE.MEET_ISSUE_TYPE" :value="row.issueType" />
-        </template>
-      </el-table-column>
-      <el-table-column prop="reporterName" label="汇报人" width="120" />
-      <el-table-column label="表决结果" width="150">
-        <template #default="{ row }">
-          <el-tag :type="row.voted ? 'success' : 'info'">
-            {{ row.voted ? '已表决' : '未表决' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="200">
-        <template #default="{ row }">
-          <el-button type="primary" link @click="viewIssueDetail(row)">
-            查看详情
-          </el-button>
-          <el-button 
-            type="success" 
-            link 
-            @click="openIssueVoteDialog(row)"
-            :disabled="row.voted"
-          >
-            表决
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <VoteManager 
+      :meeting-issues="currentMeetingIssues" 
+      :meeting-id="currentMeetingId"
+      :meeting-attendees="currentMeetingAttendees"
+      @vote-success="handleVoteSuccess"
+    />
     
     <template #footer>
       <el-button @click="voteDialogVisible = false">关 闭</el-button>
-    </template>
-  </Dialog>
-  
-  <!-- 议题表决弹窗 -->
-  <Dialog v-model="issueVoteDialogVisible" title="议题表决" width="600px">
-    <el-form
-      ref="issueVoteFormRef"
-      :model="issueVoteForm"
-      :rules="issueVoteRules"
-      label-width="100px"
-    >
-      <el-form-item label="议题标题">
-        <el-input v-model="currentVotingIssue.issueTitle" disabled />
-      </el-form-item>
-      
-      <el-form-item label="表决结果" prop="voteResult" required>
-        <el-radio-group v-model="issueVoteForm.voteResult">
-          <el-radio :label="1">同意</el-radio>
-          <el-radio :label="2">反对</el-radio>
-          <el-radio :label="3">弃权</el-radio>
-        </el-radio-group>
-      </el-form-item>
-      
-      <el-form-item label="表决意见" prop="voteOpinion">
-        <el-input
-          v-model="issueVoteForm.voteOpinion"
-          type="textarea"
-          :rows="4"
-          placeholder="请输入表决意见"
-        />
-      </el-form-item>
-    </el-form>
-    
-    <template #footer>
-      <el-button @click="issueVoteDialogVisible = false">取 消</el-button>
-      <el-button type="primary" @click="submitIssueVote" :loading="issueVoteLoading">提 交</el-button>
     </template>
   </Dialog>
   
@@ -491,7 +394,7 @@
           placeholder="请输入归档说明"
         />
       </el-form-item>
-    </el-form>
+    </el-form> 
     
     <template #footer>
       <el-button @click="archiveDialogVisible = false">取 消</el-button>
@@ -513,9 +416,11 @@ import {OaMeetingApi, OaMeetingVO} from '@/api/business/oameeting'
 import OaMeetingForm from './OaMeetingForm.vue'
 import OaMeetingDetail from './OaMeetingDetail.vue'
 import {Dialog} from '@/components/Dialog'
-import UserSelectForm from '@/components/UserSelectForm/index.vue'
-import OaMeetingIssueDetail from '@/views/business/oameetingissue/OaMeetingIssueDetail.vue'
+import AttendeeSelect from './components/AttendeeSelect.vue'
 import {BatchFileUpload} from '@/components/UploadFile'
+import SigninManager from './components/SigninManager.vue'
+import VoteManager from './components/VoteManager.vue'
+import OaMeetingIssueDetail from '@/views/business/oameetingissue/OaMeetingIssueDetail.vue'
 
 /** 会议 列表 */
 defineOptions({ name: 'OaMeeting' })
@@ -564,6 +469,7 @@ const notificationLoading = ref(false)
 
 // 办会相关
 const signinDialogVisible = ref(false)
+const signinManagerRef = ref()
 const voteDialogVisible = ref(false)
 const activeManageTab = ref('attendees')
 const currentMeetingIssues = ref<any[]>([])
@@ -571,8 +477,7 @@ const currentManageMeeting = ref<OaMeetingVO>({})
 
 // 新增参会人相关
 const addAttendeeDialogVisible = ref(false)
-const userSelectFormRef = ref<typeof UserSelectForm>()
-const selectedNewAttendees = ref<any[]>([])
+const selectedAttendeeIds = ref<any[]>([]) // 新增用于存储已选择参会人ID的引用
 
 // 表决相关
 const issueVoteDialogVisible = ref(false)
@@ -768,7 +673,12 @@ const openSigninDialog = async (row: OaMeetingVO) => {
     // 初始化参会人员数据，添加签到状态
     currentMeetingAttendees.value = (meetingDetail.attendeeList || []).map(attendee => ({
       ...attendee,
-      signed: attendee.signed || false
+      id: attendee.id || attendee.userId, // 确保ID存在
+      userId: attendee.userId || attendee.id, // 确保userId存在
+      userName: attendee.userName || attendee.nickname || attendee.name || attendee.username, // 兼容不同字段名
+      userDepartmentName: attendee.userDepartmentName || attendee.department || '-', // 兼容部门字段
+      position: attendee.position || attendee.postName || '-', // 兼容职务字段
+      signed: attendee.signed !== undefined ? attendee.signed : false // 确保signed属性存在
     }))
   } catch (err) {
     console.error('获取会议详情失败:', err)
@@ -791,13 +701,19 @@ const openVoteDialog = async (row: OaMeetingVO) => {
     // 初始化议题数据，添加表决状态
     currentMeetingIssues.value = (meetingDetail.issueList || []).map(issue => ({
       ...issue,
-      voted: issue.voted || false
+      voted: issue.voted !== undefined ? issue.voted : false // 确保voted属性存在
     }))
     
     // 初始化参会人员数据，用于检查签到状态
     currentMeetingAttendees.value = (meetingDetail.attendeeList || []).map(attendee => ({
       ...attendee,
-      signed: attendee.signed || false
+      id: attendee.id || attendee.userId, // 确保ID存在
+      userId: attendee.userId || attendee.id, // 确保userId存在
+      userName: attendee.userName || attendee.nickname || attendee.name || attendee.username, // 兼容不同字段名
+      userDepartmentName: attendee.userDepartmentName || attendee.department || '-', // 兼容部门字段
+      position: attendee.position || attendee.postName || '-', // 兼容职务字段
+      signed: attendee.signed !== undefined ? attendee.signed : false, // 确保signed属性存在
+      voted: attendee.voted !== undefined ? attendee.voted : false // 确保voted属性存在
     }))
   } catch (err) {
     console.error('获取会议详情失败:', err)
@@ -809,24 +725,11 @@ const openVoteDialog = async (row: OaMeetingVO) => {
   voteDialogVisible.value = true
 }
 
-// 计算是否所有参会人员都已签到（用于表决弹窗）
-const isAllSignedInVote = computed(() => {
-  return currentMeetingAttendees.value.length > 0 && 
-         currentMeetingAttendees.value.every(attendee => attendee.signed)
-})
-
-// /** 检查会议是否已完成签到 */
-// const isMeetingSigned = (meetingId: number) => {
-//   return meetingSigninStatus.value[meetingId] || false
-// }
 
 /** 签到 */
 const signAttendance = (attendee: any) => {
-  attendee.signed = true
-  message.success(`${attendee.userName} 签到成功`)
-  
   // 检查是否所有人员都已签到
-  const allSigned = currentMeetingAttendees.value.every(a => a.signed)
+  const allSigned = currentMeetingAttendees.value.every((a: any) => a.signed)
   if (allSigned && currentMeetingId.value) {
     // 标记该会议已完成签到
     meetingSigninStatus.value[currentMeetingId.value] = true
@@ -835,64 +738,25 @@ const signAttendance = (attendee: any) => {
 
 /** 打开新增参会人弹窗 */
 const openAddAttendeeDialog = () => {
-  selectedNewAttendees.value = []
+  // 重置选择
+  selectedAttendeeIds.value = []
   addAttendeeDialogVisible.value = true
-  // 延迟打开用户选择弹窗
-  nextTick(() => {
-    userSelectFormRef.value?.open(0, [])
-  })
 }
 
-/** 处理新增参会人确认 */
-const handleAddAttendees = (_id: any, userList: any[]) => {
-  selectedNewAttendees.value = userList
+/** 处理新增参会人 */
+const handleAddAttendees = (updatedAttendees: any[]) => {
+  currentMeetingAttendees.value = updatedAttendees
 }
 
 /** 确认添加参会人 */
 const confirmAddAttendees = async () => {
-  if (selectedNewAttendees.value.length === 0) {
-    message.warning('请至少选择一个参会人')
-    return
-  }
-  
-  try {
-    // 过滤掉已存在的参会人
-    const existingAttendeeIds = currentMeetingAttendees.value.map(a => a.id)
-    const newAttendees = selectedNewAttendees.value.filter(
-      attendee => !existingAttendeeIds.includes(attendee.id)
-    )
-    
-    if (newAttendees.length === 0) {
-      message.warning('选择的参会人已存在')
-      return
-    }
-    
-    // 添加新参会人（这里需要调用API更新会议信息）
-    const updatedAttendees = [
-      ...currentMeetingAttendees.value,
-      ...newAttendees.map(attendee => ({
-        ...attendee,
-        signed: false,
-        voted: false
-      }))
-    ]
-    
-    currentMeetingAttendees.value = updatedAttendees
-    addAttendeeDialogVisible.value = false
-    message.success('参会人添加成功')
-  } catch (err) {
-    console.error('添加参会人失败:', err)
-    message.error('添加参会人失败')
-  }
+  // 由于UserSelectForm的确认已经处理了添加逻辑，这里只需要关闭弹窗
+  addAttendeeDialogVisible.value = false
 }
 
 /** 移除参会人 */
-const removeAttendee = (attendee: any) => {
-  const index = currentMeetingAttendees.value.findIndex(a => a.id === attendee.id)
-  if (index > -1) {
-    currentMeetingAttendees.value.splice(index, 1)
-    message.success('参会人移除成功')
-  }
+const removeAttendee = (index: number) => {
+  currentMeetingAttendees.value.splice(index, 1)
 }
 
 /** 查看议题详情 */
@@ -1045,6 +909,18 @@ const submitArchive = async () => {
   }
 }
 
+/** 处理表决成功事件 */
+const handleVoteSuccess = (data: any) => {
+  // 可以在这里处理表决成功后的逻辑
+  console.log('表决成功:', data)
+  message.success('表决提交成功')
+}
+
+/** 确认签到 */
+const handleConfirmSignin = () => {
+  signinManagerRef.value?.confirmSignin()
+}
+
 /** 确认签到 */
 const confirmSignin = async () => {
   try {
@@ -1060,6 +936,9 @@ const confirmSignin = async () => {
     if (currentMeetingId.value) {
       meetingSigninStatus.value[currentMeetingId.value] = true
     }
+    
+    // 在接口响应后刷新列表数据
+    await getList()
   } catch (err) {
     console.error('签到确认失败:', err)
     message.error('签到确认失败')
@@ -1068,13 +947,6 @@ const confirmSignin = async () => {
   }
 }
 
-/** 监听通知方式变化 */
-watch(() => notificationForm.value.notifyType, (newVal) => {
-  if (newVal === 1) {
-    // 全部参会人时清空已选择的参会人
-    notificationForm.value.selectedAttendees = []
-  }
-})
 
 /** 初始化 **/
 onMounted(() => {
