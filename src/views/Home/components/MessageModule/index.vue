@@ -10,7 +10,7 @@
     </template>
     <div class="message-list-container">
       <el-skeleton :loading="loading" animated>
-                <div v-for="(item, index) in notice" :key="`dynamics-${index}`" class="message-item">
+                <div v-for="(item, index) in notice" :key="`dynamics-${index}`" class="message-item" @click="handleMessageClick(item)" :class="{ clickable: item.templateType === 3 && item.templateParams?.detailUrl }">
           <div class="flex items-start">
                           <!-- 左侧头像和发件人名称区域 -->
               <div class="sender-info flex-shrink-0">
@@ -30,9 +30,6 @@
                 <!-- 正文 -->
                 <div class="message-body text-13px text-gray-600 leading-5 mb-2">
                   <span v-html="formatContentWithEmphasis(item.content, item.emphasisWord)"></span>
-                  <!-- <div class="text-10px text-gray-400 mt-1">
-                    强调词: {{ JSON.stringify(item.emphasisWord) }}
-                  </div> -->
                 </div>
                 <!-- 时间 -->
                 <div class="message-time text-11px text-gray-400">
@@ -70,6 +67,31 @@ let notice = reactive<any[]>([])
 // 跳转我的站内信
 const goMyList = () => {
   push('/user/notify-message')
+}
+
+// 处理消息点击事件
+const handleMessageClick = (item: any) => {
+  // 如果templateType=3且存在detailUrl，则跳转
+  if (item.templateType === 3 && item.templateParams?.detailUrl) {
+    try {
+      // 解析URL，提取路径部分
+      const url = new URL(item.templateParams.detailUrl)
+      const path = url.pathname + url.search
+      
+      // 使用router跳转
+      push(path)
+    } catch (error) {
+      console.error('URL解析错误:', error)
+      // 如果URL解析失败，尝试直接跳转
+      if (item.templateParams.detailUrl.startsWith('http')) {
+        // 外部链接，在新窗口打开
+        window.open(item.templateParams.detailUrl, '_blank')
+      } else {
+        // 内部路径，直接跳转
+        push(item.templateParams.detailUrl)
+      }
+    }
+  }
 }
 
 // 处理强调词高亮显示
@@ -187,6 +209,8 @@ onMounted(() => {
 <style lang="scss" scoped>
 .message-item {
   padding: 20px 0; // 增加上下间距
+  cursor: pointer;
+  transition: all 0.2s ease;
   
   &:first-child {
     padding-top: 0;
@@ -194,6 +218,21 @@ onMounted(() => {
   
   &:last-child {
     padding-bottom: 0;
+  }
+  
+  &:hover {
+    background-color: #f5f7fa;
+    transform: translateX(2px);
+  }
+  
+  // 如果消息有templateType=3且有detailUrl，显示特殊样式
+  &.clickable {
+    cursor: pointer;
+    
+    &:hover {
+      background-color: #e6f7ff;
+      border-left: 3px solid #1890ff;
+    }
   }
 }
 
@@ -291,6 +330,8 @@ onMounted(() => {
     margin-bottom: 0;
   }
 }
+
+
 
 // 响应式设计
 @media (max-width: 768px) {

@@ -11,9 +11,20 @@
       <div class="form-section">
         <h3 class="section-title">基本信息</h3>
         <div class="form-row">
-          <el-form-item label="融资租赁单编号" prop="leaseId">
-            <el-input v-model="formData.leaseId" placeholder="请输入融资租赁单编号" />
-          </el-form-item>
+          <el-form-item label="融资租赁单编号" prop="leaseId" label-width="140px" >
+          <el-select 
+          v-model="formData.leaseId"
+          placeholder="请选择融资租赁单编号" 
+          clearable 
+          filterable>
+            <el-option
+              v-for="item in financeLeaseOptions"
+              :key="item.id"
+              :label="item.leasedCode || item.name || String(item.id)"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
           <el-form-item label="租后管理编码" prop="manageCode">
             <el-input v-model="formData.manageCode" placeholder="请输入租后管理编码" />
           </el-form-item>
@@ -29,7 +40,7 @@
           </el-form-item>
         </div>
         <div class="form-row">
-          <el-form-item label="租赁总额" prop="leaseAmount">
+          <el-form-item label="租赁总额" prop="leaseAmount" label-width="140px"  >
             <el-input v-model="formData.leaseAmount" placeholder="请输入租赁总额" />
           </el-form-item>
           <el-form-item label="租赁余额" prop="leaseAmountSurplus">
@@ -47,6 +58,12 @@
               value-format="x"
               placeholder="选择检查日期"
             />
+          </el-form-item>
+          <el-form-item label="" prop="">
+            <div></div>
+            </el-form-item>
+            <el-form-item label="" prop="">
+              <div></div>
           </el-form-item>
         </div>
         <div class="form-row">
@@ -709,6 +726,7 @@ import { FinanceManageApi, FinanceManageVO } from '@/api/business/financemanage'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
 import { BatchFileUpload } from '@/components/UploadFile'
 import { useUserStore } from '@/store/modules/user'
+import {FinanceLeaseApi, FinanceLeaseVO} from "@/api/business/financelease";
 
 const userStore = useUserStore()
 
@@ -807,7 +825,7 @@ const formData = ref({
   riskMgmtSuggestion: undefined,
   fileList: [] as string[],
   sequenceCode: undefined,
-  status: undefined,
+  status: -1,
   processInstanceId: undefined,
   deptId: undefined,
 })
@@ -872,6 +890,17 @@ const formRef = ref() // 表单 Ref
 const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
 const activeTab = ref('basic') // 当前激活的tab
 
+const financeLeaseOptions = ref<any[]>([])
+// 加载已审批的融资租赁列表作为下拉选项
+const loadFinanceLeaseOptions = async () => {
+  try {
+    const list = await FinanceLeaseApi.getFinanceLeaseListApproved()
+    financeLeaseOptions.value = Array.isArray(list) ? list : []
+  } catch (e) {
+    financeLeaseOptions.value = []
+  }
+}
+
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
   dialogVisible.value = true
@@ -894,6 +923,8 @@ const open = async (type: string, id?: number) => {
   }
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
   companyList.value = response
+      // 加载租赁单编号选项
+    await loadFinanceLeaseOptions()
 
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
@@ -1008,7 +1039,7 @@ const resetForm = () => {
     riskMgmtSuggestion: undefined,
     fileList: [],
     sequenceCode: undefined,
-    status: 1,
+    status: -1,
     processInstanceId: undefined,
     deptId: undefined,
   }
@@ -1041,6 +1072,12 @@ const resetForm = () => {
 .form-row .el-form-item {
   flex: 1;
   margin-bottom: 0;
+}
+
+/* 统一输入类控件宽度为100% */
+:deep(.el-form-item) .el-input,
+:deep(.el-form-item) .el-select{
+  width: 100%;
 }
 
 .form-row .el-form-item.full-width {

@@ -10,15 +10,21 @@
     >
       <!-- 第一行：三个字段 -->
       <div class="form-row">
-        <el-form-item  label-width="120px"  label="融资租赁单编号" prop="leaseId" >
-          <el-input
-            v-model="queryParams.leaseId"
-            placeholder="请输入融资租赁单编号"
-            clearable
-            @keyup.enter="handleQuery"
-            class="!w-240px"
+        <el-form-item label="融资租赁单编号" prop="leaseId" label-width="120px" >
+        <el-select 
+        v-model="queryParams.leaseId"
+        placeholder="请选择融资租赁单编号" 
+        clearable 
+        class="!w-240px"
+        filterable>
+          <el-option
+            v-for="item in financeLeaseOptions"
+            :key="item.id"
+            :label="item.leasedCode || item.name || String(item.id)"
+            :value="item.id"
           />
-        </el-form-item>
+        </el-select>
+      </el-form-item>
 
       <el-form-item  label-width="120px"  label="企业名称" prop="companyId"  >
         <el-select
@@ -202,6 +208,20 @@ import download from '@/utils/download'
 import { FinanceDisbursementApi, FinanceDisbursementVO } from '@/api/business/financedisbursement'
 import FinanceDisbursementForm from './FinanceDisbursementForm.vue'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
+import { FinanceLeaseApi } from '@/api/business/financelease'
+
+
+// 加载已审批的融资租赁列表作为下拉选项
+const loadFinanceLeaseOptions = async () => {
+  try {
+    const list = await FinanceLeaseApi.getFinanceLeaseListApproved()
+    financeLeaseOptions.value = Array.isArray(list) ? list : []
+  } catch (e) {
+    financeLeaseOptions.value = []
+  }
+}
+
+const financeLeaseOptions = ref<any[]>([])
 const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
 
 /** 融资租赁放款 列表 */
@@ -311,6 +331,8 @@ onMounted(async () => {
   // 加载岗位列表
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
   companyList.value = response
+    // 加载租赁单编号选项
+    await loadFinanceLeaseOptions()
 })
 </script>
 

@@ -74,4 +74,9 @@ export const FinanceLeaseApi = {
   getFinanceDeviceList: async (id: number) => {
     return await request.get({ url: `/business/finance-device/get-by-lease-id?leaseId=` + id })
   },
+
+    // 获取融资租赁项目申请列表
+  getFinanceLeaseListApproved: async () => {
+    return await request.get({ url: `/business/finance-lease/list-all-simple` })
+  }
 }

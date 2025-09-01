@@ -239,6 +239,7 @@ import { FinanceDeviceApi } from '@/api/business/financedevice'
 import FinanceLeaseForm from './FinanceLeaseForm.vue'
 import DeviceListDisplay from './components/DeviceListDisplay.vue'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
+import { status } from 'nprogress'
 
 /** 融资租赁 列表 */
 defineOptions({ name: 'FinanceLease' })

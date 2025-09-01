@@ -7,6 +7,9 @@
       label-width="100px"
       v-loading="formLoading"
     >
+     <el-form-item label="融资租赁单编号" prop="leaseId">
+            <el-input v-model="formData.leaseId" placeholder="请输入融资租赁单编号" />
+          </el-form-item>
       <el-form-item label="设备名称" prop="deviceName">
         <el-input v-model="formData.deviceName" placeholder="请输入设备名称" />
       </el-form-item>

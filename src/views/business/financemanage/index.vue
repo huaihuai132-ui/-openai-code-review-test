@@ -8,14 +8,20 @@
       :inline="true"
       label-width="128px"
     >
-      <el-form-item label="融资租赁单编号" prop="leaseId">
-        <el-input
-          v-model="queryParams.leaseId"
-          placeholder="请输入融资租赁单编号"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
+    <el-form-item label="融资租赁单编号" prop="leaseId" label-width="120px" >
+        <el-select 
+        v-model="queryParams.leaseId"
+        placeholder="请选择融资租赁单编号" 
+        clearable 
+        class="!w-240px"
+        filterable>
+          <el-option
+            v-for="item in financeLeaseOptions"
+            :key="item.id"
+            :label="item.leasedCode || item.name || String(item.id)"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="企业名称" prop="companyId">
         <el-select
@@ -169,6 +175,18 @@ import FinanceManageForm from './FinanceManageForm.vue'
 import {FinanceLeaseApi, FinanceLeaseVO} from "@/api/business/financelease";
 import {FinanceApplicationApi} from "@/api/business/financeapplication";
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
+
+
+const financeLeaseOptions = ref<any[]>([])
+// 加载已审批的融资租赁列表作为下拉选项
+const loadFinanceLeaseOptions = async () => {
+  try {
+    const list = await FinanceLeaseApi.getFinanceLeaseListApproved()
+    financeLeaseOptions.value = Array.isArray(list) ? list : []
+  } catch (e) {
+    financeLeaseOptions.value = []
+  }
+}
 
 /** 融资租赁租后管理 列表 */
 defineOptions({ name: 'FinanceManage' })
@@ -374,5 +392,8 @@ onMounted(async () => {
   getList()
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
   companyList.value = response
+
+  // 加载租赁单编号选项
+  await loadFinanceLeaseOptions()
 })
 </script>

@@ -12,7 +12,14 @@
         <h3 class="section-title">基本信息</h3>
         <div class="form-row">
           <el-form-item label="融资租赁单编号" prop="leaseId">
-            <el-input v-model="formData.leaseId" placeholder="请输入融资租赁单编号" />
+            <el-select v-model="formData.leaseId" placeholder="请选择融资租赁单编号" filterable clearable>
+              <el-option
+                v-for="item in financeLeaseOptions"
+                :key="item.id"
+                :label="item.leasedCode || item.name || String(item.id)"
+                :value="item.id"
+              />
+            </el-select>
           </el-form-item>
           <el-form-item label="企业" prop="companyId">
             <el-select v-model="formData.companyId" placeholder="请选择企业">
@@ -179,6 +186,7 @@ import { FinanceDisbursementApi, FinanceDisbursementVO } from '@/api/business/fi
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
 import RepaymentPlan from './components/RepaymentPlan.vue'
 import { useUserStore } from '@/store/modules/user';
+import { FinanceLeaseApi } from '@/api/business/financelease'
 
 /** 融资租赁放款 表单 */
 defineOptions({ name: 'FinanceDisbursementForm' })
@@ -260,6 +268,17 @@ const formRef = ref() // 表单 Ref
 const activeTab = ref('lease') // 当前激活的tab
 const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
 const repaymentPlanRef = ref() // 还款计划组件ref
+const financeLeaseOptions = ref<any[]>([])
+
+// 加载已审批的融资租赁列表作为下拉选项
+const loadFinanceLeaseOptions = async () => {
+  try {
+    const list = await FinanceLeaseApi.getFinanceLeaseListApproved()
+    financeLeaseOptions.value = Array.isArray(list) ? list : []
+  } catch (e) {
+    financeLeaseOptions.value = []
+  }
+}
 
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
@@ -282,8 +301,13 @@ const open = async (type: string, id?: number) => {
   }
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
   companyList.value = response
-  companyList.value = response
+  // 加载租赁单编号选项
+  await loadFinanceLeaseOptions()
+  
 }
+
+
+
 
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 

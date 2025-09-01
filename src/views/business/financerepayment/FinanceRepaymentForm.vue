@@ -7,6 +7,9 @@
       label-width="100px"
       v-loading="formLoading"
     >
+    <div class="form-section">
+        <h3 class="section-title">基本信息</h3>
+        <div class="form-row">
       <el-form-item label="融资租赁放款表编号" prop="disbursementId">
         <el-input v-model="formData.disbursementId" placeholder="请输入融资租赁放款表编号" />
       </el-form-item>
@@ -28,6 +31,8 @@
           placeholder="选择还款时间"
         />
       </el-form-item>
+    </div>
+    <div class="form-row">
       <el-form-item label="租金" prop="rent">
         <el-input v-model="formData.rent" placeholder="请输入租金"  type="number" >
           <template #append>元</template>
@@ -43,6 +48,8 @@
           <template #append>元</template>
         </el-input>
       </el-form-item>
+      </div>
+      <div class="form-row">
       <el-form-item label="还款利息" prop="interest">
         <el-input v-model="formData.interest" placeholder="请输入还款利息"  type="number" >
         <template #append>元</template>
@@ -58,14 +65,26 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="还款凭证" prop="fileList">
-        <BatchFileUpload
-          ref="fileUploadRef"
-          v-model:fileList="formData.fileList"
-          :mode="getUploadMode()"
-          directory="business"
-        />
-      </el-form-item>
+      <el-form-item label="" prop="">
+              <div></div>
+          </el-form-item>
+    </div>
+  </div>
+          <!-- 下部分：Tab组件 -->
+          <div class="form-section">
+            <el-tabs v-model="activeTab" class="form-tabs">
+              <el-tab-pane label="还款凭证" name="fileList">
+                <el-form-item label="还款凭证" prop="fileList">
+                <BatchFileUpload
+                  ref="fileUploadRef"
+                  v-model:fileList="formData.fileList"
+                  :mode="getUploadMode()"
+                  directory="business"
+                />
+              </el-form-item>
+              </el-tab-pane>
+            </el-tabs>
+          </div>
     </el-form>
     <template #footer>
       <el-button @click="submitForm" type="primary" :disabled="formLoading">确 定</el-button>
@@ -78,6 +97,7 @@ import { FinanceRepaymentApi, FinanceRepaymentVO } from '@/api/business/financer
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/financecompany";
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { BatchFileUpload } from '@/components/UploadFile'
+const activeTab = ref('fileList') // 当前激活的tab
 
 /** 融资租赁放款 表单 */
 defineOptions({ name: 'FinanceRepaymentForm' })
@@ -196,3 +216,30 @@ const resetForm = () => {
   formRef.value?.resetFields()
 }
 </script>
+<style scoped>
+/* 表单区域样式 */
+.form-section {
+  margin-bottom: 30px;
+}
+/* 一行三列布局 */
+.form-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-row .el-form-item {
+  flex: 1;
+  margin-bottom: 0;
+}
+.form-tabs {
+  margin-top: 20px;
+}
+
+/* 统一输入类控件宽度为100% */
+:deep(.el-form-item) .el-input,
+:deep(.el-form-item) .el-select{
+  width: 100%;
+}
+
+</style>
