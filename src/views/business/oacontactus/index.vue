@@ -77,7 +77,7 @@
           class="!w-220px"
         />
       </el-form-item> -->
-      <!-- <el-form-item label="部门编号" prop="deptId">
+      <el-form-item label="部门编号" prop="deptId">
         <el-input
           v-model="queryParams.deptId"
           placeholder="请输入部门编号"
@@ -85,7 +85,7 @@
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
-      </el-form-item> -->
+      </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
@@ -138,7 +138,7 @@
         :formatter="dateFormatter"
         width="180px"
       />
-      <el-table-column label="部门名称" align="center" prop="deptName" />
+      <el-table-column label="部门编号" align="center" prop="deptId" />
       <el-table-column label="操作" align="center" min-width="180px">
         <template #default="scope">
           <el-button

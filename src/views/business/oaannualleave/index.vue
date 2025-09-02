@@ -300,6 +300,11 @@ const handleExport = async () => {
   }
 }
 
+/** 激活时 */
+onActivated(async () => {
+  await getList()
+})
+
 /** 初始化 **/
 onMounted(() => {
   getList()
