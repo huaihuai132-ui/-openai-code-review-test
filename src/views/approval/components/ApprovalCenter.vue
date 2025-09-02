@@ -189,20 +189,33 @@ const pageStates = reactive({
   rejected: { hasMore: true, loading: false }
 });
 
-// 切换分类 - 简化版本
+// 切换分类 - 修复版本
 const changeCategory = (category) => {
   console.log('=== changeCategory 被调用 ===');
   console.log('目标分类:', category);
   console.log('当前分类:', activeCategory.value);
-  console.log('点击事件触发成功');
+  console.log('当前URL参数:', route.query.category);
   
   // 防止重复点击同一个分类
-  if (activeCategory.value === category) {
+  if (activeCategory.value === category && route.query.category === category) {
     console.log('重复点击同一分类，忽略:', category);
     return;
   }
   
   console.log('开始切换分类:', category);
+  
+  // 更新URL参数，确保路由状态同步
+  router.replace({
+    path: route.path,
+    query: {
+      ...route.query,
+      category: category
+    }
+  }).then(() => {
+    console.log('URL参数更新完成:', category);
+  }).catch(err => {
+    console.error('URL参数更新失败:', err);
+  });
   
   // 直接更新activeCategory
   activeCategory.value = category;
@@ -238,8 +251,8 @@ const changeCategory = (category) => {
   // 计算新数据数量
   calculateNewItems();
   
-  // 强制更新标签标题
-  forceSetPageTitle(category);
+  // 内部切换分类时不更新标签页标题，避免重复标签
+  // updateTagTitle(category); // 移除此调用
   
   // 更新最后阅读时间
   updateLastReadTime(`approval_${category}_last_read`);
@@ -569,8 +582,8 @@ watch(activeCategory, (newCategory) => {
   showDetail.value = false;
   selectedItemId.value = '';
   
-  // 更新标签标题
-  updateTagTitle(newCategory);
+  // 内部切换分类时不更新标签页标题，避免重复标签
+  // updateTagTitle(newCategory); // 移除此调用
 });
 
 // 移除复杂的路由监听器，改为在mounted中处理初始路由参数
@@ -588,83 +601,97 @@ const categoryTitleMap = {
 };
 
 // 更新标签标题函数
-const updateTagTitle = (category: string) => {
-  if (categoryTitleMap[category]) {
-    const newTitle = `审批中心 - ${categoryTitleMap[category]}`;
-    console.log('=== 开始更新标题 ===');
-    console.log('目标标题:', newTitle);
-    console.log('当前分类:', category);
-    console.log('当前路径:', route.path);
-    console.log('完整路径:', route.fullPath);
-    
-    // 只有当前路径是审批中心页面时才更新标题
-    if (!route.path.includes('/approval')) {
-      console.log('当前不在审批中心页面，跳过标题更新');
-      return;
-    }
-    
-    // 方法1: 使用原始的setTitle方法
-    setTitle(newTitle, route.fullPath);
-    
-    // 方法2: 直接操作visitedViews，但只更新审批中心相关的标签页
+const updateTagTitle = (category: string, isFromExternalNavigation = false) => {
+  if (!categoryTitleMap[category]) return;
+  
+  const newTitle = `审批中心 - ${categoryTitleMap[category]}`;
+  console.log('更新标题:', newTitle, '分类:', category, '是否外部导航:', isFromExternalNavigation);
+  
+  // 更新当前路由的meta.title
+  if (route.meta) {
+    route.meta.title = newTitle;
+  }
+  
+  // 只在从外部导航时更新TagsView中的标签标题
+  // 内部切换分类时不更新已存在的标签页标题，避免重复标签
+  if (isFromExternalNavigation) {
     const tagsViewStore = useTagsViewStoreWithOut();
     const visitedViews = tagsViewStore.getVisitedViews;
-    console.log('所有标签页:', visitedViews.map(v => ({ path: v.path, fullPath: v.fullPath, title: v.meta?.title })));
     
-    let found = false;
     for (const view of visitedViews) {
-      // 只更新当前活动的审批中心标签页标题，使用完整路径精确匹配
-      if (view.fullPath === route.fullPath && view.path.includes('/approval')) {
-        console.log('找到匹配的审批中心标签，更新前标题:', view.meta?.title);
+      if (view.fullPath === route.fullPath) {
         view.meta.title = newTitle;
-        console.log('更新后标题:', view.meta?.title);
-        found = true;
+        console.log('更新标签页标题:', newTitle);
         break;
       }
     }
-    
-    if (!found) {
-      console.log('未找到匹配的审批中心标签页');
-    }
-    
-    // 方法3: 强制更新当前路由的meta信息（仅限审批中心页面）
-    if (route.meta && route.path.includes('/approval')) {
-      route.meta.title = newTitle;
-      console.log('已更新当前审批中心路由meta.title:', route.meta.title);
-    }
-    
-    console.log('=== 标题更新完成 ===');
-  }
-};
-
-
-
-// 强制设置页面标题的函数
-const forceSetPageTitle = (category: string) => {
-  // 只有在审批中心页面时才强制设置标题
-  if (!route.path.includes('/approval')) {
-    console.log('当前不在审批中心页面，跳过强制标题设置');
-    return;
+  } else {
+    console.log('内部切换分类，跳过标签页标题更新');
   }
   
-  const newTitle = `审批中心 - ${categoryTitleMap[category] || '待审批'}`;
-  console.log('强制设置页面标题:', newTitle);
-  
-  // 立即更新document.title
+  // 更新浏览器标题
   document.title = newTitle;
-  
-  // 延迟执行标题更新，确保标签页已经创建
-  const timer1 = setTimeout(() => {
-    updateTagTitle(category);
-  }, 100);
-  timers.value.push(timer1);
-  
-  // 再次延迟执行，确保更新生效
-  const timer2 = setTimeout(() => {
-    updateTagTitle(category);
-  }, 500);
-  timers.value.push(timer2);
 };
+
+
+
+
+
+// 监听路由参数变化
+watch(() => route.query.category, (newCategory, oldCategory) => {
+  console.log('=== 路由参数变化监听器触发 ===');
+  console.log('新分类:', newCategory);
+  console.log('旧分类:', oldCategory);
+  console.log('当前activeCategory:', activeCategory.value);
+  
+  if (newCategory && typeof newCategory === 'string') {
+    const validCategories = ['waiting', 'done', 'apply', 'copy', 'rejected'];
+    if (validCategories.includes(newCategory)) {
+      // 只有当URL参数与当前activeCategory不一致时才更新
+      if (activeCategory.value !== newCategory) {
+        console.log('路由参数与组件状态不同步，更新组件状态:', newCategory);
+        activeCategory.value = newCategory;
+        
+        // 重置分页参数
+        queryParams[newCategory].pageNo = 1;
+        pageStates[newCategory].hasMore = true;
+        
+        // 清空当前列表
+        switch (newCategory) {
+          case 'waiting':
+            waitingList.value = [];
+            break;
+          case 'done':
+            doneList.value = [];
+            break;
+          case 'apply':
+            applyList.value = [];
+            break;
+          case 'copy':
+            copyList.value = [];
+            break;
+          case 'rejected':
+            rejectedList.value = [];
+            break;
+        }
+        
+        // 重新加载数据
+        loadCategoryData(newCategory);
+        
+        // 计算新数据数量
+        calculateNewItems();
+        
+        // 更新最后阅读时间
+        updateLastReadTime(`approval_${newCategory}_last_read`);
+      } else {
+        console.log('路由参数与组件状态已同步，无需更新');
+      }
+      
+      // 从外部导航时更新标题，确保标签栏显示正确
+      updateTagTitle(newCategory, true);
+    }
+  }
+}, { immediate: true });
 
 // 初始化
 onMounted(async () => {
@@ -692,8 +719,8 @@ onMounted(async () => {
   activeCategory.value = initialCategory;
   console.log('设置初始分类:', activeCategory.value);
   
-  // 强制设置页面标题
-  forceSetPageTitle(activeCategory.value);
+  // 设置页面标题（组件初始挂载算作外部导航）
+  updateTagTitle(activeCategory.value, true);
 
   // 加载所有分类数据
   console.log('开始加载所有分类数据');
@@ -708,12 +735,6 @@ onMounted(async () => {
 
   // 计算新数据数量
   calculateNewItems();
-  
-  // 最后再次确保标题正确
-  const timer3 = setTimeout(() => {
-    forceSetPageTitle(activeCategory.value);
-  }, 1000);
-  timers.value.push(timer3);
   
   console.log('=== ApprovalCenter 组件挂载完成 ===');
 });
