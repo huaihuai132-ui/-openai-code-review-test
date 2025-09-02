@@ -151,8 +151,10 @@ export enum DICT_TYPE {
   BPM_TASK_STATUS = 'bpm_task_status',
   BPM_OA_LEAVE_TYPE = 'bpm_oa_leave_type',
   BPM_OA_OUT_TYPE = 'bpm_oa_out_type',
+  OA_CONTACT_US_STATUS='oa_contact_us_status',
   BPM_PROCESS_LISTENER_TYPE = 'bpm_process_listener_type',
   BPM_PROCESS_LISTENER_VALUE_TYPE = 'bpm_process_listener_value_type',
+  
 
   // ========== PAY 模块 ==========
   PAY_CHANNEL_CODE = 'pay_channel_code', // 支付渠道编码类型

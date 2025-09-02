@@ -26,9 +26,6 @@
         <el-descriptions-item label="创建时间"> 
           {{ (formData as any).createTime ? formatDate((formData as any).createTime) : '-' }}
         </el-descriptions-item>
-        <el-descriptions-item label="创建人">
-          {{ (formData as any).createBy || '-' }}
-        </el-descriptions-item>
         <el-descriptions-item label="附件" :span="2">
           <div v-if="fileList.length > 0" class="flex flex-col gap-2">
             <div
