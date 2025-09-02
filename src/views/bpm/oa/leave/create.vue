@@ -31,19 +31,25 @@
             <el-button :disabled="formLoading" type="primary" @click="submitForm">
               确 定
             </el-button>
+            <el-button type="info" @click="showPrintPreview">
+              <Icon icon="ep:view" class="mr-5px" />
+              打印预览
+            </el-button>
           </el-form-item>
         </el-form>
       </ContentWrap>
     </el-col>
 
     <!-- 审批相关：流程信息 -->
-    <el-col :span="8">
+    <el-col :span="8" class="no-print">
       <ContentWrap title="审批流程" :bodyStyle="{ padding: '0 20px 0' }">
         <ProcessInstanceTimeline ref="timelineRef" :activity-nodes="activityNodes" :show-status-icon="false"
           @select-user-confirm="selectUserConfirm" />
       </ContentWrap>
     </el-col>
   </el-row>
+  <!-- 打印预览弹窗 -->
+  <PrintPreview v-model="printPreviewVisible" :leave-data="previewData" />
 </template>
 <script lang="ts" setup>
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
@@ -51,6 +57,8 @@ import * as LeaveApi from '@/api/bpm/form/leave'
 import { OaAnnualLeaveApi } from '@/api/business/oaannualleave'
 import { useTagsViewStore } from '@/store/modules/tagsView'
 import { BatchFileUpload } from '@/components/UploadFile'
+import PrintPreview from './components/PrintPreview.vue'
+import { useUserStore } from '@/store/modules/user'
 
 // 审批相关：import
 import * as DefinitionApi from '@/api/bpm/definition'
@@ -64,8 +72,11 @@ defineOptions({ name: 'BpmOALeaveCreate' })
 const message = useMessage() // 消息弹窗
 const { delView } = useTagsViewStore() // 视图操作
 const { currentRoute } = useRouter() // 路由
+const userStore = useUserStore() // 用户信息
 
 const leftLeaveDays = ref(0) // 剩余年假
+const printPreviewVisible = ref(false) // 打印预览弹窗显示状态
+const previewData = ref({}) // 预览数据
 
 // 定义 emit 事件
 const emit = defineEmits(['success'])
@@ -95,6 +106,22 @@ const startUserSelectAssignees = ref<Record<string, number[]>>({}) // 添加类�
 const tempStartUserSelectAssignees = ref<Record<string, number[]>>({}) // 添加类型
 const activityNodes = ref<ProcessInstanceApi.ApprovalNodeInfo[]>([]) // 已有类型
 const processDefinitionId = ref('')
+
+/** 显示打印预览 */
+const showPrintPreview = () => {
+  // 准备预览数据
+  previewData.value = {
+    creator: userStore.getUser?.nickname || '当前用户',
+    createTime: new Date(),
+    type: formData.value.type,
+    startTime: formData.value.startTime,
+    endTime: formData.value.endTime,
+    reason: formData.value.reason,
+    leftLeaveDays: leftLeaveDays.value,
+    duration: daysDifference()
+  }
+  printPreviewVisible.value = true
+}
 
 /** 提交表单 */
 const submitForm = async () => {
@@ -185,11 +212,22 @@ const selectUserConfirm = (id: string, userList: any[]) => {
 }
 
 // 计算天数差
-// TODO @小北：可以搞到 formatTime 里面去，然后看看 dayjs 里面有没有现成的方法，或者辅助计算的方法。
 const daysDifference = () => {
-  const oneDay = 24 * 60 * 60 * 1000 // 一天的毫秒数
+  if (!formData.value.startTime || !formData.value.endTime) {
+    return 0
+  }
   const diffTime = Math.abs(Number(formData.value.endTime) - Number(formData.value.startTime))
-  return Math.floor(diffTime / oneDay)
+  if (diffTime === 0) {
+    return 0
+  }
+  // 计算小时数
+  const hours = diffTime / (60 * 60 * 1000)
+  if (hours < 4) {
+    return 0.5
+  }
+  // 大于等于4小时，向上取整算一天
+  const oneDay = 24 * 60 * 60 * 1000 // 一天的毫秒数
+  return Math.ceil(diffTime / oneDay)
 }
 
 /** 初始化流程定义 */

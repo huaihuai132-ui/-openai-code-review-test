@@ -69,7 +69,9 @@ const setupAll = async () => {
   await router.isReady()
 
   app.use(VueDOMPurifyHTML)
-  app.use(printPlugin)
+  app.use(printPlugin, {
+    noPrintSelector: ['.no-print']
+  })
 
   app.mount('#app')
 }
