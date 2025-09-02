@@ -47,4 +47,9 @@ export const OaAnnualLeaveApi = {
   getOaFormLeaveListByUserId: async (userId) => {
     return await request.get({ url: `/business/oa-annual-leave/oa-form-leave/list-by-user-id?userId=` + userId })
   },
+
+  // 查询我的剩余年假
+  getMyOaAnnualLeave: async () => {
+    return await request.get({ url: `/business/oa-annual-leave/get-my-annual` })
+  },
 }

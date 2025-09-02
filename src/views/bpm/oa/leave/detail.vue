@@ -4,6 +4,9 @@
       <el-descriptions-item label="请假类型">
         <dict-tag :type="DICT_TYPE.BPM_OA_LEAVE_TYPE" :value="detailData.type" />
       </el-descriptions-item>
+      <el-descriptions-item label="剩余年假">
+        {{ leftLeaveDays }} 天
+      </el-descriptions-item>
       <el-descriptions-item label="开始时间">
         {{ formatDate(detailData.startTime, 'YYYY-MM-DD') }}
       </el-descriptions-item>
@@ -27,6 +30,7 @@ import { DICT_TYPE } from '@/utils/dict'
 import { formatDate } from '@/utils/formatTime'
 import { propTypes } from '@/utils/propTypes'
 import * as LeaveApi from '@/api/bpm/form/leave'
+import { OaAnnualLeaveApi } from '@/api/business/oaannualleave'
 import { BatchFileUpload } from '@/components/UploadFile'
 
 defineOptions({ name: 'BpmOALeaveDetail' })
@@ -40,6 +44,7 @@ const detailLoading = ref(false) // 表单的加载中
 const detailData = ref<any>({}) // 详情数据
 const queryId = query.id as unknown as number | string // 从 URL 传递过来的 id 编号
 const fileIdList = ref<string[]>([]) // 文件ID列表（使用字符串避免精度丢失）
+const leftLeaveDays = ref(0) // 剩余年假
 
 /** 解析文件ID列表 */
 const parseFileIdList = (fileList: string): string[] => {
@@ -66,10 +71,20 @@ const getInfo = async () => {
     detailLoading.value = false
   }
 }
+/** 获取我的剩余年假 */
+const getMyOaAnnualLeave = async () => {
+  try {
+    const res = await OaAnnualLeaveApi.getMyOaAnnualLeave()
+    leftLeaveDays.value = res || 0
+  } catch (error) {
+    console.error('获取剩余年假失败', error)
+  }
+}
 defineExpose({ open: getInfo }) // 提供 open 方法，用于打开弹窗
 
 /** 初始化 **/
-onMounted(() => {
-  getInfo()
+onMounted(async () => {
+  await getInfo()
+  await getMyOaAnnualLeave()
 })
 </script>

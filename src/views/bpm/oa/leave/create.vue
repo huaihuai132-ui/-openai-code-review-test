@@ -9,6 +9,9 @@
                 :label="dict.label" :value="dict.value" />
             </el-select>
           </el-form-item>
+          <el-form-item label="剩余年假">
+            <el-input :value="`${leftLeaveDays} 天`" disabled />
+          </el-form-item>
           <el-form-item label="开始时间" prop="startTime">
             <el-date-picker v-model="formData.startTime" clearable placeholder="请选择开始时间" type="datetime"
               value-format="x" />
@@ -45,6 +48,7 @@
 <script lang="ts" setup>
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import * as LeaveApi from '@/api/bpm/form/leave'
+import { OaAnnualLeaveApi } from '@/api/business/oaannualleave'
 import { useTagsViewStore } from '@/store/modules/tagsView'
 import { BatchFileUpload } from '@/components/UploadFile'
 
@@ -60,6 +64,8 @@ defineOptions({ name: 'BpmOALeaveCreate' })
 const message = useMessage() // 消息弹窗
 const { delView } = useTagsViewStore() // 视图操作
 const { currentRoute } = useRouter() // 路由
+
+const leftLeaveDays = ref(0) // 剩余年假
 
 // 定义 emit 事件
 const emit = defineEmits(['success'])
@@ -206,8 +212,20 @@ const initProcessDefinition = async () => {
 }
 
 // 在组件挂载后初始化流程定义
+/** 获取我的剩余年假 */
+const getMyOaAnnualLeave = async () => {
+  try {
+    const res = await OaAnnualLeaveApi.getMyOaAnnualLeave()
+    leftLeaveDays.value = res || 0
+  } catch (error) {
+    console.error('获取剩余年假失败', error)
+  }
+}
+
+// 在组件挂载后初始化流程定义
 onMounted(async () => {
   await initProcessDefinition()
+  await getMyOaAnnualLeave()
 })
 
 /** 审批相关：预测流程节点会因为输入的参数值而产生新的预测结果值，所以需重新预测一次, formData.value可改成实际业务中的特定字段 */
