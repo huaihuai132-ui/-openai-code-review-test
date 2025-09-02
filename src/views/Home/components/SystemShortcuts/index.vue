@@ -53,18 +53,12 @@
               shadow="hover" 
               class="cursor-pointer shortcut-card"
               :class="{ 'editing': isEditing }"
+              @click="!isEditing && handleShortcutClick(item.url)"
             >
               <div class="flex items-center justify-between">
                 <div class="flex items-center flex-1">
                   <Icon :icon="item.icon" class="mr-8px" :style="{ color: item.color }" />
-                  <el-link 
-                    type="default" 
-                    :underline="false" 
-                    @click="handleShortcutClick(item.url)"
-                    :disabled="isEditing"
-                  >
-                    {{ item.name }}
-                  </el-link>
+                  {{ item.name }}
                 </div>
                 <!-- 编辑模式下的删除按钮 -->
                 <el-button
@@ -72,7 +66,7 @@
                   type="danger"
                   size="small"
                   circle
-                  @click="removeShortcut(index)"
+                  @click.stop="removeShortcut(index)"
                   class="delete-btn"
                 >
                   <Icon icon="ep:delete" />
@@ -92,14 +86,14 @@
       </draggable>
       
       <!-- 查看全部按钮 -->
-      <div class="view-all-item">
+      <!-- <div class="view-all-item">
         <el-card shadow="hover" class="cursor-pointer">
           <div class="flex items-center">
             <Icon icon="ion:grid-outline" class="mr-8px" />
             <el-link type="default" :underline="false">查看全部</el-link>
           </div>
         </el-card>
-      </div>
+      </div> -->
     </el-skeleton>
   </el-card>
 </template>
@@ -251,14 +245,16 @@ const handleShortcutClick = (url: string) => {
   &.editing {
     border: 2px dashed #409eff;
     background-color: #f0f9ff;
+    cursor: default; // 编辑模式下改为默认光标
     
     &:hover {
       border-color: #67c23a;
       background-color: #f0f9ff;
+      transform: none; // 编辑模式下禁用悬停动画
     }
   }
   
-  &:hover {
+  &:not(.editing):hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
