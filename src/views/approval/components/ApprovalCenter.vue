@@ -189,23 +189,30 @@ const pageStates = reactive({
   rejected: { hasMore: true, loading: false }
 });
 
-// 切换分类
+// 切换分类 - 简化版本
 const changeCategory = (category) => {
-  activeCategory.value = category;
+  console.log('=== changeCategory 被调用 ===');
+  console.log('目标分类:', category);
+  console.log('当前分类:', activeCategory.value);
+  console.log('点击事件触发成功');
   
-  // 更新URL的query参数
-  router.push({
-    path: route.path,
-    query: {
-      ...route.query,
-      category: category
-    }
-  });
+  // 防止重复点击同一个分类
+  if (activeCategory.value === category) {
+    console.log('重复点击同一分类，忽略:', category);
+    return;
+  }
+  
+  console.log('开始切换分类:', category);
+  
+  // 直接更新activeCategory
+  activeCategory.value = category;
   
   // 重置分页参数
   queryParams[category].pageNo = 1;
   pageStates[category].hasMore = true;
+  
   // 清空当前列表
+  console.log('清空列表:', category);
   switch (category) {
     case 'waiting':
       waitingList.value = [];
@@ -223,14 +230,21 @@ const changeCategory = (category) => {
       rejectedList.value = [];
       break;
   }
-  // 强制更新标签标题
-  forceSetPageTitle(category);
+  
+  console.log('开始加载数据:', category);
   // 重新加载数据
   loadCategoryData(category);
+  
   // 计算新数据数量
   calculateNewItems();
+  
+  // 强制更新标签标题
+  forceSetPageTitle(category);
+  
   // 更新最后阅读时间
   updateLastReadTime(`approval_${category}_last_read`);
+  
+  console.log('分类切换完成:', category);
 };
 
 // 加载分类数据
@@ -559,6 +573,8 @@ watch(activeCategory, (newCategory) => {
   updateTagTitle(newCategory);
 });
 
+// 移除复杂的路由监听器，改为在mounted中处理初始路由参数
+
 // 引入标签视图钩子
 const { setTitle } = useTagsView();
 
@@ -653,24 +669,34 @@ const forceSetPageTitle = (category: string) => {
 // 初始化
 onMounted(async () => {
   console.log('=== ApprovalCenter 组件挂载 ===');
+  console.log('当前路由:', route.path);
+  console.log('路由参数:', route.query);
   
-  // 默认显示待审批，如果没有路由参数的话
-  if (!route.query.category) {
-    activeCategory.value = 'waiting';
-  }
-
-  // 检查路由参数，如果有category参数则设置对应的分类
+  // 处理初始路由参数
+  let initialCategory = 'waiting'; // 默认分类
+  
   if (route.query.category) {
     const category = route.query.category as string;
+    console.log('从路由获取分类:', category);
     if (['waiting', 'done', 'apply', 'copy', 'rejected'].includes(category)) {
-      activeCategory.value = category;
+      initialCategory = category;
+      console.log('使用路由分类:', initialCategory);
+    } else {
+      console.log('路由分类无效，使用默认分类:', initialCategory);
     }
+  } else {
+    console.log('无路由参数，使用默认分类:', initialCategory);
   }
+  
+  // 设置初始分类
+  activeCategory.value = initialCategory;
+  console.log('设置初始分类:', activeCategory.value);
   
   // 强制设置页面标题
   forceSetPageTitle(activeCategory.value);
 
   // 加载所有分类数据
+  console.log('开始加载所有分类数据');
   await Promise.all([
     loadWaitingList(),
     loadDoneList(),
@@ -678,6 +704,7 @@ onMounted(async () => {
     loadCopyList(),
     loadRejectedList()
   ]);
+  console.log('所有分类数据加载完成');
 
   // 计算新数据数量
   calculateNewItems();
@@ -687,6 +714,8 @@ onMounted(async () => {
     forceSetPageTitle(activeCategory.value);
   }, 1000);
   timers.value.push(timer3);
+  
+  console.log('=== ApprovalCenter 组件挂载完成 ===');
 });
 
 // 组件卸载时清理定时器
