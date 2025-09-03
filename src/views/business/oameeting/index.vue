@@ -93,23 +93,23 @@
           {{ formatDate(scope.row.meetDate, 'YYYY-MM-DD') }}
         </template>
       </el-table-column>
-      <el-table-column label="开始时间" align="center" prop="startTime" :formatter="dateFormatter" width="180px" />
-      <el-table-column label="结束时间" align="center" prop="endTime" :formatter="dateFormatter" width="180px" />
+<!--      <el-table-column label="开始时间" align="center" prop="startTime" :formatter="dateFormatter" width="180px" />-->
+<!--      <el-table-column label="结束时间" align="center" prop="endTime" :formatter="dateFormatter" width="180px" />-->
 <!--      <el-table-column label="会议室ID" align="center" prop="meetRoomId" />-->
       <el-table-column label="会议事由" align="center" prop="reason" />
-      <el-table-column label="会议概述" align="center" prop="description" />
+<!--      <el-table-column label="会议概述" align="center" prop="description" />-->
       <el-table-column label="会议状态" align="center" prop="status">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.MEET_STATUS" :value="scope.row.status || 0" />
         </template>
       </el-table-column>
-      <el-table-column
-        label="创建时间"
-        align="center"
-        prop="createTime"
-        :formatter="dateFormatter"
-        width="180px"
-      />
+<!--      <el-table-column-->
+<!--        label="创建时间"-->
+<!--        align="center"-->
+<!--        prop="createTime"-->
+<!--        :formatter="dateFormatter"-->
+<!--        width="180px"-->
+<!--      />-->
 <!--      <el-table-column label="文件id列表" align="center" prop="fileList" />-->
 <!--      <el-table-column label="文件序列编码" align="center" prop="sequenceCode" />-->
       <el-table-column label="操作" align="center" min-width="300px">
@@ -410,7 +410,7 @@
 
 <script setup lang="ts">
 import {DICT_TYPE, getStrDictOptions} from '@/utils/dict'
-import {dateFormatter, formatDate} from '@/utils/formatTime'
+import {formatDate} from '@/utils/formatTime'
 import download from '@/utils/download'
 import {OaMeetingApi, OaMeetingVO} from '@/api/business/oameeting'
 import OaMeetingForm from './OaMeetingForm.vue'
