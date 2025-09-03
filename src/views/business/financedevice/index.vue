@@ -1,79 +1,42 @@
 <template>
   <ContentWrap>
     <!-- 搜索工作栏 -->
-    <el-form
-      class="-mb-15px"
-      :model="queryParams"
-      ref="queryFormRef"
-      :inline="true"
-      label-width="128px"
-    >
+    <el-form class="-mb-15px" :model="queryParams" ref="queryFormRef" :inline="true" label-width="128px">
       <el-form-item label="融资租赁单编号" prop="leaseId">
-        <el-input
-          v-model="queryParams.leaseId"
-          placeholder="请输入融资租赁单编号"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
+        <el-input v-model="queryParams.leaseId" placeholder="请输入融资租赁单编号" clearable @keyup.enter="handleQuery"
+          class="!w-240px" />
       </el-form-item>
       <el-form-item label="设备名称" prop="deviceName">
-        <el-input
-          v-model="queryParams.deviceName"
-          placeholder="请输入设备名称"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
+        <el-input v-model="queryParams.deviceName" placeholder="请输入设备名称" clearable @keyup.enter="handleQuery"
+          class="!w-240px" />
       </el-form-item>
       <el-form-item label="规格型号" prop="deviceSpecification">
-        <el-input
-          v-model="queryParams.deviceSpecification"
-          placeholder="请输入规格型号"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
+        <el-input v-model="queryParams.deviceSpecification" placeholder="请输入规格型号" clearable @keyup.enter="handleQuery"
+          class="!w-240px" />
       </el-form-item>
       <el-form-item label="购买日期" prop="buyDate">
-        <el-date-picker
-          v-model="queryParams.buyDate"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          type="daterange"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
-          class="!w-220px"
-        />
+        <el-date-picker v-model="queryParams.buyDate" value-format="YYYY-MM-DD HH:mm:ss" type="daterange"
+          start-placeholder="开始日期" end-placeholder="结束日期"
+          :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]" class="!w-220px" />
       </el-form-item>
       <el-form-item label="设备状态" prop="deviceStatus">
-        <el-select
-          v-model="queryParams.deviceStatus"
-          placeholder="请选择设备状态"
-          clearable
-          class="!w-240px"
-        >
-          <el-option label="请选择字典生成" value="" />
+        <el-select v-model="queryParams.deviceStatus" placeholder="请选择设备状态" clearable class="!w-240px">
+          <el-option v-for="dict in getStrDictOptions(DICT_TYPE.DEVICE_STATUS)" :key="dict.value"
+            :label="dict.label" :value="dict.value" />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
-        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
-        <el-button
-          type="primary"
-          plain
-          @click="openForm('create')"
-          v-hasPermi="['business:finance-device:create']"
-        >
+        <el-button @click="handleQuery">
+          <Icon icon="ep:search" class="mr-5px" /> 搜索
+        </el-button>
+        <el-button @click="resetQuery">
+          <Icon icon="ep:refresh" class="mr-5px" /> 重置
+        </el-button>
+        <el-button type="primary" plain @click="openForm('create')" v-hasPermi="['business:finance-device:create']">
           <Icon icon="ep:plus" class="mr-5px" /> 新增
         </el-button>
-        <el-button
-          type="success"
-          plain
-          @click="handleExport"
-          :loading="exportLoading"
-          v-hasPermi="['business:finance-device:export']"
-        >
+        <el-button type="success" plain @click="handleExport" :loading="exportLoading"
+          v-hasPermi="['business:finance-device:export']">
           <Icon icon="ep:download" class="mr-5px" /> 导出Excel
         </el-button>
       </el-form-item>
@@ -87,53 +50,33 @@
       <el-table-column label="设备名称" align="center" prop="deviceName" />
       <el-table-column label="规格型号" align="center" prop="deviceSpecification" />
       <el-table-column label="生产厂家" align="center" prop="deviceManufacturers" />
-      <el-table-column
-        label="购买日期"
-        align="center"
-        prop="buyDate"
-        :formatter="dateFormatter"
-        width="180px"
-      />
+      <el-table-column label="购买日期" align="center" prop="buyDate" :formatter="dateFormatter" width="180px" />
       <el-table-column label="数量" align="center" prop="quantity" />
       <el-table-column label="原值" align="center" prop="originalWorth" />
       <el-table-column label="净值" align="center" prop="netWorth" />
-      <el-table-column label="设备状态" align="center" prop="deviceStatus" />
-      <el-table-column
-        label="创建时间"
-        align="center"
-        prop="createTime"
-        :formatter="dateFormatter"
-        width="180px"
-      />
+      <el-table-column label="设备状态" align="center" prop="deviceStatus">
+        <template #default="scope">
+          {{ getDictLabel(DICT_TYPE.DEVICE_STATUS, scope.row.deviceStatus) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
       <el-table-column label="部门id" align="center" prop="deptId" />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
-          <el-button
-            link
-            type="primary"
-            @click="openForm('update', scope.row.id)"
-            v-hasPermi="['business:finance-device:update']"
-          >
+          <el-button link type="primary" @click="openForm('update', scope.row.id)"
+            v-hasPermi="['business:finance-device:update']">
             编辑
           </el-button>
-          <el-button
-            link
-            type="danger"
-            @click="handleDelete(scope.row.id)"
-            v-hasPermi="['business:finance-device:delete']"
-          >
+          <el-button link type="danger" @click="handleDelete(scope.row.id)"
+            v-hasPermi="['business:finance-device:delete']">
             删除
           </el-button>
         </template>
       </el-table-column>
     </el-table>
     <!-- 分页 -->
-    <Pagination
-      :total="total"
-      v-model:page="queryParams.pageNo"
-      v-model:limit="queryParams.pageSize"
-      @pagination="getList"
-    />
+    <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize"
+      @pagination="getList" />
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
@@ -143,6 +86,7 @@
 <script setup lang="ts">
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
+import { DICT_TYPE, getStrDictOptions, getDictLabel } from '@/utils/dict'
 import { FinanceDeviceApi, FinanceDeviceVO } from '@/api/business/financedevice'
 import FinanceDeviceForm from './FinanceDeviceForm.vue'
 
@@ -213,7 +157,7 @@ const handleDelete = async (id: number) => {
     message.success(t('common.delSuccess'))
     // 刷新列表
     await getList()
-  } catch {}
+  } catch { }
 }
 
 /** 导出按钮操作 */

@@ -1,15 +1,9 @@
 <template>
   <Dialog :title="dialogTitle" v-model="dialogVisible">
-    <el-form
-      ref="formRef"
-      :model="formData"
-      :rules="formRules"
-      label-width="100px"
-      v-loading="formLoading"
-    >
-     <el-form-item label="融资租赁单编号" prop="leaseId">
-            <el-input v-model="formData.leaseId" placeholder="请输入融资租赁单编号" />
-          </el-form-item>
+    <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" v-loading="formLoading">
+      <el-form-item label="融资租赁单编号" prop="leaseId">
+        <el-input v-model="formData.leaseId" placeholder="请输入融资租赁单编号" />
+      </el-form-item>
       <el-form-item label="设备名称" prop="deviceName">
         <el-input v-model="formData.deviceName" placeholder="请输入设备名称" />
       </el-form-item>
@@ -20,12 +14,7 @@
         <el-input v-model="formData.deviceManufacturers" placeholder="请输入生产厂家" />
       </el-form-item>
       <el-form-item label="购买日期" prop="buyDate">
-        <el-date-picker
-          v-model="formData.buyDate"
-          type="date"
-          value-format="x"
-          placeholder="选择购买日期"
-        />
+        <el-date-picker v-model="formData.buyDate" type="date" value-format="x" placeholder="选择购买日期" />
       </el-form-item>
       <el-form-item label="数量" prop="quantity">
         <el-input v-model="formData.quantity" placeholder="请输入数量" />
@@ -38,7 +27,10 @@
       </el-form-item>
       <el-form-item label="设备状态" prop="deviceStatus">
         <el-radio-group v-model="formData.deviceStatus">
-          <el-radio value="1">请选择字典生成</el-radio>
+          <el-radio v-for="dict in getIntDictOptions(DICT_TYPE.DEVICE_STATUS)" :key="dict.value"
+            :label="parseInt(dict.value)">
+            {{ dict.label }}
+          </el-radio>
         </el-radio-group>
       </el-form-item>
     </el-form>
@@ -50,6 +42,7 @@
 </template>
 <script setup lang="ts">
 import { FinanceDeviceApi, FinanceDeviceVO } from '@/api/business/financedevice'
+import { DICT_TYPE, getIntDictOptions, getStrDictOptions } from '@/utils/dict'
 
 /** 融资租赁设备 表单 */
 defineOptions({ name: 'FinanceDeviceForm' })
