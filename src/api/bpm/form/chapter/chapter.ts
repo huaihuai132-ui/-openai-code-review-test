@@ -10,6 +10,7 @@ export interface ChapterVO {
   useDate: Date // 用章日期
   chapterFileName: string
   chapterName: string
+  sealEnterprise: string // 用章企业
   fileList: string // 文件ID列表，逗号分隔的字符串
   sequenceCode?: string // 文件序列编码
   isTakeOut: string
@@ -32,4 +33,4 @@ export const getChapter = (id: number) => {
 // 获取用章申请分页
 export const getChapterPage = (params) => {
   return request.get({ url: '/bpm/oa/form/chapter/page', params })
-} 
+}
