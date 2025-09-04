@@ -72,24 +72,17 @@ const goMyList = () => {
 // 处理消息点击事件
 const handleMessageClick = (item: any) => {
   // 如果templateType=3且存在detailUrl，则跳转
-  if (item.templateType === 3 && item.templateParams?.detailUrl) {
+  if (item.templateType === 3 && item.tab) {
     try {
-      // 解析URL，提取路径部分
-      const url = new URL(item.templateParams.detailUrl)
-      const path = url.pathname + url.search
-      
-      // 使用router跳转
-      push(path)
+      push({
+      path: '/approval',
+      query: {
+        category: item.tab,
+        processInstanceId: item.processInstanceId
+      }
+})
     } catch (error) {
       console.error('URL解析错误:', error)
-      // 如果URL解析失败，尝试直接跳转
-      if (item.templateParams.detailUrl.startsWith('http')) {
-        // 外部链接，在新窗口打开
-        window.open(item.templateParams.detailUrl, '_blank')
-      } else {
-        // 内部路径，直接跳转
-        push(item.templateParams.detailUrl)
-      }
     }
   }
 }

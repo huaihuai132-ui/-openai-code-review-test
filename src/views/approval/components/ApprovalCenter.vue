@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
+import { ref, reactive, onMounted, watch, onUnmounted } from 'vue';
 import CommonList from './category/CommonList.vue';
 import ProcessInstanceDetail from '@/views/bpm/processInstance/detail/index.vue';
 import { getTaskTodoPage, getTaskDonePage } from '@/api/bpm/task';
@@ -127,16 +127,9 @@ import { getProcessInstanceMyPage, getProcessInstanceCopyPage, getProcessInstanc
 import { updateLastReadTime, getLastReadTime } from '@/utils/cache';
 import { Clock, Check, Document, CopyDocument, CloseBold, Loading } from '@element-plus/icons-vue';
 import DetailOverlay from '@/components/DetailOverlay/index.vue';
-import { useRoute, useRouter } from 'vue-router'
-import { useTagsView } from '@/hooks/web/useTagsView'
-import { useTagsViewStoreWithOut } from '@/store/modules/tagsView'
+import { useRoute } from 'vue-router'
 
-const route = useRoute();
-const router = useRouter();
 const activeCategory = ref('');
-
-// 定时器管理
-const timers = ref<number[]>([]);
 const waitingList = ref([]);
 const doneList = ref([]);
 const applyList = ref([]);
@@ -189,43 +182,13 @@ const pageStates = reactive({
   rejected: { hasMore: true, loading: false }
 });
 
-// 切换分类 - 修复版本
+// 切换分类
 const changeCategory = (category) => {
-  console.log('=== changeCategory 被调用 ===');
-  console.log('目标分类:', category);
-  console.log('当前分类:', activeCategory.value);
-  console.log('当前URL参数:', route.query.category);
-  
-  // 防止重复点击同一个分类
-  if (activeCategory.value === category && route.query.category === category) {
-    console.log('重复点击同一分类，忽略:', category);
-    return;
-  }
-  
-  console.log('开始切换分类:', category);
-  
-  // 更新URL参数，确保路由状态同步
-  router.replace({
-    path: route.path,
-    query: {
-      ...route.query,
-      category: category
-    }
-  }).then(() => {
-    console.log('URL参数更新完成:', category);
-  }).catch(err => {
-    console.error('URL参数更新失败:', err);
-  });
-  
-  // 直接更新activeCategory
   activeCategory.value = category;
-  
   // 重置分页参数
   queryParams[category].pageNo = 1;
   pageStates[category].hasMore = true;
-  
   // 清空当前列表
-  console.log('清空列表:', category);
   switch (category) {
     case 'waiting':
       waitingList.value = [];
@@ -243,21 +206,12 @@ const changeCategory = (category) => {
       rejectedList.value = [];
       break;
   }
-  
-  console.log('开始加载数据:', category);
   // 重新加载数据
   loadCategoryData(category);
-  
   // 计算新数据数量
   calculateNewItems();
-  
-  // 内部切换分类时不更新标签页标题，避免重复标签
-  // updateTagTitle(category); // 移除此调用
-  
   // 更新最后阅读时间
   updateLastReadTime(`approval_${category}_last_read`);
-  
-  console.log('分类切换完成:', category);
 };
 
 // 加载分类数据
@@ -569,7 +523,11 @@ const handleSearch = (params) => {
 const closeDetail = () => {
   showDetail.value = false;
   selectedItemId.value = '';
-
+  if(route.query.processInstanceId) {
+    const q = { ...route.query }
+    delete q.processInstanceId
+    replace({ path: route.path, query: q })
+  }
   // 重新加载当前分类数据
   if (selectedCategory.value) {
     loadCategoryData(selectedCategory.value);
@@ -589,154 +547,58 @@ const handleScroll = (event: Event) => {
   }
 };
 
-// 监听分类变化（合并两个监听器）
-watch(activeCategory, (newCategory) => {
+// 监听分类变化
+watch(activeCategory, () => {
   // 关闭详情面板
   showDetail.value = false;
   selectedItemId.value = '';
-  
-  // 内部切换分类时不更新标签页标题，避免重复标签
-  // updateTagTitle(newCategory); // 移除此调用
 });
 
-// 移除复杂的路由监听器，改为在mounted中处理初始路由参数
+// 获取路由参数
+const route = useRoute();
+const { replace,removeRoute } = useRouter()
 
-// 引入标签视图钩子
-const { setTitle } = useTagsView();
-
-// 分类标题映射
-const categoryTitleMap = {
-  'waiting': '待审批',
-  'done': '已审批',
-  'apply': '我申请的',
-  'copy': '抄送我的',
-  'rejected': '被驳回的'
+// 滑动监听
+const handleScroll = (event) => {
+  const { scrollTop, scrollHeight, clientHeight } = event.target;
+  // 当滚动到底部附近时加载更多
+  if (scrollTop + clientHeight >= scrollHeight - 100) {
+    loadMoreData();
+  }
 };
 
-// 更新标签标题函数
-const updateTagTitle = (category: string, isFromExternalNavigation = false) => {
-  if (!categoryTitleMap[category]) return;
-  
-  const newTitle = `审批中心 - ${categoryTitleMap[category]}`;
-  console.log('更新标题:', newTitle, '分类:', category, '是否外部导航:', isFromExternalNavigation);
-  
-  // 更新当前路由的meta.title
-  if (route.meta) {
-    route.meta.title = newTitle;
+const handleId = (data) => {
+  selectedCategory.value = data.tab;
+  selectedItemId.value = data.processInstanceId;
+  showDetail.value = true;
+}
+const triggerFromQuery = () => {
+  const pid = route.query.processInstanceId as string
+  const category = route.query.category as string
+  if (pid && category) {
+    handleId({ processInstanceId: pid, tab: category })
   }
-  
-  // 只在从外部导航时更新TagsView中的标签标题
-  // 内部切换分类时不更新已存在的标签页标题，避免重复标签
-  if (isFromExternalNavigation) {
-    const tagsViewStore = useTagsViewStoreWithOut();
-    const visitedViews = tagsViewStore.getVisitedViews;
-    
-    for (const view of visitedViews) {
-      if (view.fullPath === route.fullPath) {
-        view.meta.title = newTitle;
-        console.log('更新标签页标题:', newTitle);
-        break;
-      }
-    }
-  } else {
-    console.log('内部切换分类，跳过标签页标题更新');
-  }
-  
-  // 更新浏览器标题
-  document.title = newTitle;
-};
-
-
-
-
-
-// 监听路由参数变化
-watch(() => route.query.category, (newCategory, oldCategory) => {
-  console.log('=== 路由参数变化监听器触发 ===');
-  console.log('新分类:', newCategory);
-  console.log('旧分类:', oldCategory);
-  console.log('当前activeCategory:', activeCategory.value);
-  
-  if (newCategory && typeof newCategory === 'string') {
-    const validCategories = ['waiting', 'done', 'apply', 'copy', 'rejected'];
-    if (validCategories.includes(newCategory)) {
-      // 只有当URL参数与当前activeCategory不一致时才更新
-      if (activeCategory.value !== newCategory) {
-        console.log('路由参数与组件状态不同步，更新组件状态:', newCategory);
-        activeCategory.value = newCategory;
-        
-        // 重置分页参数
-        queryParams[newCategory].pageNo = 1;
-        pageStates[newCategory].hasMore = true;
-        
-        // 清空当前列表
-        switch (newCategory) {
-          case 'waiting':
-            waitingList.value = [];
-            break;
-          case 'done':
-            doneList.value = [];
-            break;
-          case 'apply':
-            applyList.value = [];
-            break;
-          case 'copy':
-            copyList.value = [];
-            break;
-          case 'rejected':
-            rejectedList.value = [];
-            break;
-        }
-        
-        // 重新加载数据
-        loadCategoryData(newCategory);
-        
-        // 计算新数据数量
-        calculateNewItems();
-        
-        // 更新最后阅读时间
-        updateLastReadTime(`approval_${newCategory}_last_read`);
-      } else {
-        console.log('路由参数与组件状态已同步，无需更新');
-      }
-      
-      // 从外部导航时更新标题，确保标签栏显示正确
-      updateTagTitle(newCategory, true);
-    }
-  }
-}, { immediate: true });
+}
+onActivated(() => {
+  triggerFromQuery()
+})
 
 // 初始化
 onMounted(async () => {
-  console.log('=== ApprovalCenter 组件挂载 ===');
-  console.log('当前路由:', route.path);
-  console.log('路由参数:', route.query);
-  
-  // 处理初始路由参数
-  let initialCategory = 'waiting'; // 默认分类
-  
+    triggerFromQuery()
+  if (!route.query.category) {
+    activeCategory.value = 'waiting';
+  }
+
+  // 检查路由参数，如果有category参数则设置对应的分类
   if (route.query.category) {
     const category = route.query.category as string;
-    console.log('从路由获取分类:', category);
     if (['waiting', 'done', 'apply', 'copy', 'rejected'].includes(category)) {
-      initialCategory = category;
-      console.log('使用路由分类:', initialCategory);
-    } else {
-      console.log('路由分类无效，使用默认分类:', initialCategory);
+      activeCategory.value = category;
     }
-  } else {
-    console.log('无路由参数，使用默认分类:', initialCategory);
   }
-  
-  // 设置初始分类
-  activeCategory.value = initialCategory;
-  console.log('设置初始分类:', activeCategory.value);
-  
-  // 设置页面标题（组件初始挂载算作外部导航）
-  updateTagTitle(activeCategory.value, true);
 
   // 加载所有分类数据
-  console.log('开始加载所有分类数据');
   await Promise.all([
     loadWaitingList(),
     loadDoneList(),
@@ -744,22 +606,13 @@ onMounted(async () => {
     loadCopyList(),
     loadRejectedList()
   ]);
-  console.log('所有分类数据加载完成');
 
   // 计算新数据数量
   calculateNewItems();
-  
-  console.log('=== ApprovalCenter 组件挂载完成 ===');
 });
-
-// 组件卸载时清理定时器
 onUnmounted(() => {
-  console.log('=== ApprovalCenter 组件卸载，清理定时器 ===');
-  timers.value.forEach(timer => {
-    clearTimeout(timer);
-  });
-  timers.value = [];
-});
+  console.log("=====组件卸载完成=======")
+})
 </script>
 
 <style scoped lang="scss">

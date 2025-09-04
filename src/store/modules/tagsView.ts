@@ -36,29 +36,53 @@ export const useTagsViewStore = defineStore('tagsView', {
       this.addCachedView()
     },
     // 新增tag
-    addVisitedView(view: RouteLocationNormalizedLoaded) {
-      if (this.visitedViews.some((v) => v.fullPath === view.fullPath)) return
-      if (view.meta?.noTagsView) return
-      const visitedView = Object.assign({}, view, { title: view.meta?.title || 'no-name' })
+addVisitedView(view: RouteLocationNormalizedLoaded) {
+  if (this.visitedViews.some((v) => v.fullPath === view.fullPath)) return
+  if (view.meta?.noTagsView) return
+  if (this.visitedViews.some((v) => v.fullPath === view.fullPath)) return
+  if (view.meta?.noTagsView) return
+  // 如果同时有 tab/category 和 processInstanceId 参数，不添加 tab
+  const hasTab = view.query?.tab || view.query?.category
+  const hasProcessId = view.query?.processInstanceId
+  if (hasTab && hasProcessId) {
+    return
+  }
+    
+  // 1) 针对审批中心，按 category 改标题
+  if (view.path === '/approval') {
+    const category = (view.query?.category as string) || ''
+    const map: Record<string, string> = {
+      waiting: '审批中心 - 待审批',
+      done: '审批中心 - 已审批',
+      apply: '审批中心 - 我申请的',
+      copy: '审批中心 - 抄送我的',
+      rejected: '审批中心 - 被驳回的'
+    }
+    if (map[category]) {
+      view = Object.assign({}, view, { meta: { ...view.meta, title: map[category] } })
+    }
+  }
 
-      if (visitedView.meta) {
-        const titleSuffixList: string[] = []
-        this.visitedViews.forEach((v) => {
-          if (v.path === visitedView.path && v.meta?.title === visitedView.meta?.title) {
-            titleSuffixList.push(v.meta?.titleSuffix || '1')
-          }
-        })
-        if (titleSuffixList.length) {
-          let titleSuffix = 1
-          while (titleSuffixList.includes(`${titleSuffix}`)) {
-            titleSuffix += 1
-          }
-          visitedView.meta.titleSuffix = titleSuffix === 1 ? undefined : `${titleSuffix}`
-        }
+  const visitedView = Object.assign({}, view, { title: view.meta?.title || 'no-name' })
+
+  if (visitedView.meta) {
+    const titleSuffixList: string[] = []
+    this.visitedViews.forEach((v) => {
+      if (v.path === visitedView.path && v.meta?.title === visitedView.meta?.title) {
+        titleSuffixList.push(v.meta?.titleSuffix || '1')
       }
+    })
+    if (titleSuffixList.length) {
+      let titleSuffix = 1
+      while (titleSuffixList.includes(`${titleSuffix}`)) {
+        titleSuffix += 1
+      }
+      visitedView.meta.titleSuffix = titleSuffix === 1 ? undefined : `${titleSuffix}`
+    }
+  }
 
-      this.visitedViews.push(visitedView)
-    },
+  this.visitedViews.push(visitedView)
+},
     // 新增缓存
     addCachedView() {
       const cacheMap: Set<string> = new Set()
