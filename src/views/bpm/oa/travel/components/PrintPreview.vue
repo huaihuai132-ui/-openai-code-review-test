@@ -53,8 +53,8 @@
         <tr>
           <td class="label-cell">出差时间</td>
           <td class="time-cell" colspan="3">
-            从 {{ formatDate(travelData.startTime, 'YYYY') }} 年 {{ formatDate(travelData.startTime, 'MM') }} 月 {{ formatDate(travelData.startTime, 'DD') }} 日
-            至 {{ formatDate(travelData.endTime, 'YYYY') }} 年 {{ formatDate(travelData.endTime, 'MM') }} 月 {{ formatDate(travelData.endTime, 'DD') }} 日
+            从 {{ formatTravelDate(travelData.startTime, 'YYYY') }} 年 {{ formatTravelDate(travelData.startTime, 'MM') }} 月 {{ formatTravelDate(travelData.startTime, 'DD') }} 日
+            至 {{ formatTravelDate(travelData.endTime, 'YYYY') }} 年 {{ formatTravelDate(travelData.endTime, 'MM') }} 月 {{ formatTravelDate(travelData.endTime, 'DD') }} 日
             共 {{ calculateDays(travelData.startTime, travelData.endTime) }} 天
           </td>
         </tr>
@@ -183,14 +183,44 @@ const fetchApprovalOpinions = async (processInstanceId: string) => {
   }
 }
 
+// 格式化出差时间显示
+const formatTravelDate = (date: Date | string | null | undefined, format: string) => {
+  if (!date) return '年' // 返回默认值避免显示undefined
+  
+  try {
+    // 确保date是有效的Date对象
+    const dateObj = new Date(date)
+    if (isNaN(dateObj.getTime())) {
+      return '年' // 无效日期返回默认值
+    }
+    return formatDate(dateObj, format)
+  } catch (error) {
+    console.error('格式化日期失败:', error)
+    return '年'
+  }
+}
+
 // 计算出差天数
-const calculateDays = (startTime: Date, endTime: Date) => {
+const calculateDays = (startTime: Date | string | null | undefined, endTime: Date | string | null | undefined) => {
   if (!startTime || !endTime) return 0
-  const start = new Date(startTime)
-  const end = new Date(endTime)
-  const diffTime = Math.abs(end.getTime() - start.getTime())
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return diffDays
+  
+  try {
+    const start = new Date(startTime)
+    const end = new Date(endTime)
+    
+    // 检查日期是否有效
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return 0
+    }
+    
+    // 计算天数差，至少为1天
+    const diffTime = end.getTime() - start.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return Math.max(diffDays, 1) // 至少显示1天
+  } catch (error) {
+    console.error('计算天数失败:', error)
+    return 0
+  }
 }
 
 const handleClose = () => {

@@ -5,7 +5,7 @@
                 <!-- 申请人信息显示 -->
                 <el-alert :title="`申请人：${userStore.getUser.nickname || '未知'} | 部门：${deptName || '未知'}`" type="info"
                     :closable="false" style="margin-bottom: 20px;" />
-                    
+
                 <el-form ref="formRef" v-loading="formLoading" :model="formData" :rules="formRules" label-width="100px">
                     <el-form-item label="交通方式" prop="trafficType">
                         <el-select v-model="formData.trafficType" placeholder="请选择交通方式" style="width: 100%">
@@ -26,6 +26,8 @@
                             type="datetime"
                             placeholder="请选择出差时间"
                             style="width: 100%"
+                            value-format="x"
+                            @change="calculateTravelDays"
                         />
                     </el-form-item>
                     <el-form-item label="归来时间" prop="endTime">
@@ -34,7 +36,12 @@
                             type="datetime"
                             placeholder="请选择归来时间"
                             style="width: 100%"
+                            value-format="x"
+                            @change="calculateTravelDays"
                         />
+                    </el-form-item>
+                    <el-form-item v-if="travelDays > 0" label="出差天数">
+                        <el-tag type="info" size="large">{{ travelDays }} 天</el-tag>
                     </el-form-item>
                     <el-form-item label="出差地点" prop="address">
                         <el-input v-model="formData.address" placeholder="请输入出差地点" />
@@ -94,10 +101,10 @@
 
     <!-- 打印预览弹窗 -->
     <PrintPreview v-model="printPreviewVisible" :travel-data="previewData" />
-    
+
     <!-- 人员选择弹窗 -->
     <UserSelectForm ref="userSelectRef" @confirm="handleUserSelect" />
-    
+
     <!-- 手动添加人员弹窗 -->
     <el-dialog v-model="manualInputVisible" title="手动添加人员" width="400px">
         <el-form :model="manualInputForm" :rules="manualInputRules" ref="manualInputFormRef" label-width="80px">
@@ -145,8 +152,8 @@ const formData = ref({
     deptId: undefined as number | undefined, // 部门ID
     trafficType: 1, // 默认火车
     airplaneReason: '',
-    startTime: new Date(),
-    endTime: new Date(),
+    startTime: undefined,
+    endTime: undefined,
     address: '',
     reason: '',
     remark: '',
@@ -157,7 +164,25 @@ const formData = ref({
 const formRules = reactive({
     trafficType: [{ required: true, message: '交通方式不能为空', trigger: 'change' }],
     startTime: [{ required: true, message: '出差时间不能为空', trigger: 'change' }],
-    endTime: [{ required: true, message: '归来时间不能为空', trigger: 'change' }],
+    endTime: [
+        { required: true, message: '归来时间不能为空', trigger: 'change' },
+        {
+            validator: (rule: any, value: any, callback: any) => {
+                if (value && formData.value.startTime) {
+                    const startTime = new Date(formData.value.startTime)
+                    const endTime = new Date(value)
+                    if (endTime <= startTime) {
+                        callback(new Error('归来时间必须晚于出差时间'))
+                    } else {
+                        callback()
+                    }
+                } else {
+                    callback()
+                }
+            },
+            trigger: 'change'
+        }
+    ],
     address: [{ required: true, message: '出差地点不能为空', trigger: 'blur' }],
     reason: [{ required: true, message: '出差事由不能为空', trigger: 'blur' }],
     airplaneReason: [
@@ -181,6 +206,7 @@ const personList = ref<TravelApi.TravelPersonListVO[]>([]) // 出差人员列表
 const printPreviewVisible = ref(false) // 打印预览弹窗显示状态
 const previewData = ref({}) // 预览数据
 const manualInputVisible = ref(false) // 手动输入弹窗显示状态
+const travelDays = ref(0) // 出差天数
 const manualInputForm = ref({
     nickname: ''
 })
@@ -220,7 +246,7 @@ const openUserSelect = () => {
 const handleUserSelect = (id: string, userList: any[]) => {
     // 移除已选择的内部人员，保留外部人员
     personList.value = personList.value.filter(p => !p.userId)
-    
+
     // 添加新选择的内部人员
     userList.forEach(user => {
         personList.value.push({
@@ -228,7 +254,7 @@ const handleUserSelect = (id: string, userList: any[]) => {
             userId: user.id
         })
     })
-    
+
     updatePersonList()
 }
 
@@ -243,20 +269,20 @@ const confirmManualInput = async () => {
     if (!manualInputFormRef.value) return
     const valid = await manualInputFormRef.value.validate()
     if (!valid) return
-    
+
     // 检查是否已存在同名人员
     const exists = personList.value.some(p => p.nickname === manualInputForm.value.nickname)
     if (exists) {
         message.warning('该人员已存在')
         return
     }
-    
+
     // 添加外部人员
     personList.value.push({
         nickname: manualInputForm.value.nickname,
         userId: undefined
     })
-    
+
     updatePersonList()
     manualInputVisible.value = false
 }
@@ -270,6 +296,32 @@ const removePerson = (index: number) => {
 /** 更新人员列表 */
 const updatePersonList = () => {
     formData.value.personList = personList.value
+}
+
+/** 计算出差天数 */
+const calculateTravelDays = () => {
+    if (formData.value.startTime && formData.value.endTime) {
+        try {
+            const start = new Date(formData.value.startTime)
+            const end = new Date(formData.value.endTime)
+
+            // 检查日期是否有效
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                travelDays.value = 0
+                return
+            }
+
+            // 计算天数差，至少为1天
+            const diffTime = end.getTime() - start.getTime()
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+            travelDays.value = Math.max(diffDays, 1)
+        } catch (error) {
+            console.error('计算天数失败:', error)
+            travelDays.value = 0
+        }
+    } else {
+        travelDays.value = 0
+    }
 }
 
 /** 提交表单 */
@@ -328,9 +380,9 @@ const getApprovalDetail = async () => {
         const data = await ProcessInstanceApi.getApprovalDetail({
             processDefinitionId: processDefinitionId.value,
             activityId: NodeId.START_USER_NODE_ID,
-            processVariablesStr: JSON.stringify({ 
+            processVariablesStr: JSON.stringify({
                 trafficType: formData.value.trafficType,
-                address: formData.value.address 
+                address: formData.value.address
             })
         })
 
@@ -371,7 +423,7 @@ const selectUserConfirm = (id: string, userList: any[]) => {
 onMounted(async () => {
     // 获取部门信息
     await getDeptName()
-    
+
     const processDefinitionDetail = await DefinitionApi.getProcessDefinition(
         undefined,
         processDefineKey
@@ -386,6 +438,9 @@ onMounted(async () => {
 
     // 审批相关：加载最新的审批详情，主要用于节点预测
     await getApprovalDetail()
+
+    // 初始化计算天数
+    calculateTravelDays()
 })
 
 /** 审批相关：预测流程节点会因为输入的参数值而产生新的预测结果值，所以需重新预测一次 */
@@ -409,6 +464,15 @@ watch(
     { deep: true }
 )
 
+/** 监听时间变化，自动计算天数 */
+watch(
+    () => [formData.value.startTime, formData.value.endTime],
+    () => {
+        calculateTravelDays()
+    },
+    { deep: true }
+)
+
 // 计算属性：是否可以预览
 const canPreview = computed(() => {
     return formData.value.reason && formData.value.address && personList.value.length > 0
@@ -416,14 +480,14 @@ const canPreview = computed(() => {
 
 /** 显示打印预览 */
 const showPrintPreview = () => {
-    // 准备预览数据
+    // 准备预览数据，确保时间字段正确传递
     previewData.value = {
         creator: userStore.getUser?.nickname || '当前用户',
         createTime: new Date(),
         trafficType: formData.value.trafficType,
         airplaneReason: formData.value.airplaneReason,
-        startTime: formData.value.startTime,
-        endTime: formData.value.endTime,
+        startTime: formData.value.startTime || new Date(),
+        endTime: formData.value.endTime || new Date(),
         address: formData.value.address,
         reason: formData.value.reason,
         remark: formData.value.remark,
