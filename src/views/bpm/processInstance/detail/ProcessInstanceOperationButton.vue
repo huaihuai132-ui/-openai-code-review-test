@@ -25,17 +25,6 @@
           :rules="approveReasonRule"
           label-width="100px"
         >
-          <el-card v-if="runningTask?.formId > 0" class="mb-15px !-mt-10px">
-            <template #header>
-              <span class="el-icon-picture-outline"> 填写表单【{{ runningTask?.formName }}】 </span>
-            </template>
-            <form-create
-              v-model="approveForm.value"
-              v-model:api="approveFormFApi"
-              :option="approveForm.option"
-              :rule="approveForm.rule"
-            />
-          </el-card>
           <el-form-item :label="`${nodeTypeName}意见`" prop="reason">
             <el-input
               v-model="approveReasonForm.reason"
@@ -512,7 +501,6 @@
 </template>
 <script lang="ts" setup>
 import { useUserStoreWithOut } from '@/store/modules/user'
-import { setConfAndFields2 } from '@/utils/formCreate'
 import * as TaskApi from '@/api/bpm/task'
 import * as ProcessInstanceApi from '@/api/bpm/processInstance'
 import * as UserApi from '@/api/system/user'
@@ -522,7 +510,7 @@ import {
   OperationButtonType,
   CandidateStrategy
 } from '@/components/SimpleProcessDesignerV2/src/consts'
-import { BpmModelFormType, BpmProcessInstanceStatus } from '@/utils/constants'
+import { BpmProcessInstanceStatus } from '@/utils/constants'
 import type { FormInstance, FormRules } from 'element-plus'
 import SignDialog from './SignDialog.vue'
 import ProcessInstanceTimeline from '../detail/ProcessInstanceTimeline.vue'
@@ -540,9 +528,6 @@ const props = defineProps<{
   processInstance: any // 流程实例信息
   processDefinition: any // 流程定义信息
   userOptions: UserApi.UserVO[]
-  normalForm: any // 流程表单 formCreate
-  normalFormApi: any // 流程表单 formCreate Api
-  writableFields: string[] // 流程表单可以编辑的字段
 }>()
 
 const formLoading = ref(false) // 表单加载中
@@ -562,7 +547,6 @@ const returnList = ref([] as any) // 退回节点
 // ========== 审批信息 ==========
 const runningTask = ref<any>() // 运行中的任务
 const approveForm = ref<any>({}) // 审批通过时，额外的补充信息
-const approveFormFApi = ref<any>({}) // approveForms 的 fAPi
 const nodeTypeName = ref('审批') // 节点类型名称
 
 // 审批通过意见表单
@@ -671,27 +655,9 @@ const cancelFormRule = reactive<FormRules<typeof cancelForm>>({
   cancelReason: [{ required: true, message: '取消理由不能为空', trigger: 'blur' }]
 })
 
-/** 监听 approveFormFApis，实现它对应的 form-create 初始化后，隐藏掉对应的表单提交按钮 */
-watch(
-  () => approveFormFApi.value,
-  (val) => {
-    val?.btn?.show(false)
-    val?.resetBtn?.show(false)
-  },
-  {
-    deep: true
-  }
-)
-
 /** 弹出气泡卡 */
 const openPopover = async (type: string) => {
   if (type === 'approve') {
-    // 校验流程表单
-    const valid = await validateNormalForm()
-    if (!valid) {
-      message.warning('表单校验不通过，请先完善表单!!')
-      return
-    }
     initNextAssigneesFormField()
   }
   if (type === 'return') {
@@ -721,7 +687,7 @@ const closePopover = (type: string, formRef: FormInstance | undefined) => {
 /** 流程通过时，根据表单变量查询新的流程节点，判断下一个节点类型是否为自选审批人 */
 const initNextAssigneesFormField = async () => {
   // 获取修改的流程变量, 暂时只支持流程表单
-  const variables = getUpdatedProcessInstanceVariables()
+  const variables = {}
   const data = await ProcessInstanceApi.getNextApprovalNodes({
     processInstanceId: props.processInstance.id,
     taskId: runningTask.value.id,
@@ -769,35 +735,19 @@ const handleAudit = async (pass: boolean, formRef: FormInstance | undefined) => 
     // 校验表单
     if (!formRef) return
     await formRef.validate()
-    // 校验流程表单必填字段
-    const valid = await validateNormalForm()
-    if (!valid) {
-      message.warning('表单校验不通过，请先完善表单!!')
-      return
-    }
 
     if (pass) {
       const nextAssigneesValid = validateNextAssignees()
       if (!nextAssigneesValid) return
-      const variables = getUpdatedProcessInstanceVariables()
       // 审批通过数据
       const data = {
         id: runningTask.value.id,
         reason: approveReasonForm.reason,
-        variables, // 审批通过, 把修改的字段值赋于流程实例变量
         nextAssignees: approveReasonForm.nextAssignees // 下个自选节点选择的审批人信息
       } as any
       // 签名
       if (runningTask.value.signEnable) {
         data.signPicUrl = approveReasonForm.signPicUrl
-      }
-      // 多表单处理，并且有额外的 approveForm 表单，需要校验 + 拼接到 data 表单里提交
-      // TODO 芋艿 任务有多表单这里要如何处理，会和可编辑的字段冲突
-      const formCreateApi = approveFormFApi.value
-      if (Object.keys(formCreateApi)?.length > 0) {
-        await formCreateApi.validate()
-        // @ts-ignore
-        data.variables = approveForm.value.value
       }
       await TaskApi.approveTask(data)
       popOverVisible.value.approve = false
@@ -1050,41 +1000,9 @@ const getButtonDisplayName = (btnType: OperationButtonType) => {
 const loadTodoTask = (task: any) => {
   approveForm.value = {}
   runningTask.value = task
-  approveFormFApi.value = {}
   reasonRequire.value = task?.reasonRequire ?? false
   nodeTypeName.value = task?.nodeType === NodeType.TRANSACTOR_NODE ? '办理' : '审批'
-  // 处理 approve 表单.
-  if (task && task.formId && task.formConf) {
-    const tempApproveForm = {}
-    setConfAndFields2(tempApproveForm, task.formConf, task.formFields, task.formVariables)
-    approveForm.value = tempApproveForm
-  } else {
-    approveForm.value = {} // 占位，避免为空
-  }
-}
-
-/** 校验流程表单 */
-const validateNormalForm = async () => {
-  if (props.processDefinition?.formType === BpmModelFormType.NORMAL) {
-    let valid = true
-    try {
-      await props.normalFormApi?.validate()
-    } catch {
-      valid = false
-    }
-    return valid
-  } else {
-    return true
-  }
-}
-
-/** 从可以编辑的流程表单字段，获取需要修改的流程实例的变量 */
-const getUpdatedProcessInstanceVariables = () => {
-  const variables = {}
-  props.writableFields.forEach((field) => {
-    variables[field] = props.normalFormApi.getValue(field)
-  })
-  return variables
+  approveForm.value = {} // 占位，避免为空
 }
 
 /** 处理签名完成 */

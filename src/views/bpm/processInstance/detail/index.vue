@@ -31,25 +31,6 @@
                   <el-col :span="19" class="!flex !flex-col formCol">
                     <!-- 表单信息 -->
                     <div v-loading="processInstanceLoading" class="form-box flex flex-col mb-30px flex-1">
-                      <!-- 情况一：流程表单 -->
-                      <el-col v-if="processDefinition?.formType === BpmModelFormType.NORMAL">
-                        <!-- 只有融资租赁流程才显示 FinanceLeaseForm -->
-                        <FinanceLeaseForm
-                          v-if="processDefinition?.key === 'bpm_oa_finance_lease'"
-                          :process-instance="processInstance"
-                          :process-definition="processDefinition"
-                          :form-variables="processInstance.formVariables"
-                          :readonly="true"
-                        />
-                        <!-- 其他流程使用原有的 form-create -->
-                        <form-create
-                          v-else
-                          v-model="detailForm.value"
-                          v-model:api="fApi"
-                          :option="detailForm.option"
-                          :rule="detailForm.rule"
-                        />
-                      </el-col>
                       <!-- 情况二：业务表单 -->
                       <div v-if="processDefinition?.formType === BpmModelFormType.CUSTOM">
                         <FinanceLeaseForm
@@ -108,8 +89,7 @@
         <div class="b-t-solid border-t-1px border-[var(--el-border-color)]">
           <!-- 操作栏按钮 -->
           <ProcessInstanceOperationButton ref="operationButtonRef" :process-instance="processInstance"
-            :process-definition="processDefinition" :userOptions="userOptions" :normal-form="detailForm"
-            :normal-form-api="fApi" :writable-fields="writableFields" @success="refresh" />
+            :process-definition="processDefinition" :userOptions="userOptions" @success="refresh" />
         </div>
       </el-scrollbar>
     </div>
@@ -119,10 +99,8 @@
 import { formatDate } from '@/utils/formatTime'
 import { DICT_TYPE } from '@/utils/dict'
 import { BpmModelType, BpmModelFormType } from '@/utils/constants'
-import { setConfAndFields2 } from '@/utils/formCreate'
 import { registerComponent } from '@/utils/routerHelper'
 import { markRaw } from 'vue'
-import type { ApiAttrs } from '@form-create/element-ui/types/config'
 import * as ProcessInstanceApi from '@/api/bpm/processInstance'
 import * as UserApi from '@/api/system/user'
 import ProcessInstanceBpmnViewer from './ProcessInstanceBpmnViewer.vue'
@@ -130,7 +108,6 @@ import ProcessInstanceSimpleViewer from './ProcessInstanceSimpleViewer.vue'
 import ProcessInstanceTaskList from './ProcessInstanceTaskList.vue'
 import ProcessInstanceOperationButton from './ProcessInstanceOperationButton.vue'
 import ProcessInstanceTimeline from './ProcessInstanceTimeline.vue'
-import { FieldPermissionType } from '@/components/SimpleProcessDesignerV2/src/consts'
 import FinanceLeaseForm from '@/views/business/financeLease/FinanceLeaseForm.vue'
 import { TaskStatusEnum } from '@/api/bpm/task'
 import runningSvg from '@/assets/svgs/bpm/running.svg'
@@ -156,16 +133,6 @@ const auditIconsMap = {
   [TaskStatusEnum.REJECT]: rejectSvg,
   [TaskStatusEnum.CANCEL]: cancelSvg
 }
-
-// ========== 申请信息 ==========
-const fApi = ref<ApiAttrs>() //
-const detailForm = ref({
-  rule: [],
-  option: {},
-  value: {}
-}) // 流程实例的表单详情
-
-const writableFields: Array<string> = [] // 表单可以编辑的字段
 
 /** 获得详情 */
 const getDetail = () => {
@@ -200,39 +167,9 @@ const getApprovalDetail = async () => {
     console.log("====",processDefinition.value)
 
     // 设置表单信息
-    if (processDefinition.value.formType === BpmModelFormType.NORMAL) {
-      // 获取表单字段权限
-      const formFieldsPermission = data.formFieldsPermission
-      // 清空可编辑字段为空
-      writableFields.splice(0)
-      if (detailForm.value.rule?.length > 0) {
-        // 避免刷新 form-create 显示不了
-        detailForm.value.value = processInstance.value.formVariables
-      } else {
-        setConfAndFields2(
-          detailForm,
-          processDefinition.value.formConf,
-          processDefinition.value.formFields,
-          processInstance.value.formVariables
-        )
-      }
-      nextTick().then(() => {
-        fApi.value?.btn.show(false)
-        fApi.value?.resetBtn.show(false)
-        //@ts-ignore
-        fApi.value?.disabled(true)
-        // 设置表单字段权限
-        if (formFieldsPermission) {
-          Object.keys(data.formFieldsPermission).forEach((item) => {
-            setFieldPermission(item, formFieldsPermission[item])
-          })
-        }
-      })
-    } else {
-      // 注意：data.processDefinition.formCustomViewPath 是组件的全路径，例如说：/crm/contract/detail/Index.vue
-      // 使用 markRaw 包装动态加载的组件，避免 Vue 将其设为响应式对象
-      BusinessFormComponent.value = markRaw(registerComponent(data.processDefinition.formCustomViewPath))
-    }
+    // 注意：data.processDefinition.formCustomViewPath 是组件的全路径，例如说：/crm/contract/detail/Index.vue
+    // 使用 markRaw 包装动态加载的组件，避免 Vue 将其设为响应式对象
+    BusinessFormComponent.value = markRaw(registerComponent(data.processDefinition.formCustomViewPath))
 
     // 获取审批节点，显示 Timeline 的数据
     activityNodes.value = data.activityNodes
@@ -260,25 +197,6 @@ const getProcessModelView = async () => {
 
 // 审批节点信息
 const activityNodes = ref<ProcessInstanceApi.ApprovalNodeInfo[]>([])
-/**
- * 设置表单权限
- */
-const setFieldPermission = (field: string, permission: string) => {
-  if (permission === FieldPermissionType.READ) {
-    //@ts-ignore
-    fApi.value?.disabled(true, field)
-  }
-  if (permission === FieldPermissionType.WRITE) {
-    //@ts-ignore
-    fApi.value?.disabled(false, field)
-    // 加入可以编辑的字段
-    writableFields.push(field)
-  }
-  if (permission === FieldPermissionType.NONE) {
-    //@ts-ignore
-    fApi.value?.hidden(true, field)
-  }
-}
 
 /**
  * 操作成功后刷新
