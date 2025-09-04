@@ -534,18 +534,6 @@ const closeDetail = () => {
   }
 };
 
-// 处理滚动事件，实现无限滚动
-const handleScroll = (event: Event) => {
-  const target = event.target as HTMLElement;
-  if (!target || !activeCategory.value) return;
-  
-  const { scrollTop, scrollHeight, clientHeight } = target;
-  
-  // 当滚动到距离底部100px时触发加载更多
-  if (scrollTop + clientHeight >= scrollHeight - 100) {
-    loadMoreData();
-  }
-};
 
 // 监听分类变化
 watch(activeCategory, () => {
