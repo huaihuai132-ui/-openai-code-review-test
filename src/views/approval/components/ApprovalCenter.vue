@@ -534,6 +534,18 @@ const closeDetail = () => {
   }
 };
 
+// 处理滚动事件，实现无限滚动
+const handleScroll = (event: Event) => {
+  const target = event.target as HTMLElement;
+  if (!target || !activeCategory.value) return;
+  
+  const { scrollTop, scrollHeight, clientHeight } = target;
+  
+  // 当滚动到距离底部100px时触发加载更多
+  if (scrollTop + clientHeight >= scrollHeight - 100) {
+    loadMoreData();
+  }
+};
 
 // 监听分类变化
 watch(activeCategory, () => {
@@ -546,14 +558,7 @@ watch(activeCategory, () => {
 const route = useRoute();
 const { replace,removeRoute } = useRouter()
 
-// 滑动监听
-const handleScroll = (event) => {
-  const { scrollTop, scrollHeight, clientHeight } = event.target;
-  // 当滚动到底部附近时加载更多
-  if (scrollTop + clientHeight >= scrollHeight - 100) {
-    loadMoreData();
-  }
-};
+
 
 const handleId = (data) => {
   selectedCategory.value = data.tab;
@@ -563,9 +568,11 @@ const handleId = (data) => {
 const triggerFromQuery = () => {
   const pid = route.query.processInstanceId as string
   const category = route.query.category as string
-  if (pid && category) {
+  setTimeout(() => {
+    if (pid && category) {
     handleId({ processInstanceId: pid, tab: category })
   }
+  }, 100);
 }
 onActivated(() => {
   triggerFromQuery()

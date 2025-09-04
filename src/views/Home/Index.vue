@@ -329,6 +329,12 @@ const getTaskCenterTagsData = async () => {
   taskCenterTagsData.copy = data.copy||0
   taskCenterTagsData.reject = data.reject||0
   taskCenterTagsData.todo = data.todo||0
+  console.log('[TaskCenterPolling]', new Date().toISOString(), {
+    apply: taskCenterTagsData.apply,
+    copy: taskCenterTagsData.copy,
+    reject: taskCenterTagsData.reject,
+    todo: taskCenterTagsData.todo
+  })
 }
 
 // 获取启用的轮播图数据
@@ -364,6 +370,29 @@ const getAllApi = async () => {
     getBannerData()
   ])
   loading.value = false
+}
+
+
+// ============ 动态刷新「任务中心各状态数量」============ //
+const pollingTimer = ref<number | null>(null)
+const startPolling = () => {
+  if (pollingTimer.value) return
+  pollingTimer.value = setInterval(() => {
+    getTaskCenterTagsData()
+  }, 15000) as unknown as number // 15s
+}
+
+const stopPolling = () => {
+  if (pollingTimer.value) {
+    clearInterval(pollingTimer.value)
+    pollingTimer.value = null
+  }
+}
+
+const onVisibilityChange = () => {
+  if (!document.hidden) {
+    getTaskCenterTagsData()
+  }
 }
 
 
@@ -429,7 +458,17 @@ const handleShortcutChange = async (newShortcuts: Shortcut[]) => {
   }
 }
 
-getAllApi()
+onMounted(() => {
+  getAllApi()
+  // 启动轮询与可见性刷新
+  startPolling()
+  document.addEventListener('visibilitychange', onVisibilityChange)
+})
+
+onUnmounted(() => {
+  stopPolling()
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+})
 </script>
 
 <style lang="scss" scoped>
