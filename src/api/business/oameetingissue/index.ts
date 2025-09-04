@@ -62,5 +62,16 @@ export const OaMeetingIssueApi = {
   // 议题送审
   sendApprove: async (id: number) => {
     return await request.post({ url: `/business/oa-meeting-issue/sendApprove?id=` + id })
-  }
+  },
+  // 议题确认
+  confirmMeetingIssue: async (id: number) => {
+    return await request.post({ url: `/business/oa-meeting-issue/confirm-meeting-relation?id=` + id })
+  },
+  // 议题取消
+  cancelMeetingIssue: async (id: number) => {
+    return await request.post({ url: `/business/oa-meeting-issue/cancel-meeting-relation?id=` + id })
+  },
+  assignMeeting: async (meetingId: number,issueId : number) => {
+    return await request.post({ url: `/business/oa-meeting-issue/link-meeting?meetingId=` + meetingId+'&issueId='+issueId })
+  },
 }
