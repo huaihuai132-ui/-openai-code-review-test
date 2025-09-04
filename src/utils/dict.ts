@@ -254,6 +254,7 @@ export enum DICT_TYPE {
   REPAYMENT_MODE = 'repayment_mode', // 融资租赁还租方式
   REPAYMENT_STATUS = 'repayment_status', // 融资租赁还租方式
   DEVICE_STATUS='device_status',
+  SEAL_ENTERPRISE = 'seal_enterprise', // 用章企业
   // ========== Meet - 会议模块  ==========
   MEET_ISSUE_TYPE = 'meet_issue_type',
   MEET_TYPE = 'meet_type',

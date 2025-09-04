@@ -34,6 +34,25 @@
                             </div>
                         </div>
                     </el-form-item>
+                    <el-form-item label="用章企业" prop="sealEnterprise">
+                        <el-select 
+                            v-model="formData.sealEnterprise" 
+                            placeholder="请选择或输入用章企业" 
+                            filterable 
+                            allow-create 
+                            clearable
+                            :loading="enterpriseLoading"
+                            @change="handleEnterpriseChange"
+                            @visible-change="handleEnterpriseDropdownVisible"
+                        >
+                            <el-option 
+                                v-for="option in enterpriseOptions" 
+                                :key="option.value" 
+                                :label="option.label" 
+                                :value="option.value" 
+                            />
+                        </el-select>
+                    </el-form-item>
                     <el-form-item label="印章类型" prop="chapterName">
                         <el-select v-model="formData.chapterName" placeholder="请选择印章类型" clearable>
                             <el-option v-for="dict in getIntDictOptions('bpm_oa_chapter_type')" :key="dict.value"
@@ -71,11 +90,12 @@
 <script lang="ts" setup>
 import * as ChapterApi from '@/api/bpm/form/chapter'
 import { useTagsViewStore } from '@/store/modules/tagsView'
-import { getIntDictOptions } from '@/utils/dict'
+import { getIntDictOptions, getStrDictOptions } from '@/utils/dict'
 import { Delete, Plus } from '@element-plus/icons-vue'
 import { BatchFileUpload } from '@/components/UploadFile'
 import { useUserStore } from '@/store/modules/user'
 import * as DeptApi from '@/api/system/dept'
+import * as DictDataApi from '@/api/system/dict/dict.data'
 
 // 审批相关：import
 import * as DefinitionApi from '@/api/bpm/definition'
@@ -100,19 +120,23 @@ const formData = ref({
     useDate: new Date(), // 默认当前日期
     chapterFileName: '',
     chapterName: '',
+    sealEnterprise: '', // 用章企业
     isTakeOut: '0',
     fileList: [] as number[], // 文件ID列表
     sequenceCode: '' // 文件序列编码（可选）
 })
 const formRules = reactive({
     reason: [{ required: true, message: '用章事由不能为空', trigger: 'change' }],
-    chapterName: [{ required: true, message: '印章类型不能为空', trigger: 'change' }]
+    chapterName: [{ required: true, message: '印章类型不能为空', trigger: 'change' }],
+    sealEnterprise: [{ required: true, message: '用章企业不能为空', trigger: 'change' }]
 })
 const formRef = ref() // 表单 Ref
 const fileUploadRef = ref() // 文件上传组件 Ref
 const fileNames = ref<string[]>(['']) // 用章文件名称列表
 const userStore = useUserStore() // 用户Store
 const deptName = ref('') // 部门名称
+const enterpriseOptions = ref([]) // 企业选项列表
+const enterpriseLoading = ref(false) // 企业选项加载状态
 
 // 审批相关：变量
 const processDefineKey = 'oa_form_chapter' // 流程定义 Key
@@ -158,6 +182,109 @@ const updateChapterFileName = () => {
     formData.value.chapterFileName = JSON.stringify(validFileNames)
 }
 
+/** 加载企业选项列表 */
+const loadEnterpriseOptions = async () => {
+    try {
+        enterpriseLoading.value = true
+        // 直接调用API获取完整的字典数据列表
+        const response = await DictDataApi.getDictDataPage({
+            dictType: 'seal_enterprise',
+            pageNo: 1,
+            pageSize: 100, // 符合后端最大限制
+            status: 0 // 只获取启用状态的数据
+        })
+        
+        const dictList = response.list || []
+        // 转换为选项格式
+        enterpriseOptions.value = dictList.map(item => ({
+            label: item.label,
+            value: item.value
+        }))
+    } catch (error) {
+        console.error('加载企业选项失败:', error)
+        message.error('加载企业选项失败')
+    } finally {
+        enterpriseLoading.value = false
+    }
+}
+
+/** 处理企业下拉框显示/隐藏 */
+const handleEnterpriseDropdownVisible = (visible: boolean) => {
+    if (visible) {
+        loadEnterpriseOptions()
+    }
+}
+
+/** 处理企业选择变更 */
+const handleEnterpriseChange = (value: string) => {
+    // 只更新表单数据，不立即创建企业
+    // 企业创建将在流程创建成功后进行
+}
+
+/** 创建新的企业字典项 */
+const createNewEnterprise = async (enterpriseName: string) => {
+    try {
+        // 先查询现有的用章企业字典数据
+        const response = await DictDataApi.getDictDataPage({
+            dictType: 'seal_enterprise',
+            pageNo: 1,
+            pageSize: 100 // 符合后端最大限制
+        })
+        
+        const existingData = response.list || []
+        
+        // 计算自增的value值
+        let maxValue = 0
+        if (existingData.length > 0) {
+            // 获取现有数据中value的最大值
+            const values = existingData
+                .map(item => parseInt(item.value) || 0)
+                .filter(val => !isNaN(val))
+            maxValue = values.length > 0 ? Math.max(...values) : 0
+        }
+        
+        const newValue = (maxValue + 1).toString()
+        
+        // 获取当前最大排序号
+        const maxSort = existingData.length > 0 
+            ? Math.max(...existingData.map(item => item.sort || 0)) 
+            : 0
+        
+        const dictData = {
+            label: enterpriseName,
+            value: newValue, // 使用自增的value值
+            dictType: 'seal_enterprise',
+            sort: maxSort + 1,
+            status: 0, // 启用状态
+            colorType: 'default',
+            cssClass: '',
+            remark: '用印申请自动创建'
+        }
+        
+        await DictDataApi.createDictData(dictData)
+        console.log(`企业"${enterpriseName}"已自动添加到字典，value值为: ${newValue}`)
+        
+        // 重新加载企业选项
+        await loadEnterpriseOptions()
+    } catch (error) {
+        console.error('创建企业字典项失败:', error)
+        // 不显示错误提示，避免影响用户体验
+    }
+}
+
+/** 流程创建成功后处理新企业 */
+const handleNewEnterpriseAfterSubmit = async () => {
+    const selectedEnterprise = formData.value.sealEnterprise
+    if (!selectedEnterprise) return
+    
+    // 检查是否为新创建的企业（不在现有选项中）
+    const existingOption = enterpriseOptions.value.find(option => option.value === selectedEnterprise)
+    if (!existingOption) {
+        // 创建新的企业字典项
+        await createNewEnterprise(selectedEnterprise)
+    }
+}
+
 
 
 /** 提交表单 */
@@ -186,18 +313,20 @@ const submitForm = async () => {
             data.useDate = formData.value.useDate
         }
 
-        // 处理文件列表 - 将文件ID数组转换为逗号分隔的字符串
-        if (formData.value.fileList && formData.value.fileList.length > 0) {
-            data.fileList = formData.value.fileList.join(',')
-        } else {
-            data.fileList = ''
-        }
+        // 处理文件列表 - 确保始终转换为字符串格式，避免后端JSON反序列化错误
+        data.fileList = formData.value.fileList && formData.value.fileList.length > 0 
+            ? formData.value.fileList.join(',') 
+            : ''
 
         // 审批相关：设置指定审批人
         if (startUserSelectTasks.value?.length > 0) {
             data.startUserSelectAssignees = startUserSelectAssignees.value
         }
         await ChapterApi.createChapter(data)
+        
+        // 流程创建成功后，检查是否需要创建新的企业
+        await handleNewEnterpriseAfterSubmit()
+        
         message.success('发起成功')
         // 发送成功事件
         emit('success')
@@ -256,6 +385,9 @@ const selectUserConfirm = (id: string, userList: any[]) => {
 onMounted(async () => {
     // 获取部门名称
     await getDeptName()
+    
+    // 加载企业选项
+    await loadEnterpriseOptions()
 
     const processDefinitionDetail = await DefinitionApi.getProcessDefinition(
         undefined,
