@@ -28,8 +28,8 @@
                         :class="['category-tag', { 'category-tag-selected': isTagSelected(tag.value) }, tag.colorClass]"
                         @click="toggleCategoryFilter(tag.value)">
                         {{ tag.label }}
-                        <span v-if="getCategoryNewCount(tag.value) > 0" class="category-badge">{{
-                            getCategoryNewCount(tag.value) }}</span>
+                        <!-- <span v-if="getCategoryNewCount(tag.value) > 0" class="category-badge">{{
+                            getCategoryNewCount(tag.value) }}</span> -->
                         <i v-if="isTagSelected(tag.value)" class="el-icon-check tag-check-icon"></i>
                     </div>
                 </div>
@@ -623,8 +623,8 @@ loadInitialData();
     background-color: #f56c6c;
     color: white;
     border-radius: 50%;
-    min-width: 16px;
-    height: 16px;
+    min-width: 20px;
+    height: 20px;
     font-size: 10px;
     line-height: 16px;
     text-align: center;
