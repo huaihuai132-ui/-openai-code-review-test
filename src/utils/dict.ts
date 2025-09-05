@@ -152,6 +152,7 @@ export enum DICT_TYPE {
   BPM_OA_LEAVE_TYPE = 'bpm_oa_leave_type',
   BPM_OA_OUT_TYPE = 'bpm_oa_out_type',
   TRAVEL_TRAFFIC_TYPE = 'travel_traffic_type',
+  PURCHASE_DEPT_TYPE = 'purchase_dept_type',
   OA_CONTACT_US_STATUS='oa_contact_us_status',
   BPM_PROCESS_LISTENER_TYPE = 'bpm_process_listener_type',
   BPM_PROCESS_LISTENER_VALUE_TYPE = 'bpm_process_listener_value_type',

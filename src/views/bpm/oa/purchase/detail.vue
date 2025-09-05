@@ -6,12 +6,19 @@
                 打印预览
             </el-button>
         </template>
-        <el-descriptions :column="1" border>
-            <el-descriptions-item label="采购事由">
-                {{ detailData.reason }}
+        <el-descriptions :column="2" border>
+            <el-descriptions-item label="申请编号">{{ detailData.id }}</el-descriptions-item>
+            <el-descriptions-item label="申请人">{{ detailData.nickname || detailData.creator }}</el-descriptions-item>
+            <el-descriptions-item label="申请部门">{{ detailData.deptName }}</el-descriptions-item>
+            <el-descriptions-item label="采购部门">
+                <dict-tag :type="DICT_TYPE.PURCHASE_DEPT_TYPE" :value="detailData.purchaseDeptType" />
             </el-descriptions-item>
             <el-descriptions-item label="采购日期">
                 {{ formatDate(detailData.purchaseDate, 'YYYY-MM-DD') }}
+            </el-descriptions-item>
+            <el-descriptions-item label="申请时间">{{ formatDate(detailData.createTime) }}</el-descriptions-item>
+            <el-descriptions-item label="采购事由" :span="2">
+                {{ detailData.reason }}
             </el-descriptions-item>
             <el-descriptions-item label="物品清单">
                 <div v-if="detailData.itemList && detailData.itemList.length > 0">
@@ -46,6 +53,7 @@ import { formatDate } from '@/utils/formatTime'
 import { propTypes } from '@/utils/propTypes'
 import * as PurchaseApi from '@/api/bpm/form/purchase/purchase'
 import { BatchFileUpload } from '@/components/UploadFile'
+import { DICT_TYPE } from '@/utils/dict'
 import PrintPreview from './components/PrintPreview.vue'
 
 defineOptions({ name: 'BpmOAPurchaseDetail' })

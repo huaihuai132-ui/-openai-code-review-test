@@ -2,7 +2,21 @@
     <el-row :gutter="20">
         <el-col :span="16">
             <ContentWrap title="申请信息">
+                <!-- 申请人信息显示 -->
+                <el-alert :title="`申请人：${userStore.getUser.nickname || '未知'} | 部门：${deptName || '未知'}`" type="info"
+                    :closable="false" style="margin-bottom: 20px;" />
+
                 <el-form ref="formRef" v-loading="formLoading" :model="formData" :rules="formRules" label-width="100px">
+                    <el-form-item label="采购部门" prop="purchaseDeptType">
+                        <el-select v-model="formData.purchaseDeptType" placeholder="请选择采购部门" style="width: 100%">
+                            <el-option
+                                v-for="dict in getIntDictOptions(DICT_TYPE.PURCHASE_DEPT_TYPE)"
+                                :key="dict.value"
+                                :label="dict.label"
+                                :value="dict.value"
+                            />
+                        </el-select>
+                    </el-form-item>
                     <el-form-item label="采购事由" prop="reason">
                         <el-input v-model="formData.reason" placeholder="请输入采购事由" type="textarea" />
                     </el-form-item>
@@ -49,7 +63,7 @@
                         </el-table>
                     </el-form-item>
                     <el-form-item label="总价" prop="totalPrice">
-                        <el-input-number v-model="formData.totalPrice" :precision="2" :step="100" :min="0"
+                        <el-input-number v-model="formData.totalPrice" :precision="2" :step="100" :min="0" disabled
                             controls-position="right" />
                     </el-form-item>
                     <el-form-item label="附件" prop="fileList">
@@ -87,6 +101,8 @@ import { useTagsViewStore } from '@/store/modules/tagsView'
 import { BatchFileUpload } from '@/components/UploadFile'
 import PrintPreview from './components/PrintPreview.vue'
 import { useUserStore } from '@/store/modules/user'
+import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
+import * as DeptApi from '@/api/system/dept'
 
 // 审批相关：import
 import * as DefinitionApi from '@/api/bpm/definition'
@@ -101,12 +117,15 @@ const message = useMessage() // 消息弹窗
 const { delView } = useTagsViewStore() // 视图操作
 const { push, currentRoute } = useRouter() // 路由
 const userStore = useUserStore() // 用户信息
+const deptName = ref('') // 部门名称
 
 // 定义 emit 事件
 const emit = defineEmits(['success'])
 
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formData = ref({
+    deptId: undefined as number | undefined, // 部门ID
+    purchaseDeptType: undefined as number | undefined, // 采购部门类型
     reason: '',
     purchaseDate: new Date().toISOString().split('T')[0], // 默认当前日期
     itemList: [] as PurchaseApi.ItemListVO[],
@@ -115,6 +134,7 @@ const formData = ref({
     sequenceCode: ''
 })
 const formRules = reactive({
+    purchaseDeptType: [{ required: true, message: '采购部门不能为空', trigger: 'change' }],
     reason: [{ required: true, message: '采购事由不能为空', trigger: 'change' }],
     totalPrice: [{ required: true, message: '总价不能为空', trigger: 'change' }]
 })
@@ -131,6 +151,21 @@ const startUserSelectAssignees = ref<Record<string, number[]>>({}) // 发起人�
 const tempStartUserSelectAssignees = ref<Record<string, number[]>>({}) // 历史发起人选择审批人的数据，用于每次表单变更时，临时保存
 const activityNodes = ref<ProcessInstanceApi.ApprovalNodeInfo[]>([]) // 审批节点信息
 const processDefinitionId = ref('')
+
+/** 获取部门名称 */
+const getDeptName = async () => {
+    const currentUser = userStore.getUser
+    if (currentUser.deptId) {
+        try {
+            const dept = await DeptApi.getDept(currentUser.deptId)
+            deptName.value = dept.name || ''
+            formData.value.deptId = currentUser.deptId
+        } catch (error) {
+            console.error('获取部门信息失败', error)
+            deptName.value = ''
+        }
+    }
+}
 
 /** 添加物品 */
 const addItem = () => {
@@ -180,6 +215,11 @@ const submitForm = async () => {
     formLoading.value = true
     try {
         const data = { ...formData.value } as unknown as PurchaseApi.PurchaseVO
+
+        // 设置用户ID和部门ID
+        const currentUser = userStore.getUser
+        data.userId = currentUser.id
+        data.deptId = formData.value.deptId || currentUser.deptId
 
         // 处理文件列表 - 将文件ID数组转换为逗号分隔的字符串
         if (formData.value.fileList && formData.value.fileList.length > 0) {
@@ -247,6 +287,9 @@ const selectUserConfirm = (id: string, userList: any[]) => {
 
 /** 初始化 */
 onMounted(async () => {
+    // 获取部门信息
+    await getDeptName()
+
     const processDefinitionDetail = await DefinitionApi.getProcessDefinition(
         undefined,
         processDefineKey
@@ -298,7 +341,9 @@ const showPrintPreview = () => {
         purchaseDate: formData.value.purchaseDate,
         reason: formData.value.reason,
         itemList: items.value,
-        totalPrice: formData.value.totalPrice
+        totalPrice: formData.value.totalPrice,
+        deptName: deptName.value,
+        purchaseDeptType: formData.value.purchaseDeptType
     }
     printPreviewVisible.value = true
 }

@@ -13,6 +13,11 @@ export interface ItemListVO {
 export interface PurchaseVO {
   id: number
   userId: number
+  deptId?: number
+  deptName?: string
+  nickname?: string
+  creator?: string
+  purchaseDeptType?: number
   reason: string
   purchaseDate: Date
   itemList: ItemListVO[]
@@ -38,4 +43,4 @@ export const getPurchase = (id: number) => {
 // 获取采购申请分页
 export const getPurchasePage = (params: any) => {
   return request.get({ url: '/bpm/oa/form/purchase/page', params })
-} 
+}
