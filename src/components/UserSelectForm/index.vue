@@ -79,11 +79,17 @@ const open = async (id: number, selectedList?: any[]) => {
   activityId.value = id
   resetForm()
 
+  // 定义一个过滤名单
+  const nicknameBlacklist = ['超级管理员','大数据管理员','租户管理员']
+
   // 加载部门、用户列表
   const deptData = await DeptApi.getSimpleDeptList()
   deptList.value = deptData // 保存扁平结构的部门数据
   deptTree.value = handleTree(deptData) // 转换成树形结构
-  userList.value = await UserApi.getSimpleUserList()
+  // 获取所有用户
+  const allUsers = await UserApi.getSimpleUserList()
+  // 过滤掉黑名单中的用户
+  userList.value = allUsers.filter((user) => !nicknameBlacklist.includes(user.nickname))
 
   // 初始状态下，过滤列表等于所有用户列表
   filteredUserList.value = [...userList.value]
