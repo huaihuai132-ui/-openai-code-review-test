@@ -24,6 +24,8 @@
         <el-tab-pane label="会议议题" name="issue">
           <IssueManager 
             v-model:issues="formData.issueList" 
+            :meeting-type="formData.meetType"
+            :meeting-id="formData.id"
             @add-attendee="handleAddAttendee"
           />
         </el-tab-pane>
@@ -46,7 +48,7 @@ import AttendeeManager from './AttendeeManager.vue'
 import IssueManager from './IssueManager.vue'
 import AttachmentManager from './AttachmentManager.vue'
 import type {MeetingFormData, MeetingRoom} from './types'
-import {reactive, ref} from 'vue'
+import {reactive, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {useMessage} from '@/hooks/web/useMessage'
 import {ElMessageBox} from 'element-plus'
@@ -237,6 +239,17 @@ const submitForm = async () => {
   }
 }
 
+// 监听会议类型变化，如果会议类型改变则清空议题列表
+watch(
+  () => formData.value.meetType,
+  (newMeetType, oldMeetType) => {
+    // 只有当会议类型实际发生改变时才清空议题列表
+    if (newMeetType !== oldMeetType && oldMeetType !== undefined) {
+      formData.value.issueList = []
+    }
+  }
+)
+
 /** 送审表单 */
 const submitForApproval = async () => {
   try {
@@ -324,9 +337,3 @@ const handleAddAttendee = (attendee: any) => {
 
 defineExpose({ open })
 </script>
-
-<style scoped>
-.form-tabs {
-  margin-top: 20px;
-}
-</style>

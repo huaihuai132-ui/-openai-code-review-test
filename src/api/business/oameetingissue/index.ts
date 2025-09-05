@@ -74,4 +74,7 @@ export const OaMeetingIssueApi = {
   assignMeeting: async (meetingId: number,issueId : number) => {
     return await request.post({ url: `/business/oa-meeting-issue/link-meeting?meetingId=` + meetingId+'&issueId='+issueId })
   },
+  waitMeeting: async (params: any) => {
+    return await request.get({ url: `/business/oa-meeting-issue/wait-meeting`, params })
+  },
 }

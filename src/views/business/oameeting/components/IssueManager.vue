@@ -1,10 +1,20 @@
 <template>
   <div class="py-4">
     <div class="mb-4">
-      <el-button type="primary" @click="openIssueSelectDialog">
+      <el-button 
+        type="primary" 
+        @click="openIssueSelectDialog"
+        :disabled="isMeetingTypeRequired && !props.meetingType"
+      >
         <Icon icon="ep:plus" />
         添加会议议题
       </el-button>
+      <div 
+        v-if="isMeetingTypeRequired && !props.meetingType" 
+        class="text-sm text-red-500 mt-2"
+      >
+        请先选择会议类型
+      </div>
     </div>
     <el-table :data="issues" border style="width: 100%" empty-text="暂无会议议题">
       <el-table-column label="序号" width="150">
@@ -191,12 +201,16 @@ import OaMeetingIssueDetail from '@/views/business/oameetingissue/OaMeetingIssue
 interface Props {
   issues: OaMeetingIssueVO[]
   meetingType?: number | string // 添加会议类型属性
+  meetingId?: number // 添加会议ID属性
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits(['update:issues', 'addAttendee'])
 
 const message = useMessage()
+
+// 是否要求必须选择会议类型
+const isMeetingTypeRequired = true
 
 const issues = computed({
   get: () => props.issues,
@@ -316,7 +330,14 @@ const openIssueDetail = async (issueId: number) => {
 
 /** 打开议题选择弹窗 */
 const openIssueSelectDialog = async () => {
+  // 检查是否必须选择会议类型但未选择
+  if (isMeetingTypeRequired && !props.meetingType) {
+    message.warning('请先选择会议类型')
+    return
+  }
+  
   issueDialogVisible.value = true
+  console.log("--------------"+props.meetingType)
   // 设置会议类型筛选条件
   if (props.meetingType !== undefined) {
     queryForm.value.meetingType = props.meetingType
@@ -327,14 +348,16 @@ const openIssueSelectDialog = async () => {
 /** 加载可用的议题列表 */
 const loadAvailableAgendaTopics = async () => {
   issueLoading.value = true
+  console.log("meetingId================"+props.meetingId)
   try {
     // 调用API获取未关联会议的已审核议题
-    const response = await OaMeetingIssueApi.getOaMeetingIssuePage({
+    const response = await OaMeetingIssueApi.waitMeeting({
       pageNo: 1,
       pageSize: 100,
       status: 2, // 已审核状态
       issueTitle: queryForm.value.issueTitle,
-      meetingType: queryForm.value.meetingType
+      meetingType: queryForm.value.meetingType,
+      meetingId: props.meetingId // 添加meetingId参数
     })
     availableIssues.value = response.list || []
   } catch (error) {
