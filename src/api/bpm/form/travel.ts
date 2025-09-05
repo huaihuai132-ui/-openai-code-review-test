@@ -12,8 +12,8 @@ export interface TravelVO {
   deptId?: number
   trafficType: number
   airplaneReason?: string
-  startTime: Date
-  endTime: Date
+  startTime?: Date
+  endTime?: Date
   address: string
   reason: string
   remark?: string

@@ -66,13 +66,18 @@
           <td class="label-cell">出差事由</td>
           <td class="value-cell" colspan="3">{{ travelData.reason || '' }}</td>
         </tr>
-        <tr>
-          <td class="label-cell">分管领导意见</td>
-          <td class="opinion-cell" colspan="3">{{ approvalOpinions.managerOpinion || '' }}</td>
+        <!-- 动态生成审批意见行 -->
+        <tr v-if="loading">
+          <td class="label-cell">审批意见</td>
+          <td class="opinion-cell" colspan="3">加载中...</td>
         </tr>
-        <tr>
-          <td class="label-cell">主要负责人意见</td>
-          <td class="opinion-cell" colspan="3">{{ approvalOpinions.leaderOpinion || '' }}</td>
+        <tr v-else-if="approvalOpinions.length === 0">
+          <td class="label-cell">审批意见</td>
+          <td class="opinion-cell" colspan="3">暂无审批意见</td>
+        </tr>
+        <tr v-else v-for="opinion in approvalOpinions" :key="opinion.name">
+          <td class="label-cell">{{ opinion.name }}意见</td>
+          <td class="opinion-cell" colspan="3">{{ opinion.reason || '' }}</td>
         </tr>
         <tr>
           <td class="label-cell">备注</td>
@@ -96,13 +101,15 @@ import * as TaskApi from '@/api/bpm/task'
 import { formatDate } from '@/utils/formatTime'
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 
+
+interface ApprovalOpinion {
+  name: string
+  reason: string
+}
+
 interface Props {
   modelValue: boolean
   travelData: TravelApi.TravelVO
-  approvalOpinionsInput?: {
-    managerOpinion: string
-    leaderOpinion: string
-  }
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -116,8 +123,7 @@ const props = withDefaults(defineProps<Props>(), {
     reason: '',
     remark: '',
     personList: []
-  }),
-  approvalOpinionsInput: undefined
+  })
 })
 
 const emit = defineEmits<{
@@ -130,25 +136,27 @@ const dialogVisible = computed({
 })
 
 const printRef = ref()
-const approvalOpinions = ref({
-  managerOpinion: '', // 分管领导审批意见
-  leaderOpinion: '' // 主要负责人审批意见
-})
+const approvalOpinions = ref<ApprovalOpinion[]>([])
+const loading = ref(false)
 
 // 监听对话框显示状态，当显示时获取审批意见
 watch(dialogVisible, async (visible) => {
   if (visible) {
-    // 如果外部传入了审批意见，则直接使用
-    if (props.approvalOpinionsInput) {
-      approvalOpinions.value = { ...props.approvalOpinionsInput }
-    }
-    // 否则，如果存在流程实例ID，则尝试获取
-    else if (props.travelData.processInstanceId) {
-      await fetchApprovalOpinions(props.travelData.processInstanceId)
+    loading.value = true
+    try {
+      // 如果存在流程实例ID，则获取审批意见
+      if (props.travelData.processInstanceId) {
+        await fetchApprovalOpinions(props.travelData.processInstanceId)
+      } else {
+        approvalOpinions.value = []
+      }
+    } finally {
+      loading.value = false
     }
   } else {
     // 关闭时重置
-    approvalOpinions.value = { managerOpinion: '', leaderOpinion: '' }
+    approvalOpinions.value = []
+    loading.value = false
   }
 })
 
@@ -158,67 +166,109 @@ const fetchApprovalOpinions = async (processInstanceId: string) => {
     // 获取流程实例的任务列表
     const tasks = await TaskApi.getTaskListByProcessInstanceId(processInstanceId)
 
-    if (tasks && tasks.length > 0) {
-      // 查找分管领导的审批意见
-      const managerTask = tasks.find(task =>
-        task.taskDefinitionKey === 'supervisor_approval' ||
-        task.name?.includes('分管领导')
-      )
-      if (managerTask && managerTask.reason) {
-        approvalOpinions.value.managerOpinion = managerTask.reason
-      }
-
-      // 查找主要负责人的审批意见
-      const leaderTask = tasks.find(task =>
-        task.taskDefinitionKey === 'main_responsible_approval' ||
-        task.name?.includes('主要负责人') ||
-        task.name?.includes('董事长')
-      )
-      if (leaderTask && leaderTask.reason) {
-        approvalOpinions.value.leaderOpinion = leaderTask.reason
-      }
+    // 检查是否是CommonResult包装的数据
+    if (tasks && typeof tasks === 'object' && 'data' in tasks) {
+      const actualTasks = tasks.data
+      return await processTaskList(actualTasks)
     }
+
+    // 直接处理任务列表
+    return await processTaskList(tasks)
   } catch (error) {
-    console.error('获取审批意见失败:', error)
+    approvalOpinions.value = []
   }
 }
 
+// 处理任务列表的辅助函数
+const processTaskList = async (tasks: any[]) => {
+  if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
+    approvalOpinions.value = []
+    return
+  }
+
+  // 过滤掉发起人节点，保留所有审批节点
+  const approvalTasks = tasks.filter(task => {
+    return task.name !== '发起人'
+  })
+
+  // 将任务转换为审批意见格式，根据状态显示不同内容
+  const opinions = approvalTasks.map(task => {
+    let reason = ''
+
+    if (task.status === 2) {
+      // 已完成的任务
+      if (task.reason && task.reason.trim() !== '') {
+        reason = task.reason // 有意见就显示意见
+      } else {
+        reason = '无意见' // 已完成但没有意见
+      }
+    } else {
+      // 还未开始或进行中的任务，意见为空白
+      reason = ''
+    }
+
+    return {
+      name: task.name || '审批人',
+      reason: reason
+    }
+  })
+
+  approvalOpinions.value = opinions
+}
+
 // 格式化出差时间显示
-const formatTravelDate = (date: Date | string | null | undefined, format: string) => {
-  if (!date) return '年' // 返回默认值避免显示undefined
-  
+const formatTravelDate = (date: Date | string | number | null | undefined, format: string) => {
+  // 检查是否为无效的日期值
+  if (date === null || date === undefined || date === '' || date === 0) {
+    return format === 'YYYY' ? '____' : format === 'MM' ? '__' : '__'
+  }
+
   try {
     // 确保date是有效的Date对象
     const dateObj = new Date(date)
+
     if (isNaN(dateObj.getTime())) {
-      return '年' // 无效日期返回默认值
+      return format === 'YYYY' ? '____' : format === 'MM' ? '__' : '__'
     }
+
+    // 检查是否是1970年（通常表示时间戳为0或接近0）
+    if (dateObj.getFullYear() === 1970) {
+      return format === 'YYYY' ? '____' : format === 'MM' ? '__' : '__'
+    }
+
     return formatDate(dateObj, format)
   } catch (error) {
-    console.error('格式化日期失败:', error)
-    return '年'
+    return format === 'YYYY' ? '____' : format === 'MM' ? '__' : '__'
   }
 }
 
 // 计算出差天数
-const calculateDays = (startTime: Date | string | null | undefined, endTime: Date | string | null | undefined) => {
-  if (!startTime || !endTime) return 0
-  
+const calculateDays = (startTime: Date | string | number | null | undefined, endTime: Date | string | number | null | undefined) => {
+  // 检查是否为无效的日期值
+  if (startTime === null || startTime === undefined || startTime === '' || startTime === 0 ||
+      endTime === null || endTime === undefined || endTime === '' || endTime === 0) {
+    return 0
+  }
+
   try {
     const start = new Date(startTime)
     const end = new Date(endTime)
-    
+
     // 检查日期是否有效
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return 0
     }
-    
+
+    // 检查是否是1970年（通常表示时间戳为0或接近0）
+    if (start.getFullYear() === 1970 || end.getFullYear() === 1970) {
+      return 0
+    }
+
     // 计算天数差，至少为1天
     const diffTime = end.getTime() - start.getTime()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     return Math.max(diffDays, 1) // 至少显示1天
   } catch (error) {
-    console.error('计算天数失败:', error)
     return 0
   }
 }

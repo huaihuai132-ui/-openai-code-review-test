@@ -277,8 +277,8 @@ const loadExistingFiles = async () => {
   try {
     // debugger;
     // 将文件ID转换为合适的格式传递给后端
-    console.log("====fileList", props.fileList)
-    
+
+
     // 处理fileList，可能是数组或逗号分隔的字符串
     let fileIds: (number | string)[] = []
     if (typeof props.fileList === 'string') {
@@ -291,9 +291,9 @@ const loadExistingFiles = async () => {
       // 如果都不是，返回空数组
       fileIds = []
     }
-    
-    console.log("====处理后的fileIds", fileIds)
-    
+
+
+
     if (fileIds.length === 0) {
       return
     }
