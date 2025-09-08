@@ -72,5 +72,7 @@ export const OaMeetingApi = {
   notifyAttendees: async (data) => {
     return await request.post({ url: `/business/oa-meeting/notifyAttendees`, data })
   },
-
+  startMeeting: async (id: number) => {
+    return await request.post({ url: `/business/oa-meeting/startMeeting?id=` + id })
+  },
 }
