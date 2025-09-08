@@ -401,18 +401,18 @@
             <template #default="{ row }">
               <div class="flex justify-center space-x-2">
                 <el-button 
-                  :type="archiveIssueResults[row.id!] === 1 ? 'success' : 'default'"
-                  @click="archiveIssueResults[row.id!] = 1"
-                  :plain="archiveIssueResults[row.id!] !== 1"
+                  :type="archiveIssueResults[row.id!] === 3 ? 'success' : 'default'"
+                  @click="archiveIssueResults[row.id!] = 3"
+                  :plain="archiveIssueResults[row.id!] !== 3"
                   size="small"
                   :disabled="!row.id"
                 >
                   通过
                 </el-button>
                 <el-button 
-                  :type="archiveIssueResults[row.id!] === 2 ? 'danger' : 'default'"
-                  @click="archiveIssueResults[row.id!] = 2"
-                  :plain="archiveIssueResults[row.id!] !== 2"
+                  :type="archiveIssueResults[row.id!] === 4 ? 'danger' : 'default'"
+                  @click="archiveIssueResults[row.id!] = 4"
+                  :plain="archiveIssueResults[row.id!] !== 4"
                   size="small"
                   :disabled="!row.id"
                 >
@@ -910,11 +910,11 @@ const openArchiveDialog = async (row: OaMeetingVO) => {
     const meetingDetail = await OaMeetingApi.getOaMeeting(row.id!)
     currentArchiveMeeting.value = meetingDetail
     
-    // 默认为每个议题设置决议为通过（1表示通过）
+    // 默认为每个议题设置决议为通过（3表示通过）
     if (meetingDetail.issueList && meetingDetail.issueList.length > 0) {
       meetingDetail.issueList.forEach(issue => {
         if (issue.id) {
-          archiveIssueResults.value[issue.id] = 1
+          archiveIssueResults.value[issue.id] = 3
         }
       })
     }
@@ -959,6 +959,18 @@ const submitArchive = async () => {
       sequenceCode: currentArchiveMeeting.value.sequenceCode!,
       archiveFileList: archiveForm.value.archiveFileList.join(','),
       archiveDescription: archiveForm.value.archiveDescription
+    }
+    
+    // 添加议题决议结果
+    if (currentArchiveMeeting.value.issueList && currentArchiveMeeting.value.issueList.length > 0) {
+      const issueList = currentArchiveMeeting.value.issueList.map(issue => {
+        return {
+          id: issue.id,
+          issueStatus: issue.id ? (archiveIssueResults.value[issue.id] || 3) : 3 // 默认通过
+        }
+      })
+      // 将议题决议结果添加到归档数据中
+      archiveData.issueList = issueList
     }
     
     // 调用归档接口
