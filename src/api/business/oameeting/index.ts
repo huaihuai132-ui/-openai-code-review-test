@@ -69,6 +69,8 @@ export const OaMeetingApi = {
   confirmSignin: async (id: number) => {
     return await request.post({ url: `/business/oa-meeting/confirmSignin?id=` + id })
   },
-
+  notifyAttendees: async (data) => {
+    return await request.post({ url: `/business/oa-meeting/notifyAttendees`, data })
+  },
 
 }

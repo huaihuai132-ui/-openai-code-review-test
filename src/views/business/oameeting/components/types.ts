@@ -1,7 +1,7 @@
 // 会议表单相关类型定义
 
-import { OaMeetingAttendeeVO } from '@/api/business/oameetingattendee'
-import { OaMeetingIssueVO } from '@/api/business/oameetingissue'
+import {OaMeetingAttendeeVO} from '@/api/business/oameetingattendee'
+import {OaMeetingIssueVO} from '@/api/business/oameetingissue'
 
 export interface MeetingFormData {
   id?: number

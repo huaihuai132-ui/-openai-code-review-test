@@ -249,7 +249,7 @@
             v-for="attendee in currentMeetingAttendees"
             :key="attendee.id"
             :label="attendee.userName"
-            :value="attendee.id"
+            :value="attendee.userId"
           />
         </el-select>
       </el-form-item>
@@ -643,13 +643,13 @@ const submitNotification = async () => {
       meetingId: currentMeetingId.value,
       notifyType: notificationForm.value.notifyType,
       attendeeIds: notificationForm.value.notifyType === 1 
-        ? currentMeetingAttendees.value.map(a => a.id) 
+        ? currentMeetingAttendees.value.map(a => a.userId)
         : notificationForm.value.selectedAttendees,
       content: notificationForm.value.content
     }
     
-    // 调用通知接口（这里假设有一个通知接口）
-    // await OaMeetingApi.notifyAttendees(notifyData)
+    // 调用通知接口
+    await OaMeetingApi.notifyAttendees(notifyData)
     
     message.success('通知发送成功')
     notificationDialogVisible.value = false
