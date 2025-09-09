@@ -89,12 +89,12 @@ const handleMessageClick = (item: any) => {
 
 // 处理强调词高亮显示
 const formatContentWithEmphasis = (content: string, emphasisWord?: string | string[]) => {
-  
+
   if (!content) return '消息内容'
   if (!emphasisWord) return content
-  
+
   let formattedContent = content
-  
+
   try {
     // 如果emphasisWord是数组，处理多个强调词
     if (Array.isArray(emphasisWord)) {
@@ -125,7 +125,7 @@ const getNotice = async () => {
   try {
     const data = await NotifyMessageApi.getUnreadNotifyMessageList()
     console.log("data",data)
-    // const data = []       
+    // const data = []
     // 确保数据是数组并且有内容
     if (Array.isArray(data) && data.length > 0) {
       const slicedData = data.slice(0, 6)
@@ -135,46 +135,46 @@ const getNotice = async () => {
         notice = Object.assign(notice, [
           {
             name: '系统通知',
-            title: '测试消息1',
-            content: '这是一条测试消息内容，包含重要信息需要强调显示。',
+            title: '欢迎',
+            content: '欢迎来到工控通，请及时修改默认密码。',
             emphasisWord: ['重要信息', '强调显示'],
             createTime: new Date().getTime()
           },
-          {
-            name: '管理员',
-            title: '测试消息2',
-            content: '这是第二条测试消息，包含更多的内容来测试滚动功能。',
-            emphasisWord: '滚动功能',
-            createTime: new Date().getTime() - 3600000
-          },
-          {
-            name: '系统通知',
-            title: '测试消息3',
-            content: '第三条测试消息，继续测试滚动和显示功能。',
-            emphasisWord: ['测试', '功能'],
-            createTime: new Date().getTime() - 7200000
-          },
-          {
-            name: '用户反馈',
-            title: '测试消息4',
-            content: '第四条测试消息，测试长文本的显示效果和换行。',
-            emphasisWord: '长文本',
-            createTime: new Date().getTime() - 10800000
-          },
-          {
-            name: '系统通知',
-            title: '测试消息5',
-            content: '第五条测试消息，验证所有消息都能正确显示。',
-            emphasisWord: ['验证', '正确显示'],
-            createTime: new Date().getTime() - 14400000
-          },
-          {
-            name: '管理员',
-            title: '测试消息6',
-            content: '第六条测试消息，这是最后一条，用于测试完整的滚动功能。',
-            emphasisWord: '完整',
-            createTime: new Date().getTime() - 18000000
-          }
+          // {
+          //   name: '管理员',
+          //   title: '测试消息2',
+          //   content: '这是第二条测试消息，包含更多的内容来测试滚动功能。',
+          //   emphasisWord: '滚动功能',
+          //   createTime: new Date().getTime() - 3600000
+          // },
+          // {
+          //   name: '系统通知',
+          //   title: '测试消息3',
+          //   content: '第三条测试消息，继续测试滚动和显示功能。',
+          //   emphasisWord: ['测试', '功能'],
+          //   createTime: new Date().getTime() - 7200000
+          // },
+          // {
+          //   name: '用户反馈',
+          //   title: '测试消息4',
+          //   content: '第四条测试消息，测试长文本的显示效果和换行。',
+          //   emphasisWord: '长文本',
+          //   createTime: new Date().getTime() - 10800000
+          // },
+          // {
+          //   name: '系统通知',
+          //   title: '测试消息5',
+          //   content: '第五条测试消息，验证所有消息都能正确显示。',
+          //   emphasisWord: ['验证', '正确显示'],
+          //   createTime: new Date().getTime() - 14400000
+          // },
+          // {
+          //   name: '管理员',
+          //   title: '测试消息6',
+          //   content: '第六条测试消息，这是最后一条，用于测试完整的滚动功能。',
+          //   emphasisWord: '完整',
+          //   createTime: new Date().getTime() - 18000000
+          // }
         ])
     }
   } catch (error) {
@@ -204,24 +204,24 @@ onMounted(() => {
   padding: 20px 0; // 增加上下间距
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:first-child {
     padding-top: 0;
   }
-  
+
   &:last-child {
     padding-bottom: 0;
   }
-  
+
   &:hover {
     background-color: #f5f7fa;
     transform: translateX(2px);
   }
-  
+
   // 如果消息有templateType=3且有detailUrl，显示特殊样式
   &.clickable {
     cursor: pointer;
-    
+
     &:hover {
       background-color: #e6f7ff;
       border-left: 3px solid #1890ff;
@@ -246,13 +246,13 @@ onMounted(() => {
 
 .message-content {
   padding-left: 8px;
-  
+
   .message-title {
     line-height: 1.4;
     word-break: break-word; // 防止长标题溢出
     font-weight: 500;
   }
-  
+
   .message-body {
     line-height: 1.5;
     word-break: break-word; // 防止长正文溢出
@@ -261,7 +261,7 @@ onMounted(() => {
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  
+
   .message-time {
     line-height: 1.3;
   }
@@ -293,24 +293,24 @@ onMounted(() => {
   overflow-y: auto;
   max-height: calc(100vh - 300px); // 使用更合理的高度计算
   padding-right: 8px;
-  
+
   // 自定义滚动条样式
   scrollbar-width: thin;
   scrollbar-color: #cbd5e0 #f7fafc;
-  
+
   &::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: #f7fafc;
     border-radius: 3px;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: #cbd5e0;
     border-radius: 3px;
-    
+
     &:hover {
       background: #a0aec0;
     }
@@ -331,23 +331,23 @@ onMounted(() => {
   .sender-info {
     width: 60px;
   }
-  
+
   .message-content {
     padding-left: 6px;
   }
-  
+
   .sender-name {
     font-size: 11px;
   }
-  
+
   .message-title {
     font-size: 13px;
   }
-  
+
   .message-body {
     font-size: 12px;
   }
-  
+
   .message-list-container {
     max-height: calc(100vh - 250px);
   }
