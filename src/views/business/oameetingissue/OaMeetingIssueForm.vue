@@ -13,26 +13,18 @@
 -->      
       <el-form-item label="议题标题" prop="issueTitle">
         <el-input v-model="formData.issueTitle" placeholder="请输入议题标题" />
-      </el-form-item> 
-      <el-form-item label="关联会议" prop="meetingId">
-        <el-select 
-          v-model="formData.meetingId" 
-          placeholder="请选择关联会议" 
-          clearable
-          filterable
-          remote
-          :remote-method="searchMeetings"
-          :loading="meetingLoading"
-        >
+      </el-form-item>
+      <el-form-item label="上会类型" prop="meetingType">
+        <el-select v-model="formData.meetingType" placeholder="请选择上会类型" @change="handleMeetingTypeChange">
           <el-option
-            v-for="meeting in filteredMeetingList"
-            :key="meeting.id"
-            :label="meeting.meetName"
-            :value="meeting.id"
+            v-for="dict in getIntDictOptions(DICT_TYPE.MEET_TYPE)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="议题类型" prop="issueType">  
+      <el-form-item label="议题类型" prop="issueType">
         <el-select v-model="formData.issueType" placeholder="请选择议题类型">
           <el-option
             v-for="dict in getIntDictOptions(DICT_TYPE.MEET_ISSUE_TYPE)"
@@ -42,16 +34,27 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="上会类型" prop="meetingType">
-        <el-select v-model="formData.meetingType" placeholder="请选择上会类型">
+      <el-form-item label="关联会议" prop="meetingId">
+        <el-select 
+          v-model="formData.meetingId" 
+          :placeholder="meetingPlaceholder"
+          clearable
+          filterable
+          remote
+          :remote-method="searchMeetings"
+          :loading="meetingLoading"
+          :disabled="isMeetingSelectDisabled"
+        >
           <el-option
-            v-for="dict in getIntDictOptions(DICT_TYPE.MEET_TYPE)"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
+            v-for="meeting in filteredMeetingList"
+            :key="meeting.id"
+            :label="meeting.meetName"
+            :value="meeting.id"
           />
         </el-select>
       </el-form-item>
+
+
       <el-form-item label="汇报人" prop="reporterId">
         <el-select 
           v-model="formData.reporterId" 
@@ -112,7 +115,7 @@
           <!-- <BatchFileUpload
             ref="batchUploadRef"
             v-model:fileList="batchFileList"
-            :mode="formType === 'create' ? 'create' : 'edit'"
+            :mode="formType === 'create' ? 'create' : 'edit'
             file-type="common"
             directory="documents"
             :max-files="5"
@@ -183,6 +186,22 @@ const formData = ref({
   sequenceCode: undefined,
 })
 
+// 计算属性：判断会议选择器是否禁用
+const isMeetingSelectDisabled = computed(() => {
+  return !formData.value.meetingType
+})
+
+// 计算属性：会议选择器的占位符文本
+const meetingPlaceholder = computed(() => {
+  if (!formData.value.meetingType) {
+    return '请先选择上会类型'
+  }
+  if (filteredMeetingList.value.length === 0) {
+    return '当前无会议安排'
+  }
+  return '请选择关联会议'
+})
+
 const formRules = reactive({
   // userId: [{ required: true, message: '议题发起人ID不能为空', trigger: 'blur' }],
   // issueNo: [{ required: true, message: '议题编号不能为空', trigger: 'blur' }],
@@ -196,6 +215,14 @@ const formRef = ref() // 表单 Ref
 
 // 上传组件引用
 const fileUploadRef = ref()
+
+/** 处理上会类型变更 */
+const handleMeetingTypeChange = () => {
+  // 清空已选择的会议
+  formData.value.meetingId = undefined
+  // 重新获取会议列表
+  getMeetingList()
+}
 
 /** 搜索用户 */
 const searchUsers = (query: string) => {
@@ -242,13 +269,21 @@ const getDeptList = async () => {
 
 /** 获取会议列表 */
 const getMeetingList = async () => {
+  // 如果没有选择上会类型，则不加载会议列表
+  if (!formData.value.meetingType) {
+    meetingList.value = []
+    filteredMeetingList.value = []
+    return
+  }
+
   try {
     meetingLoading.value = true
     // 获取会议列表，使用和页面中一样的参数，但设置较大的pageSize
     const params = { 
       pageSize: 100,
       pageNo: 1,
-      status: 2 // 只获取状态为"待开始"的会议
+      status: 2, // 只获取状态为"待开始"的会议
+      meetType: formData.value.meetingType // 根据上会类型筛选会议
     }
     const data = await OaMeetingApi.getOaMeetingPage(params)
     meetingList.value = data.list
@@ -268,7 +303,7 @@ const open = async (type: string, id?: number) => {
   resetForm()
   
   // 获取用户列表和部门列表
-  await Promise.all([getUserList(), getDeptList(), getMeetingList()])
+  await Promise.all([getUserList(), getDeptList()])
   
   // 修改时，设置数据
   if (id) {
@@ -323,6 +358,11 @@ const open = async (type: string, id?: number) => {
       
       // 等待Vue的响应式系统处理完数据更新
       await nextTick()
+      
+      // 如果有上会类型，则加载对应的会议列表
+      if (formData.value.meetingType) {
+        await getMeetingList()
+      }
     } finally {
       formLoading.value = false
     }
@@ -383,10 +423,14 @@ const resetForm = async () => {
     description: undefined,
     fileList: [],  // 重置为正确类型
     sequenceCode: undefined,
+    meetingId: undefined, // 重置会议ID
   }
   // 重置表单数据
   formRef.value?.resetFields()
   // 重置用户筛选列表
   filteredUserList.value = [...userList.value]
+  // 重置会议列表
+  meetingList.value = []
+  filteredMeetingList.value = []
 }
 </script>
