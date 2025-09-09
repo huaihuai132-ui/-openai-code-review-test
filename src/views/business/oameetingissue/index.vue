@@ -178,7 +178,7 @@
       </el-table-column>
 <!--      <el-table-column label="议题详细内容" align="center" prop="issueContent" />-->
       <el-table-column label="议题概述" align="center" prop="description" />
-      <el-table-column label="议题状态" align="center" prop="issueStatus">
+      <el-table-column label="上会状态" align="center" prop="issueStatus">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.ISSUE_STATUS" :value="scope.row.issueStatus || 0" />
         </template>
@@ -254,15 +254,14 @@
 </template>
 
 <script setup lang="ts">
-import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
-import { dateFormatter } from '@/utils/formatTime'
+import {DICT_TYPE, getIntDictOptions} from '@/utils/dict'
 import download from '@/utils/download'
-import { OaMeetingIssueApi, OaMeetingIssueVO } from '@/api/business/oameetingissue'
+import {OaMeetingIssueApi, OaMeetingIssueVO} from '@/api/business/oameetingissue'
 import OaMeetingIssueForm from './OaMeetingIssueForm.vue'
 import OaMeetingIssueDetail from './OaMeetingIssueDetail.vue'
 import * as UserApi from '@/api/system/user'
 import * as DeptApi from '@/api/system/dept'
-import { handleTree } from '@/utils/tree'
+import {handleTree} from '@/utils/tree'
 
 /** 会议议题 列表 */
 defineOptions({ name: 'OaMeetingIssue' })

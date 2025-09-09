@@ -392,7 +392,7 @@
               <div class="font-bold">{{ row?.issueTitle || row?.title || '-' }}</div>
             </template>
           </el-table-column>
-          <el-table-column prop="issueType" label="议题类型" width="120" align="center">
+          <el-table-column prop="issueType" label="上会类型" width="120" align="center">
             <template #default="{ row }">
               <dict-tag :type="DICT_TYPE.MEET_ISSUE_TYPE" :value="row?.issueType" />
             </template>
@@ -632,7 +632,7 @@ const sendApprove = async (id: number | string) => {
     await message.sendApproveConfirm()
     // 发起送审
     sendApproveLoading.value[id] = true
-    await OaMeetingApi.sendApprove(Number(id))
+    await OaMeetingApi.sendApprove(id)
     message.success(t('common.sendApproveSuccess'))
     // 刷新列表
     await getList()
@@ -1068,7 +1068,7 @@ const handleVoteSuccess = (data: any) => {
 const startMeeting = async (id: number | string) => {
   try {
     startMeetingLoading.value[id] = true
-    await OaMeetingApi.startMeeting(Number(id));
+    await OaMeetingApi.startMeeting(id);
     await getList()
   } finally {
     startMeetingLoading.value[id] = false

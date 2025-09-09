@@ -437,7 +437,8 @@ const getList = async () => {
     // 确保始终只查询已审核的议题
     const params = {
       ...queryParams,
-      status: 2
+      status: 2,
+      onlyUnEnd: true,
     }
     const data = await OaMeetingIssueApi.getOaMeetingIssuePage(params)
     // 检查数据结构是否正确

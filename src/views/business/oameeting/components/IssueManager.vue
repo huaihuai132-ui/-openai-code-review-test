@@ -59,6 +59,11 @@
           <dict-tag :type="DICT_TYPE.MEET_TYPE" :value="row.meetingType" />
         </template>
       </el-table-column>
+      <el-table-column label="上会状态" align="center" prop="issueStatus" width="120px">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.ISSUE_STATUS" :value="scope.row.issueStatus" />
+        </template>
+      </el-table-column>
       <el-table-column prop="reporter" label="汇报人" width="80">
         <template #default="{ row }">
           {{ getUserName(row.reporterId) }}
@@ -357,7 +362,8 @@ const loadAvailableAgendaTopics = async () => {
       status: 2, // 已审核状态
       issueTitle: queryForm.value.issueTitle,
       meetingType: queryForm.value.meetingType,
-      meetingId: props.meetingId // 添加meetingId参数
+      meetingId: props.meetingId, // 添加meetingId参数
+      onlyUnEnd:  true
     })
     availableIssues.value = response.list || []
   } catch (error) {

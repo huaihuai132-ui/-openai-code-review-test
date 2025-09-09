@@ -54,7 +54,7 @@ export const OaMeetingApi = {
     return await request.download({ url: `/business/oa-meeting/export-excel`, params })
   },
   // 发送审批
-  sendApprove: async (id: number) => {
+  sendApprove: async (id) => {
     return await request.post({ url: `/business/oa-meeting/sendApprove?id=` + id })
   },
   // 结束会议
@@ -72,7 +72,7 @@ export const OaMeetingApi = {
   notifyAttendees: async (data) => {
     return await request.post({ url: `/business/oa-meeting/notifyAttendees`, data })
   },
-  startMeeting: async (id: number) => {
+  startMeeting: async (id) => {
     return await request.post({ url: `/business/oa-meeting/startMeeting?id=` + id })
   },
 }

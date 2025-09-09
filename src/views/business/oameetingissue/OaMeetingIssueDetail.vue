@@ -20,7 +20,7 @@
         <el-descriptions-item label="相关部门">
           {{ getDeptNames((formData as any).relevantDept) || '-' }}
         </el-descriptions-item>
-        <el-descriptions-item label="议题状态">
+        <el-descriptions-item label="上会状态">
           <dict-tag :type="DICT_TYPE.ISSUE_STATUS" :value="$attrs.issueStatus || formData.issueStatus" />
         </el-descriptions-item>
         <el-descriptions-item label="审核状态">
