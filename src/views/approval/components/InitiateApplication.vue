@@ -76,7 +76,7 @@
     </div>
 
     <!-- 详情蒙层 -->
-    <DetailOverlay v-model:visible="dialogVisible" title="表单详情">
+    <DetailOverlay v-model:visible="dialogVisible" :title="dialogTitle">
       <component :is="formComponent" v-if="formComponent" :preview-mode="true" :readonly="true"
         :model-info="currentFlow" @success="handleFormSuccess" />
       <div v-else class="flex items-center justify-center h-100px">
@@ -95,7 +95,6 @@ import { CategoryApi } from '@/api/bpm/category';
 import { BpmModelFormType } from '@/utils/constants';
 import DetailOverlay from '@/components/DetailOverlay/index.vue';
 import {
-  Document,
   Right
 } from '@element-plus/icons-vue';
 
@@ -122,6 +121,7 @@ const searchText = ref('');
 const dialogVisible = ref(false);
 const currentFlow = ref<any>(null);
 const formComponent = shallowRef<any>(null);
+const dialogTitle = ref('表单详情'); // 弹窗标题
 const isLoading = ref(false);
 const loading = ref(false);
 const categoryGroup = ref<any[]>([]);
@@ -215,6 +215,7 @@ const getList = async () => {
 // 处理流程点击
 function handleFlowClick(model: any) {
   currentFlow.value = model;
+  dialogTitle.value = model.name; // 设置弹窗标题为审批名称
 
   // 根据模型类型加载不同的组件
   if (model.formType === BpmModelFormType.CUSTOM) { // 自定义表单
