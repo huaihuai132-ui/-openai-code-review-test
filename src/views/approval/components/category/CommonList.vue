@@ -38,124 +38,177 @@
 
         <div class="card-container">
             <div class="card-list">
-                <div class="card-item" v-for="(item, index) in filteredData" :key="index"
-                    @click="handleCardClick(item)">
-                    <div class="card-header">
-                        <span>{{ getProcessName(item) }}</span>
-                        <span v-if="category === 'apply'" class="status-badge" :class="getStatusClass(item)">{{
-                            getStatusText(item) }}</span>
-                        <span v-else-if="isNew(item)" class="badge">新</span>
-                    </div>
-
-                    <div class="card-detail">
-                        <!-- 公共字段 -->
-                        <div class="user-info" v-if="['waiting', 'done', 'copy'].includes(category)">
-                            <el-avatar :size="40" :src="getAvatar(item)" />
-                            <div class="user-meta">
-                                <div class="user-name">{{ getUserName(item) }}</div>
-                                <div class="user-dept" v-if="getDeptName(item)">{{ getDeptName(item) }}</div>
+                <!-- 加载中显示骨架屏 -->
+                <template v-if="loading">
+                    <div class="card-skeleton" v-for="n in 4" :key="'skeleton-' + n">
+                        <!-- 卡片头部骨架 -->
+                        <div class="skeleton-header">
+                            <el-skeleton-item variant="text" style="width: 45%; height: 18px" />
+                            <el-skeleton-item variant="text" style="width: 18%; height: 16px" />
+                        </div>
+                        
+                        <!-- 卡片内容骨架 -->
+                        <div class="skeleton-content">
+                            <!-- 用户信息骨架 -->
+                            <div class="skeleton-user">
+                                <el-skeleton-item variant="circle" style="width: 40px; height: 40px" />
+                                <div class="skeleton-user-info">
+                                    <el-skeleton-item variant="text" style="width: 80px; height: 14px" />
+                                    <el-skeleton-item variant="text" style="width: 60px; height: 12px; margin-top: 4px" />
+                                </div>
                             </div>
-                        </div>
-
-                        <!-- 流程名称 - 不在抄送我的中显示，因为已在卡片头部显示 -->
-                        <div class="detail-item" v-if="category !== 'copy'">
-                            <span class="label">流程名称：</span>
-                            <span class="value">{{ getProcessInstanceName(item) }}</span>
-                        </div>
-
-                        <!-- 流程分类 -->
-                        <div class="detail-item" v-if="item.categoryName">
-                            <span class="label">流程分类：</span>
-                            <span class="value">{{ item.categoryName }}</span>
-                        </div>
-
-                        <!-- 申请/发起时间 -->
-                        <div class="detail-item">
-                            <span class="label">{{ getTimeLabel() }}：</span>
-                            <span class="value">{{ formatTime(getTimeValue(item)) }}</span>
-                        </div>
-
-                        <!-- 待审批特有字段 -->
-                        <div class="detail-item" v-if="category === 'waiting'">
-                            <span class="label">到达时间：</span>
-                            <span class="value">{{ getTimeDiff(item.createTime) }}</span>
-                        </div>
-
-                        <!-- 已审批特有字段 -->
-                        <div class="detail-item" v-if="category === 'done'">
-                            <span class="label">审批结果：</span>
-                            <span class="value" :class="getResultClass(item)"> {{ item.reason === "" ? '待审批' :
-                                item.reason || '待审批' }}</span>
-                        </div>
-
-                        <!-- 我申请的特有字段 -->
-                        <div class="detail-item" v-if="category === 'apply'">
-                            <span class="label">当前节点：</span>
-                            <div class="value">
-                                <!-- 审批中状态 -->
-                                <template v-if="item.status === 1 && item.tasks?.length > 0">
-                                    <!-- 单人审批 -->
-                                    <template v-if="item.tasks.length === 1">
-                                        <span>
-                                            <span class="approver-name">{{ item.tasks[0].assigneeUser?.nickname
-                                                }}</span>
-                                            ({{ item.tasks[0].name }}) 审批中
-                                        </span>
-                                    </template>
-                                    <!-- 多人审批 -->
-                                    <template v-else>
-                                        <span>
-                                            <span class="approver-name">{{ item.tasks[0].assigneeUser?.nickname
-                                                }}</span>
-                                            等 {{ item.tasks.length }} 人 ({{ item.tasks[0].name }})审批中
-                                        </span>
-                                    </template>
-                                </template>
-                                <!-- 非审批中状态 -->
-                                <template v-else>
-                                    <dict-tag :type="'bpm_process_instance_status'" :value="item.status" />
-                                </template>
-                            </div>
-                        </div>
-
-                        <!-- 抄送我的特有字段 -->
-                        <div class="detail-item" v-if="category === 'copy'">
-                            <div class="copy-info">
-                                <span class="label">抄送人：</span>
-                                <div class="copy-user">
-                                    <el-avatar :size="24" :src="getCopyUserAvatar(item)" />
-                                    <span>{{ getCopyUserName(item) }}</span>
+                            
+                            <!-- 详情信息骨架 -->
+                            <div class="skeleton-details">
+                                <!-- 流程名称行 -->
+                                <div class="skeleton-detail-row">
+                                    <el-skeleton-item variant="text" style="width: 70px; height: 13px" />
+                                    <el-skeleton-item variant="text" style="width: 65%; height: 13px" />
+                                </div>
+                                
+                                <!-- 流程分类行 -->
+                                <div class="skeleton-detail-row">
+                                    <el-skeleton-item variant="text" style="width: 70px; height: 13px" />
+                                    <el-skeleton-item variant="text" style="width: 45%; height: 13px" />
+                                </div>
+                                
+                                <!-- 时间行 -->
+                                <div class="skeleton-detail-row">
+                                    <el-skeleton-item variant="text" style="width: 70px; height: 13px" />
+                                    <el-skeleton-item variant="text" style="width: 55%; height: 13px" />
+                                </div>
+                                
+                                <!-- 额外信息行 -->
+                                <div class="skeleton-detail-row">
+                                    <el-skeleton-item variant="text" style="width: 70px; height: 13px" />
+                                    <el-skeleton-item variant="text" style="width: 40%; height: 13px" />
                                 </div>
                             </div>
                         </div>
-
-                        <div class="detail-item" v-if="category === 'copy' && item.processInstanceName">
-                            <span class="label">流程名称：</span>
-                            <span class="value">{{ item.processInstanceName }}</span>
+                    </div>
+                </template>
+                
+                <!-- 有数据时显示实际卡片 -->
+                <template v-else>
+                    <div class="card-item" v-for="(item, index) in filteredData" :key="index"
+                        @click="handleCardClick(item)">
+                        <div class="card-header">
+                            <span>{{ getProcessName(item) }}</span>
+                            <span v-if="category === 'apply'" class="status-badge" :class="getStatusClass(item)">{{ getStatusText(item) }}</span>
+                            <span v-else-if="isNew(item)" class="badge">新</span>
                         </div>
 
-                        <div class="detail-item" v-if="category === 'copy'">
-                            <span class="label">抄送节点：</span>
-                            <span class="value">{{ item.activityName || '-' }}</span>
-                        </div>
+                        <div class="card-detail">
+                            <!-- 公共字段 -->
+                            <div class="user-info" v-if="['waiting', 'done', 'copy'].includes(category)">
+                                <el-avatar :size="40" :src="getAvatar(item)" />
+                                <div class="user-meta">
+                                    <div class="user-name">{{ getUserName(item) }}</div>
+                                    <div class="user-dept" v-if="getDeptName(item)">{{ getDeptName(item) }}</div>
+                                </div>
+                            </div>
 
-                        <div class="detail-item" v-if="category === 'copy' && item.reason">
-                            <span class="label">抄送意见：</span>
-                            <span class="value">{{ item.reason }}</span>
-                        </div>
+                            <!-- 流程名称 - 不在抄送我的中显示，因为已在卡片头部显示 -->
+                            <div class="detail-item" v-if="category !== 'copy'">
+                                <span class="label">流程名称：</span>
+                                <span class="value">{{ getProcessInstanceName(item) }}</span>
+                            </div>
 
-                        <div class="detail-item" v-if="category === 'copy' && item.processInstance">
-                            <span class="label">流程状态：</span>
-                            <span class="value">
-                                <dict-tag :type="'bpm_process_instance_status'" :value="item.processInstance.status" />
-                            </span>
+                            <!-- 流程分类 -->
+                            <div class="detail-item" v-if="item.categoryName">
+                                <span class="label">流程分类：</span>
+                                <span class="value">{{ item.categoryName }}</span>
+                            </div>
+
+                            <!-- 申请/发起时间 -->
+                            <div class="detail-item">
+                                <span class="label">{{ getTimeLabel() }}：</span>
+                                <span class="value">{{ formatTime(getTimeValue(item)) }}</span>
+                            </div>
+
+                            <!-- 待审批特有字段 -->
+                            <div class="detail-item" v-if="category === 'waiting'">
+                                <span class="label">到达时间：</span>
+                                <span class="value">{{ getTimeDiff(item.createTime) }}</span>
+                            </div>
+
+                            <!-- 已审批特有字段 -->
+                            <div class="detail-item" v-if="category === 'done'">
+                                <span class="label">审批结果：</span>
+                                <span class="value" :class="getResultClass(item)"> {{ item.reason === "" ? '待审批' :
+                                    item.reason || '待审批' }}</span>
+                            </div>
+
+                            <!-- 我申请的特有字段 -->
+                            <div class="detail-item" v-if="category === 'apply'">
+                                <span class="label">当前节点：</span>
+                                <div class="value">
+                                    <!-- 审批中状态 -->
+                                    <template v-if="item.status === 1 && item.tasks?.length > 0">
+                                        <!-- 单人审批 -->
+                                        <template v-if="item.tasks.length === 1">
+                                            <span>
+                                                <span class="approver-name">{{ item.tasks[0].assigneeUser?.nickname
+                                                    }}</span>
+                                                ({{ item.tasks[0].name }}) 审批中
+                                            </span>
+                                        </template>
+                                        <!-- 多人审批 -->
+                                        <template v-else>
+                                            <span>
+                                                <span class="approver-name">{{ item.tasks[0].assigneeUser?.nickname
+                                                    }}</span>
+                                                等 {{ item.tasks.length }} 人 ({{ item.tasks[0].name }})审批中
+                                            </span>
+                                        </template>
+                                    </template>
+                                    <!-- 非审批中状态 -->
+                                    <template v-else>
+                                        <dict-tag :type="'bpm_process_instance_status'" :value="item.status" />
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- 抄送我的特有字段 -->
+                            <div class="detail-item" v-if="category === 'copy'">
+                                <div class="copy-info">
+                                    <span class="label">抄送人：</span>
+                                    <div class="copy-user">
+                                        <el-avatar :size="24" :src="getCopyUserAvatar(item)" />
+                                        <span>{{ getCopyUserName(item) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="detail-item" v-if="category === 'copy' && item.processInstanceName">
+                                <span class="label">流程名称：</span>
+                                <span class="value">{{ item.processInstanceName }}</span>
+                            </div>
+
+                            <div class="detail-item" v-if="category === 'copy'">
+                                <span class="label">抄送节点：</span>
+                                <span class="value">{{ item.activityName || '-' }}</span>
+                            </div>
+
+                            <div class="detail-item" v-if="category === 'copy' && item.reason">
+                                <span class="label">抄送意见：</span>
+                                <span class="value">{{ item.reason }}</span>
+                            </div>
+
+                            <div class="detail-item" v-if="category === 'copy' && item.processInstance">
+                                <span class="label">流程状态：</span>
+                                <span class="value">
+                                    <dict-tag :type="'bpm_process_instance_status'" :value="item.processInstance.status" />
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div v-if="filteredData.length === 0" class="empty-container">
-                    <el-empty :description="getEmptyText()" />
-                </div>
+                    <!-- 无数据且不在加载中时显示空状态 -->
+                    <div v-if="filteredData.length === 0" class="empty-container">
+                        <el-empty :description="getEmptyText()" />
+                    </div>
+                </template>
             </div>
         </div>
     </div>
@@ -174,6 +227,7 @@ const props = defineProps<{
     data: any[];
     category: 'waiting' | 'done' | 'apply' | 'copy' | 'rejected';
     showCategoryTags?: boolean;
+    loading?: boolean;
 }>();
 
 const emit = defineEmits(['select-card', 'search']);
@@ -938,6 +992,110 @@ loadInitialData();
 
     .card-item:nth-child(even) {
         transform: none;
+    }
+}
+.card-skeleton {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+    padding: 16px 25px;
+    margin-bottom: 0;
+    height: fit-content;
+    
+    /* 参差感效果 - 使偶数列卡片向下偏移 */
+    &:nth-child(even) {
+        transform: translateY(15px);
+    }
+    
+    /* 参差感效果 - 使每隔4个的卡片有不同的边框 */
+    &:nth-child(4n+1) {
+        border-left: 3px solid #67c23a;
+    }
+    
+    &:nth-child(4n+2) {
+        border-right: 3px solid #e6a23c;
+    }
+    
+    &:nth-child(4n+3) {
+        border-bottom: 3px solid #409EFF;
+    }
+    
+    &:nth-child(4n+4) {
+        border-top: 3px solid #f56c6c;
+    }
+}
+
+.skeleton-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #ebeef5;
+}
+
+.skeleton-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.skeleton-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    padding: 6px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+}
+
+.skeleton-user-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.skeleton-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.skeleton-detail-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+/* 骨架屏动画效果 */
+.card-skeleton {
+    animation: skeleton-loading 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.8;
+    }
+}
+
+/* 为骨架元素添加渐变背景 */
+.el-skeleton__item {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 2s infinite;
+}
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
     }
 }
 </style>

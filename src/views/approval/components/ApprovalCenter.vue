@@ -51,8 +51,8 @@
     <div class="content" v-if="activeCategory">
       <div v-show="activeCategory === 'waiting'" class="category-container" @scroll="handleScroll" ref="waitingContainer">
         <common-list :data="waitingList" category="waiting" @select-card="handleSelectCard" @search="handleSearch"
-          :show-category-tags="true" />
-        <div v-if="pageStates.waiting.loading" class="loading-more">
+          :show-category-tags="true" :loading="pageStates.waiting.loading && waitingList.length === 0" />
+        <div v-if="pageStates.waiting.loading && waitingList.length > 0" class="loading-more">
           <el-icon class="is-loading"><Loading /></el-icon>
           <span>加载中...</span>
         </div>
@@ -62,8 +62,8 @@
       </div>
       <div v-show="activeCategory === 'done'" class="category-container" @scroll="handleScroll" ref="doneContainer">
         <common-list :data="doneList" category="done" @select-card="handleSelectCard" @search="handleSearch"
-          :show-category-tags="true" />
-        <div v-if="pageStates.done.loading" class="loading-more">
+          :show-category-tags="true" :loading="pageStates.done.loading && doneList.length === 0" />
+        <div v-if="pageStates.done.loading && doneList.length > 0" class="loading-more">
           <el-icon class="is-loading"><Loading /></el-icon>
           <span>加载中...</span>
         </div>
@@ -73,8 +73,8 @@
       </div>
       <div v-show="activeCategory === 'apply'" class="category-container" @scroll="handleScroll" ref="applyContainer">
         <common-list :data="applyList" category="apply" @select-card="handleSelectCard" @search="handleSearch"
-          :show-category-tags="true" />
-        <div v-if="pageStates.apply.loading" class="loading-more">
+          :show-category-tags="true" :loading="pageStates.apply.loading && applyList.length === 0" />
+        <div v-if="pageStates.apply.loading && applyList.length > 0" class="loading-more">
           <el-icon class="is-loading"><Loading /></el-icon>
           <span>加载中...</span>
         </div>
@@ -84,8 +84,8 @@
       </div>
       <div v-show="activeCategory === 'copy'" class="category-container" @scroll="handleScroll" ref="copyContainer">
         <common-list :data="copyList" category="copy" @select-card="handleSelectCard" @search="handleSearch"
-          :show-category-tags="true" />
-        <div v-if="pageStates.copy.loading" class="loading-more">
+          :show-category-tags="true" :loading="pageStates.copy.loading && copyList.length === 0" />
+        <div v-if="pageStates.copy.loading && copyList.length > 0" class="loading-more">
           <el-icon class="is-loading"><Loading /></el-icon>
           <span>加载中...</span>
         </div>
@@ -95,8 +95,8 @@
       </div>
       <div v-show="activeCategory === 'rejected'" class="category-container" @scroll="handleScroll" ref="rejectedContainer">
         <common-list :data="rejectedList" category="rejected" @select-card="handleSelectCard" @search="handleSearch"
-          :show-category-tags="true" />
-        <div v-if="pageStates.rejected.loading" class="loading-more">
+          :show-category-tags="true" :loading="pageStates.rejected.loading && rejectedList.length === 0" />
+        <div v-if="pageStates.rejected.loading && rejectedList.length > 0" class="loading-more">
           <el-icon class="is-loading"><Loading /></el-icon>
           <span>加载中...</span>
         </div>
