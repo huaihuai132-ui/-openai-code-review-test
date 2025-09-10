@@ -12,6 +12,12 @@ export type LeaveVO = {
   fileList: string
   sequenceCode: string
   startUserSelectAssignees?: Record<string, number[]> // 发起人自选审批人
+  userId?: number
+  creator?: string
+  nickname?: string
+  deptName?: string
+  duration?: number
+  leftLeaveDays?: number
 }
 
 // 创建请假申请

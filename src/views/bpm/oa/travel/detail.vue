@@ -34,12 +34,12 @@
     <!-- 出差人员列表 -->
     <el-divider content-position="left">出差人员</el-divider>
     <el-table :data="detailData.personList" border style="width: 100%">
-      <el-table-column prop="userId" label="用户ID" width="100">
+      <el-table-column prop="nickname" label="姓名" />
+      <el-table-column prop="deptName" label="部门" width="200">
         <template #default="{ row }">
-          {{ row.userId || '外部人员' }}
+          {{ row.userId ? (row.deptName || '加载中...') : '外部人员' }}
         </template>
       </el-table-column>
-      <el-table-column prop="nickname" label="姓名" />
     </el-table>
   </div>
 
@@ -49,6 +49,8 @@
 
 <script lang="ts" setup>
 import * as TravelApi from '@/api/bpm/form/travel'
+import * as UserApi from '@/api/system/user'
+import * as DeptApi from '@/api/system/dept'
 
 import { BatchFileUpload } from '@/components/UploadFile'
 import { DICT_TYPE } from '@/utils/dict'
@@ -113,8 +115,51 @@ const getInfo = async () => {
     detailData.value = await TravelApi.getTravelApi(props.id || queryId)
     // 处理文件列表，如果字段不存在则设为空字符串
     fileIdList.value = parseFileIdList(detailData.value.fileList || '')
+    
+    // 获取出差人员的部门信息
+    await enrichPersonListWithDeptInfo()
   } finally {
     detailLoading.value = false
+  }
+}
+
+/** 丰富人员列表的部门信息 */
+const enrichPersonListWithDeptInfo = async () => {
+  if (!detailData.value.personList || detailData.value.personList.length === 0) {
+    return
+  }
+
+  try {
+    // 获取所有的部门信息列表
+    const deptList = await DeptApi.getSimpleDeptList()
+    
+    // 为每个有userId的人员获取部门信息
+    for (const person of detailData.value.personList) {
+      if (person.userId) {
+        try {
+          // 获取用户信息
+          const userInfo = await UserApi.getUser(person.userId)
+          if (userInfo && userInfo.deptId) {
+            // 根据部门ID找到部门名称
+            const dept = deptList.find(dept => dept.id === userInfo.deptId)
+            person.deptName = dept ? dept.name : '未知部门'
+          } else {
+            person.deptName = '无部门'
+          }
+        } catch (error) {
+          console.error(`获取用户 ${person.userId} 信息失败:`, error)
+          person.deptName = '获取失败'
+        }
+      }
+    }
+  } catch (error) {
+    console.error('获取部门列表失败:', error)
+    // 如果获取部门列表失败，为所有人员设置默认值
+    detailData.value.personList.forEach(person => {
+      if (person.userId && !person.deptName) {
+        person.deptName = '部门信息获取失败'
+      }
+    })
   }
 }
 
