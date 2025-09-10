@@ -318,6 +318,11 @@ const submitForm = async () => {
             ? formData.value.fileList.join(',') 
             : ''
 
+        // 将前端的sealEnterprise字段转换为后端的chapterCompany字段
+        // 根据选中的企业value值，查找对应的企业名称（label）
+        const selectedEnterprise = enterpriseOptions.value.find(option => option.value === formData.value.sealEnterprise)
+        data.chapterCompany = selectedEnterprise ? selectedEnterprise.label : formData.value.sealEnterprise
+
         // 审批相关：设置指定审批人
         if (startUserSelectTasks.value?.length > 0) {
             data.startUserSelectAssignees = startUserSelectAssignees.value

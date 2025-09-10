@@ -24,6 +24,9 @@
             <el-descriptions-item label="印章类型">
                 <dict-tag type="bmp_oa_chapter_type" :value="detailData.chapterName || ''" />
             </el-descriptions-item>
+            <el-descriptions-item label="印章企业">
+                {{ detailData.chapterCompany }}
+            </el-descriptions-item>
             <el-descriptions-item label="是否外带">
                 <dict-tag type="sys_boolean_string" :value="detailData.isTakeOut || '0'" />
             </el-descriptions-item>
