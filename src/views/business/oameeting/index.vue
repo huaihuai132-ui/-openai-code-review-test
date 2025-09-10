@@ -663,7 +663,7 @@ const openNotificationDialog = async (row: OaMeetingVO) => {
   notificationForm.value = {
     notifyType: 1,
     selectedAttendees: [],
-    content: `会议通知：${row.meetName}将于${row.meetDate ? formatDate(new Date(row.meetDate), 'YYYY-MM-DD') : ''}召开，请准时参加。`
+    content: `${row.meetName}将于${row.meetDate ? formatDate(new Date(row.meetDate), 'YYYY-MM-DD') : ''}召开，请准时参加。`
   }
   
   // 获取参会人员列表
