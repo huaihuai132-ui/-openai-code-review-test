@@ -49,58 +49,38 @@
     </div>
 
     <div class="content" v-if="activeCategory">
-      <div v-show="activeCategory === 'waiting'" class="category-container" @scroll="handleScroll" ref="waitingContainer">
+      <div v-show="activeCategory === 'waiting'" class="category-container" @scroll="handleScroll" ref="waitingContainer" v-loading="pageStates.waiting.loading">
         <common-list :data="waitingList" category="waiting" @select-card="handleSelectCard" @search="handleSearch"
-          :show-category-tags="true" :loading="pageStates.waiting.loading && waitingList.length === 0" />
-        <div v-if="pageStates.waiting.loading && waitingList.length > 0" class="loading-more">
-          <el-icon class="is-loading"><Loading /></el-icon>
-          <span>加载中...</span>
-        </div>
-        <div v-else-if="!pageStates.waiting.hasMore && waitingList.length > 0" class="no-more">
+          :show-category-tags="true" />
+        <div v-if="!pageStates.waiting.hasMore && waitingList.length > 0" class="no-more">
           <span>没有更多数据了</span>
         </div>
       </div>
-      <div v-show="activeCategory === 'done'" class="category-container" @scroll="handleScroll" ref="doneContainer">
+      <div v-show="activeCategory === 'done'" class="category-container" @scroll="handleScroll" ref="doneContainer" v-loading="pageStates.done.loading">
         <common-list :data="doneList" category="done" @select-card="handleSelectCard" @search="handleSearch"
-          :show-category-tags="true" :loading="pageStates.done.loading && doneList.length === 0" />
-        <div v-if="pageStates.done.loading && doneList.length > 0" class="loading-more">
-          <el-icon class="is-loading"><Loading /></el-icon>
-          <span>加载中...</span>
-        </div>
-        <div v-else-if="!pageStates.done.hasMore && doneList.length > 0" class="no-more">
+          :show-category-tags="true" />
+        <div v-if="!pageStates.done.hasMore && doneList.length > 0" class="no-more">
           <span>没有更多数据了</span>
         </div>
       </div>
-      <div v-show="activeCategory === 'apply'" class="category-container" @scroll="handleScroll" ref="applyContainer">
+      <div v-show="activeCategory === 'apply'" class="category-container" @scroll="handleScroll" ref="applyContainer" v-loading="pageStates.apply.loading">
         <common-list :data="applyList" category="apply" @select-card="handleSelectCard" @search="handleSearch"
-          :show-category-tags="true" :loading="pageStates.apply.loading && applyList.length === 0" />
-        <div v-if="pageStates.apply.loading && applyList.length > 0" class="loading-more">
-          <el-icon class="is-loading"><Loading /></el-icon>
-          <span>加载中...</span>
-        </div>
-        <div v-else-if="!pageStates.apply.hasMore && applyList.length > 0" class="no-more">
+          :show-category-tags="true" />
+        <div v-if="!pageStates.apply.hasMore && applyList.length > 0" class="no-more">
           <span>没有更多数据了</span>
         </div>
       </div>
-      <div v-show="activeCategory === 'copy'" class="category-container" @scroll="handleScroll" ref="copyContainer">
+      <div v-show="activeCategory === 'copy'" class="category-container" @scroll="handleScroll" ref="copyContainer" v-loading="pageStates.copy.loading">
         <common-list :data="copyList" category="copy" @select-card="handleSelectCard" @search="handleSearch"
-          :show-category-tags="true" :loading="pageStates.copy.loading && copyList.length === 0" />
-        <div v-if="pageStates.copy.loading && copyList.length > 0" class="loading-more">
-          <el-icon class="is-loading"><Loading /></el-icon>
-          <span>加载中...</span>
-        </div>
-        <div v-else-if="!pageStates.copy.hasMore && copyList.length > 0" class="no-more">
+          :show-category-tags="true" />
+        <div v-if="!pageStates.copy.hasMore && copyList.length > 0" class="no-more">
           <span>没有更多数据了</span>
         </div>
       </div>
-      <div v-show="activeCategory === 'rejected'" class="category-container" @scroll="handleScroll" ref="rejectedContainer">
+      <div v-show="activeCategory === 'rejected'" class="category-container" @scroll="handleScroll" ref="rejectedContainer" v-loading="pageStates.rejected.loading">
         <common-list :data="rejectedList" category="rejected" @select-card="handleSelectCard" @search="handleSearch"
-          :show-category-tags="true" :loading="pageStates.rejected.loading && rejectedList.length === 0" />
-        <div v-if="pageStates.rejected.loading && rejectedList.length > 0" class="loading-more">
-          <el-icon class="is-loading"><Loading /></el-icon>
-          <span>加载中...</span>
-        </div>
-        <div v-else-if="!pageStates.rejected.hasMore && rejectedList.length > 0" class="no-more">
+          :show-category-tags="true" />
+        <div v-if="!pageStates.rejected.hasMore && rejectedList.length > 0" class="no-more">
           <span>没有更多数据了</span>
         </div>
       </div>
@@ -538,9 +518,9 @@ const closeDetail = () => {
 const handleScroll = (event: Event) => {
   const target = event.target as HTMLElement;
   if (!target || !activeCategory.value) return;
-  
+
   const { scrollTop, scrollHeight, clientHeight } = target;
-  
+
   // 当滚动到距离底部100px时触发加载更多
   if (scrollTop + clientHeight >= scrollHeight - 100) {
     loadMoreData();
@@ -715,17 +695,11 @@ onUnmounted(() => {
   padding: 0;
   animation: fadeIn 0.3s ease;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
-.loading-more {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  color: #909399;
-  font-size: 14px;
-  gap: 8px;
-}
+
 
 .no-more {
   display: flex;
