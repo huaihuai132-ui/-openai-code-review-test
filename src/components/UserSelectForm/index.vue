@@ -97,7 +97,7 @@ const open = async (id: number, selectedList?: any[]) => {
   dialogVisible.value = true
 }
 
-/** 获取指定部门及其所有子部门的ID列表 */
+/** 获取指定部门及其所有子部门的ID列表（保留逻辑，暂未使用） */
 const getChildDeptIds = (deptId: number, deptList: any[]): number[] => {
   const ids = [deptId]
   const children = deptList.filter((dept) => dept.parentId === deptId)
@@ -107,8 +107,8 @@ const getChildDeptIds = (deptId: number, deptList: any[]): number[] => {
   return ids
 }
 
-/** 获取部门过滤后的用户列表 */
-const filterUserList = async (deptId?: number) => {
+/** 获取部门及所有子部门的用户（保留逻辑，可用于切换显示模式） */
+const filterUserListWithChildren = async (deptId?: number) => {
   formLoading.value = true
   try {
     if (!deptId) {
@@ -122,6 +122,37 @@ const filterUserList = async (deptId?: number) => {
 
     // 过滤出这些部门下的用户
     filteredUserList.value = userList.value.filter((user) => deptIds.includes(user.deptId))
+  } finally {
+    formLoading.value = false
+  }
+}
+
+/** 获取部门过滤后的用户列表 */
+const filterUserList = async (deptId?: number) => {
+  formLoading.value = true
+  try {
+    if (!deptId) {
+      // 如果没有选择部门，显示所有用户
+      filteredUserList.value = [...userList.value]
+      return
+    }
+
+    // 获取当前部门信息
+    const currentDept = deptList.value.find((dept) => dept.id === deptId)
+    
+    // 过滤出本部门成员（deptId 等于当前部门ID）
+    let departmentUsers = userList.value.filter((user) => user.deptId === deptId)
+    
+    // 如果部门有领导人，且领导人不在本部门中，需要单独添加
+    if (currentDept?.leaderUserId) {
+      const leader = userList.value.find((user) => user.id === currentDept.leaderUserId)
+      if (leader && leader.deptId !== deptId) {
+        // 领导人不在本部门，需要添加到列表中
+        departmentUsers = [...departmentUsers, leader]
+      }
+    }
+    
+    filteredUserList.value = departmentUsers
   } finally {
     formLoading.value = false
   }
