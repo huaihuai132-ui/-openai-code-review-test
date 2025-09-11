@@ -556,7 +556,7 @@ const signRef = ref()
 const approveSignFormRef = ref()
 const nextAssigneesActivityNode = ref<ProcessInstanceApi.ApprovalNodeInfo[]>([]) // 下一个审批节点信息
 const approveReasonForm = reactive({
-  reason: '',
+  reason: '同意',
   signPicUrl: '',
   nextAssignees: {}
 })

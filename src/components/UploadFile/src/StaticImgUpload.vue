@@ -35,16 +35,10 @@
 
           <!-- 文件信息和操作 -->
           <div class="file-info">
-            <!-- 文件名编辑 -->
+            <!-- 文件名显示 -->
             <div class="file-name-section">
-              <div v-if="!box.editing" class="file-name" @click="startEditName(index)">
+              <div class="file-name">
                 <span class="name-text">{{ box.displayName }}</span>
-                <div class="edit-icon">✏️</div>
-              </div>
-              <div v-else class="file-name-edit">
-                <el-input v-model="box.editingName" size="small" @blur="finishEditName(index)"
-                  @keyup.enter="finishEditName(index)" @keyup.esc="cancelEditName(index)" ref="nameInput" />
-                <div class="confirm-icon" @click="finishEditName(index)">✅</div>
               </div>
             </div>
 
@@ -191,8 +185,6 @@ interface FileBox {
   status: 'empty' | 'selected' | 'uploading' | 'uploaded' | 'error'
   file?: File
   displayName?: string
-  editingName?: string
-  editing?: boolean
   hover?: boolean
   progress?: number
   speed?: number
@@ -221,8 +213,7 @@ const createEmptyFileBox = (): FileBox => ({
   speed: 0,
   remainingTime: 0,
   showCancel: false,
-  showPreview: false,
-  editing: false
+  showPreview: false
 })
 
 // 初始化文件框
@@ -347,8 +338,6 @@ const handleFileSelect = async (index: number, event: Event) => {
   box.status = 'selected'
   box.file = file
   box.displayName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name
-  box.editingName = box.displayName
-  box.editing = false
   box.isNewFile = true // 标记为新文件
 
   console.log(`文件框 ${index} 状态更新:`, box)
@@ -382,34 +371,6 @@ const validateFile = (file: File): boolean => {
   return true
 }
 
-// 开始编辑名称
-const startEditName = (index: number) => {
-  const box = fileBoxes.value[index]
-  box.editing = true
-  nextTick(() => {
-    const inputs = document.querySelectorAll(`[ref="nameInput"]`) as NodeListOf<HTMLInputElement>
-    const input = inputs[index]
-    if (input) {
-      input.focus()
-    }
-  })
-}
-
-// 完成编辑名称
-const finishEditName = (index: number) => {
-  const box = fileBoxes.value[index]
-  if (box.editingName && box.editingName.trim()) {
-    box.displayName = box.editingName.trim()
-  }
-  box.editing = false
-}
-
-// 取消编辑名称
-const cancelEditName = (index: number) => {
-  const box = fileBoxes.value[index]
-  box.editingName = box.displayName
-  box.editing = false
-}
 
 // 上传文件
 const uploadFile = async (index: number) => {
@@ -471,7 +432,7 @@ const uploadFile = async (index: number) => {
     // 调用后端保存文件记录
     const createResponse = await StaticFileApi.createStaticFile({
       configId: urlData.configId || 0, // 使用预签名响应中的configId
-      name: box.displayName + (box.file.name.includes('.') ? box.file.name.substring(box.file.name.lastIndexOf('.')) : ''),
+      name: box.file.name,
       path: urlData.path,
       url: urlData.url,
       type: box.file.type,
@@ -746,15 +707,15 @@ watch(() => props.fileList, () => {
     padding: 20px;
 
     .upload-icon {
-      width: 60px;
-      height: 60px;
+      width: 48px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 50%;
       background-color: #f0f0f0;
       color: #bbb;
-      font-size: 24px;
+      font-size: 20px;
       margin-bottom: 12px;
       transition: all 0.3s ease;
 
@@ -804,17 +765,10 @@ watch(() => props.fileList, () => {
         .file-name {
           display: flex;
           align-items: center;
-          cursor: pointer;
+          justify-content: center;
           padding: 4px;
-          border-radius: 4px;
-          transition: background-color 0.3s ease;
-
-          &:hover {
-            background-color: #f0f0f0;
-          }
 
           .name-text {
-            flex: 1;
             font-size: 12px;
             color: #606266;
             word-break: break-all;
@@ -824,32 +778,6 @@ watch(() => props.fileList, () => {
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
-          }
-
-          .edit-icon {
-            margin-left: 4px;
-            font-size: 12px;
-            color: #909399;
-          }
-        }
-
-        .file-name-edit {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-
-          .el-input {
-            flex: 1;
-          }
-
-          .confirm-icon {
-            cursor: pointer;
-            color: #67c23a;
-            font-size: 14px;
-
-            &:hover {
-              color: #529b2e;
-            }
           }
         }
       }

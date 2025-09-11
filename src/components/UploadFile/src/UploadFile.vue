@@ -62,20 +62,10 @@
             </div>
           </div>
 
-          <!-- 文件名和编辑 -->
+          <!-- 文件名显示 -->
           <div class="file-name-section">
-            <div v-if="!fileBox.editingName || mode === 'view'" class="file-name-display">
+            <div class="file-name-display">
               <div class="file-name-text" :title="fileBox.displayName">{{ truncateFileName(fileBox.displayName) }}</div>
-              <div v-if="mode !== 'view'" class="edit-icon" @click.stop="startEditName(index)">
-                ✏️
-              </div>
-            </div>
-            <div v-else class="file-name-edit">
-              <el-input v-model="fileBox.tempName" size="small" @keyup.enter="finishEditName(index)"
-                @keyup.esc="cancelEditName(index)" ref="nameInput" />
-              <div class="confirm-icon" @click.stop="finishEditName(index)">
-                ✅
-              </div>
             </div>
           </div>
         </div>
@@ -176,8 +166,6 @@ const props = defineProps({
 const fileBoxes = ref<Array<{
   file: File | null
   displayName: string
-  tempName: string
-  editingName: boolean
   uploading: boolean
   uploaded: boolean
   error: boolean
@@ -245,8 +233,6 @@ const initFileBoxes = async () => {
 const createEmptyFileBox = () => ({
   file: null,
   displayName: '',
-  tempName: '',
-  editingName: false,
   uploading: false,
   uploaded: false,
   error: false,
@@ -303,7 +289,6 @@ const handleFileSelect = async (event: Event, index: number) => {
     const box = fileBoxes.value[index]
     box.file = file
     box.displayName = getFileNameWithoutExtension(file.name)
-    box.tempName = box.displayName
     box.uploaded = false
     box.uploading = false
     box.error = false
@@ -328,7 +313,6 @@ const handleDrop = async (event: DragEvent, index: number) => {
     const box = fileBoxes.value[index]
     box.file = file
     box.displayName = getFileNameWithoutExtension(file.name)
-    box.tempName = box.displayName
     box.uploaded = false
     box.uploading = false
     box.error = false
@@ -338,36 +322,6 @@ const handleDrop = async (event: DragEvent, index: number) => {
   }
 }
 
-// 开始编辑文件名
-const startEditName = (index: number) => {
-  const box = fileBoxes.value[index]
-  box.editingName = true
-  box.tempName = box.displayName
-
-  nextTick(() => {
-    const input = document.querySelector('.file-name-edit input') as HTMLInputElement
-    input?.focus()
-    input?.select()
-  })
-}
-
-// 完成编辑文件名
-const finishEditName = (index: number) => {
-  const box = fileBoxes.value[index]
-  if (box.tempName.trim()) {
-    box.displayName = box.tempName.trim()
-  } else {
-    box.tempName = box.displayName
-  }
-  box.editingName = false
-}
-
-// 取消编辑文件名
-const cancelEditName = (index: number) => {
-  const box = fileBoxes.value[index]
-  box.tempName = box.displayName
-  box.editingName = false
-}
 
 // ========== 上传相关方法 ==========
 // 上传文件
@@ -459,7 +413,7 @@ const uploadCommonFile = async (box: any) => {
   // 3. 创建文件记录
   const createFileData = {
     configId: presignedData.configId,
-    name: box.displayName + getFileExtension(box.file.name),
+    name: box.file.name,
     path: presignedData.path,
     url: presignedData.url,
     type: box.file.type,
@@ -1032,7 +986,7 @@ defineExpose({
     align-items: center;
     justify-content: space-between;
     height: 100%;
-    padding: 16px 12px;
+    padding: 10px 8px;
 
     .file-icon-container {
       position: relative;
@@ -1040,7 +994,7 @@ defineExpose({
       justify-content: center;
       align-items: center;
       flex: 1;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
 
       .file-thumbnail-container {
         .file-thumbnail {
@@ -1059,15 +1013,15 @@ defineExpose({
       }
 
       .file-icon {
-        font-size: 32px !important;
+        font-size: 48px !important;
         transition: transform 0.2s ease;
         color: #409eff !important;
-        min-height: 32px;
+        min-height: 48px;
         display: flex !important;
         align-items: center;
         justify-content: center;
         line-height: 1;
-        width: 88px;
+        width: 100%;
         opacity: 1 !important;
         visibility: visible !important;
       }
@@ -1112,70 +1066,31 @@ defineExpose({
       transform: scale(1.1);
     }
 
-    .file-name-section {
-      width: 100%;
-      text-align: center;
-      flex-shrink: 1;
-      min-height: 0;
-
-      .file-name-display {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 3px;
+      .file-name-section {
         width: 100%;
-        max-width: 120px;
-        flex-wrap: nowrap;
+        text-align: center;
+        flex-shrink: 1;
+        min-height: 0;
 
-        .file-name-text {
-          font-size: 13px;
-          font-weight: 500;
-          color: #303133;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          line-height: 1.2;
-          min-height: 16px;
-          flex: 1;
-          min-width: 0;
-          max-width: 100px;
-        }
-
-        .edit-icon {
-          font-size: 11px;
-          cursor: pointer;
-          flex-shrink: 0;
-          opacity: 0.7;
-          transition: opacity 0.2s ease;
-          width: 14px;
-          height: 14px;
+        .file-name-display {
           display: flex;
           align-items: center;
           justify-content: center;
+          width: 100%;
 
-          &:hover {
-            opacity: 1;
+          .file-name-text {
+            font-size: 13px;
+            font-weight: 500;
+            color: #303133;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            line-height: 1.2;
+            min-height: 16px;
+            max-width: 100px;
           }
         }
       }
-
-      .file-name-edit {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: 100%;
-
-        .el-input {
-          flex: 1;
-        }
-
-        .confirm-icon {
-          font-size: 12px;
-          cursor: pointer;
-          flex-shrink: 0;
-        }
-      }
-    }
   }
 
   // 错误状态

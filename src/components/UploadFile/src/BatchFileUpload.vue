@@ -70,20 +70,10 @@
             </div>
           </div>
 
-          <!-- 文件名和编辑 -->
+          <!-- 文件名显示 -->
           <div class="file-name-section">
-            <div v-if="!fileBox.editingName || mode === 'view'" class="file-name-display">
+            <div class="file-name-display">
               <div class="file-name-text" :title="fileBox.displayName">{{ truncateFileName(fileBox.displayName) }}</div>
-              <div v-if="mode !== 'view'" class="edit-icon" @click.stop="startEditName(index)">
-                ✏️
-              </div>
-            </div>
-            <div v-else class="file-name-edit">
-              <el-input v-model="fileBox.tempName" size="small" @keyup.enter="finishEditName(index)"
-                @keyup.esc="cancelEditName(index)" ref="nameInput" />
-              <div class="confirm-icon" @click.stop="finishEditName(index)">
-                ✅
-              </div>
             </div>
           </div>
         </div>
@@ -181,8 +171,6 @@ const props = withDefaults(defineProps<{
 const fileBoxes = ref<Array<{
   file: File | null
   displayName: string
-  tempName: string
-  editingName: boolean
   uploading: boolean
   uploaded: boolean
   error: boolean
@@ -258,8 +246,6 @@ const initFileBoxes = async () => {
 const createEmptyFileBox = () => ({
   file: null,
   displayName: '',
-  tempName: '',
-  editingName: false,
   uploading: false,
   uploaded: false,
   error: false,
@@ -353,7 +339,6 @@ const handleFileSelect = async (event: Event, index: number) => {
   // 设置文件信息
   box.file = file
   box.displayName = getFileNameWithoutExtension(file.name)
-  box.tempName = box.displayName
   box.uploaded = false
   box.uploading = false
   box.error = false
@@ -384,7 +369,6 @@ const handleDrop = (event: DragEvent, index: number) => {
   // 设置文件信息
   box.file = file
   box.displayName = getFileNameWithoutExtension(file.name)
-  box.tempName = box.displayName
   box.uploaded = false
   box.uploading = false
   box.error = false
@@ -392,33 +376,6 @@ const handleDrop = (event: DragEvent, index: number) => {
   box.fileInfo = null
 }
 
-// 开始编辑文件名
-const startEditName = async (index: number) => {
-  const box = fileBoxes.value[index]
-  box.editingName = true
-  box.tempName = box.displayName
-
-  await nextTick()
-  const input = document.querySelector('.file-name-edit input') as HTMLInputElement
-  input?.focus()
-  input?.select()
-}
-
-// 完成编辑文件名
-const finishEditName = (index: number) => {
-  const box = fileBoxes.value[index]
-  if (box.tempName.trim()) {
-    box.displayName = box.tempName.trim()
-  }
-  box.editingName = false
-}
-
-// 取消编辑文件名
-const cancelEditName = (index: number) => {
-  const box = fileBoxes.value[index]
-  box.tempName = box.displayName
-  box.editingName = false
-}
 
 // ========== 上传相关方法 ==========
 // 单个文件上传
@@ -495,7 +452,7 @@ const uploadCommonFile = async (box: any) => {
   // 3. 创建文件记录
   const createFileData = {
     configId: presignedData.configId,
-    name: box.displayName + '.' + getFileExtension(box.file.name),
+    name: box.file.name,
     path: presignedData.path,
     url: presignedData.url,
     type: box.file.type,
@@ -1071,66 +1028,17 @@ defineExpose({
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 3px;
         width: 100%;
-        max-width: 120px;
-        flex-wrap: nowrap;
-        border: 1px solid red; /* 临时调试 */
-        background: rgba(255, 0, 0, 0.1); /* 临时调试 */
 
         .file-name-text {
           font-size: 13px;
           color: #333;
           text-align: center;
           line-height: 1.2;
-          flex: 1;
-          min-width: 0;
           max-width: 100px;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          border: 1px solid blue; /* 临时调试 */
-          background: rgba(0, 0, 255, 0.1); /* 临时调试 */
-        }
-
-        .edit-icon {
-          font-size: 11px;
-          color: #409eff;
-          cursor: pointer;
-          flex-shrink: 0;
-          width: 14px;
-          height: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid green; /* 临时调试 */
-          background: rgba(0, 255, 0, 0.1); /* 临时调试 */
-
-          &:hover {
-            color: #66b1ff;
-          }
-        }
-      }
-
-      .file-name-edit {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: 100%;
-
-        .el-input {
-          flex: 1;
-        }
-
-        .confirm-icon {
-          font-size: 16px;
-          color: #67c23a;
-          cursor: pointer;
-          flex-shrink: 0;
-
-          &:hover {
-            color: #85ce61;
-          }
         }
       }
     }
@@ -1200,26 +1108,26 @@ defineExpose({
     align-items: center;
     justify-content: space-between;
     height: 100%;
-    padding: 8px;
+    padding: 10px 8px;
     box-sizing: border-box;
 
     .file-icon-container {
       position: relative;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
       flex-shrink: 0;
 
       .file-icon {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 48px;
-        height: 48px;
+        width: 60px;
+        height: 60px;
         color: #67c23a;
         background: #f0f9f0;
         border-radius: 8px;
         transition: all 0.3s ease;
         cursor: pointer;
-        font-size: 20px;
+        font-size: 32px;
 
         &:hover {
           transform: scale(1.05);
