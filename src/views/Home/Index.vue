@@ -323,13 +323,14 @@ const taskCenterTagsData = reactive({
   reject: 0,
   todo: 0
 })
+// 原始的获取任务数据方法（保留兼容性）
 const getTaskCenterTagsData = async () => {
   const data = await getTaskCenterTags()
-  taskCenterTagsData.apply = data.apply ||0
-  taskCenterTagsData.copy = data.copy||0
-  taskCenterTagsData.reject = data.reject||0
-  taskCenterTagsData.todo = data.todo||0
-  console.log('[TaskCenterPolling]', new Date().toISOString(), {
+  taskCenterTagsData.apply = data.apply || 0
+  taskCenterTagsData.copy = data.copy || 0
+  taskCenterTagsData.reject = data.reject || 0
+  taskCenterTagsData.todo = data.todo || 0
+  console.log('[TaskCenterPolling-Legacy]', new Date().toISOString(), {
     apply: taskCenterTagsData.apply,
     copy: taskCenterTagsData.copy,
     reject: taskCenterTagsData.reject,
@@ -366,7 +367,7 @@ const getAllApi = async () => {
     getShortcut(),
     getUserAccessSource(),
     getWeeklyUserActivity(),
-    getTaskCenterTagsData(),
+    getTaskCenterTagsDataOptimized(true), // 首次加载传入true
     getBannerData()
   ])
   loading.value = false
@@ -375,23 +376,97 @@ const getAllApi = async () => {
 
 // ============ 动态刷新「任务中心各状态数量」============ //
 const pollingTimer = ref<number | null>(null)
-const startPolling = () => {
-  if (pollingTimer.value) return
-  pollingTimer.value = setInterval(() => {
-    getTaskCenterTagsData()
-  }, 15000) as unknown as number // 15s
+const isPageVisible = ref(true) // 页面可见性状态
+const lastTaskDataHash = ref('') // 上次数据的hash值，用于检测变化
+
+// 生成任务数据hash，用于检测数据是否发生变化
+const generateTaskDataHash = (data: any) => {
+  return JSON.stringify({
+    apply: data.apply || 0,
+    copy: data.copy || 0,
+    reject: data.reject || 0,
+    todo: data.todo || 0
+  })
 }
 
+// 检测任务数据是否发生变化
+const hasTaskDataChanged = (newData: any) => {
+  const newHash = generateTaskDataHash(newData)
+  const changed = newHash !== lastTaskDataHash.value
+  lastTaskDataHash.value = newHash
+  return changed
+}
+
+// 获取任务中心数据（优化版）
+const getTaskCenterTagsDataOptimized = async (isInitialLoad = false) => {
+  try {
+    const data = await getTaskCenterTags()
+    
+    // 检查数据是否发生变化
+    if (hasTaskDataChanged(data) || isInitialLoad) {
+      taskCenterTagsData.apply = data.apply || 0
+      taskCenterTagsData.copy = data.copy || 0
+      taskCenterTagsData.reject = data.reject || 0
+      taskCenterTagsData.todo = data.todo || 0
+      
+      console.log('[TaskCenterPolling]', new Date().toISOString(), '数据已更新:', {
+        apply: taskCenterTagsData.apply,
+        copy: taskCenterTagsData.copy,
+        reject: taskCenterTagsData.reject,
+        todo: taskCenterTagsData.todo
+      })
+    } else {
+      console.log('[TaskCenterPolling]', new Date().toISOString(), '数据无变化，跳过UI更新')
+    }
+  } catch (error) {
+    console.error('[TaskCenterPolling] 获取任务中心数据失败:', error)
+  }
+}
+
+// 开始轮询（只在页面可见时）
+const startPolling = () => {
+  // 清除之前的定时器
+  stopPolling()
+  
+  // 只在页面可见时启动轮询
+  if (!isPageVisible.value) {
+    console.log('[TaskCenterPolling] 页面不可见，跳过启动轮询')
+    return
+  }
+  
+  pollingTimer.value = setInterval(() => {
+    if (isPageVisible.value) {
+      getTaskCenterTagsDataOptimized(false)
+    } else {
+      console.log('[TaskCenterPolling] 页面不可见，跳过本次轮询')
+    }
+  }, 15000) as unknown as number // 15s
+  
+  console.log('[TaskCenterPolling] 开始任务中心轮询，间隔15秒')
+}
+
+// 停止轮询
 const stopPolling = () => {
   if (pollingTimer.value) {
     clearInterval(pollingTimer.value)
     pollingTimer.value = null
+    console.log('[TaskCenterPolling] 停止任务中心轮询')
   }
 }
 
+// 页面可见性变化处理
 const onVisibilityChange = () => {
-  if (!document.hidden) {
-    getTaskCenterTagsData()
+  isPageVisible.value = !document.hidden
+  
+  if (isPageVisible.value) {
+    // 页面变为可见时，立即刷新一次数据并重新开始轮询
+    console.log('[TaskCenterPolling] 页面变为可见，立即刷新任务数据')
+    getTaskCenterTagsDataOptimized(false)
+    startPolling()
+  } else {
+    // 页面不可见时，停止轮询
+    console.log('[TaskCenterPolling] 页面不可见，暂停任务轮询')
+    stopPolling()
   }
 }
 
@@ -459,7 +534,11 @@ const handleShortcutChange = async (newShortcuts: Shortcut[]) => {
 }
 
 onMounted(() => {
+  // 初始化页面可见性状态
+  isPageVisible.value = !document.hidden
+  
   getAllApi()
+  
   // 启动轮询与可见性刷新
   startPolling()
   document.addEventListener('visibilitychange', onVisibilityChange)
