@@ -70,23 +70,64 @@
           </div>
           <span v-else>-</span>
         </el-descriptions-item>
+        <!-- 会议归档材料 -->
+        <el-descriptions-item label="归档材料" :span="2">
+          <div v-if="archiveFileList.length > 0" class="flex flex-col gap-2">
+            <div
+              v-for="file in archiveFileList"
+              :key="file.id"
+              class="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer"
+              @click="previewFile(file)"
+            >
+              <div class="flex items-center justify-center w-8 h-8 rounded bg-blue-100 text-blue-500">
+                {{ getFileTypeIcon(file.name) }}
+              </div>
+              <span class="text-sm text-gray-700 truncate flex-1">{{ file.name }}</span>
+              <el-icon class="text-gray-400"><View /></el-icon>
+            </div>
+          </div>
+          <span v-else>-</span>
+        </el-descriptions-item>
         <!-- 会议议题 -->
         <el-descriptions-item label="会议议题" :span="2">
           <div v-if="issueList.length > 0" class="flex flex-col gap-2">
             <div
               v-for="issue in issueList"
               :key="issue.id"
-              class="p-3 border rounded hover:bg-gray-50 cursor-pointer"
+              class="p-3 border rounded hover:bg-gray-50 cursor-pointer relative"
               @click="openIssueDetail(issue.id)"
             >
-              <div class="font-medium">{{ issue.issueTitle || issue.title || '-' }}</div>
-              <div class="text-sm text-gray-500 mt-1">{{ issue.description || '-' }}</div>
+              <div class="flex justify-between items-start">
+                <div class="font-bold text-lg">{{ issue.issueTitle || issue.title || '-' }}</div>
+                <div v-if="issue.issueStatus !== undefined && issue.issueStatus !== null" class="flex items-center">
+                  <span class="text-gray-500">决议结果：</span>
+                  <el-tag 
+                    :type="getIssueStatusType(issue.issueStatus)"
+                    size="small"
+                  >
+                    {{ getIssueStatusText(issue.issueStatus) }}
+                  </el-tag>
+                </div>
+              </div>
+              <div class="my-3 text-gray-700 break-words whitespace-pre-wrap" style="text-indent: 2em;">
+                {{ issue.description || '-' }}
+              </div>
+              <div class="flex justify-between items-center mt-2">
+                <div class="flex flex-col">
+                  <div v-if="issue.reporterName" class="text-gray-600 flex items-center">
+                    <span>汇报人：</span>
+                    <span>{{ issue.reporterName }}</span>
+                  </div>
+                  <div v-if="getDeptNames(issue.relevantDept) && getDeptNames(issue.relevantDept) !== '-'">
+                    <span class="text-gray-500">相关部门：</span>
+                    <span>{{ getDeptNames(issue.relevantDept) }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <span v-else>-</span>
         </el-descriptions-item>
-
-
       </el-descriptions>
     </div>
     <template #footer>
@@ -112,6 +153,8 @@ import {openPreviewWindow} from '@/utils/previewWindow'
 import {ref} from 'vue'
 import {useRouter} from 'vue-router'
 import MeetingIssueDetail from '@/views/business/meet/meetingIssue/MeetingIssueDetail.vue'
+import * as DeptApi from '@/api/system/dept'
+import {handleTree} from '@/utils/tree'
 
 /** 会议详情 */
 defineOptions({ name: 'MeetingDetail' })
@@ -125,10 +168,12 @@ const dialogVisible = ref(false) // 弹窗的是否展示
 const loading = ref(false) // 数据加载状态
 const formData = ref<Partial<OaMeetingVO>>({}) // 表单数据
 const fileList = ref<Array<{ id: number; name: string; url: string }>>([]) // 附件列表
+const archiveFileList = ref<Array<{ id: number; name: string; url: string }>>([]) // 归档材料列表
 const attendeeList = ref<any[]>([]) // 参会人员列表
 const issueList = ref<any[]>([]) // 会议议题列表
 const meetingRooms = ref<any[]>([]) // 会议室列表
 const issueDetailRef = ref<InstanceType<typeof MeetingIssueDetail>>()
+const deptList = ref<Tree[]>([]) // 部门列表
 
 // 固定域名配置
 const FIXED_DOMAIN = 'http://182.109.52.126:49090'
@@ -215,6 +260,82 @@ const getFileTypeIcon = (fileName: string): string => {
   return '📄'
 }
 
+/** 获取议题状态类型 */
+const getIssueStatusType = (status: number) => {
+  // 根据项目规范，3表示通过，4表示否决
+  switch (status) {
+    case 3:
+      return 'success'
+    case 4:
+      return 'danger'
+    default:
+      return 'info'
+  }
+}
+
+/** 获取议题状态文本 */
+const getIssueStatusText = (status: number) => {
+  // 根据项目规范，3表示通过，4表示否决
+  switch (status) {
+    case 3:
+      return '通过'
+    case 4:
+      return '否决'
+    default:
+      return '未知'
+  }
+}
+
+/** 获取部门列表 */
+const getDeptList = async () => {
+  try {
+    const data = await DeptApi.getSimpleDeptList()
+    deptList.value = handleTree(data)
+  } catch (error) {
+    console.error('获取部门列表失败:', error)
+  }
+}
+
+/** 根据部门ID获取部门名称（支持多个部门） */
+const getDeptNames = (deptIds: string | string[] | undefined) => {
+  if (!deptIds) return '-'
+
+  let ids: string[] = []
+
+  // 统一处理输入为字符串或数组的情况
+  if (typeof deptIds === 'string') {
+    // 去除两边的方括号并按逗号分割
+    ids = deptIds.replace(/[\[\]]/g, '').split(',').map(id => id.trim()).filter(Boolean)
+  } else if (Array.isArray(deptIds)) {
+    ids = deptIds.map(id => String(id))
+  }
+
+  if (ids.length === 0) return '-'
+
+  // 递归查找树中的部门
+  const findDeptInTree = (tree: Tree[], id: string): Tree | undefined => {
+    for (const node of tree) {
+      if (String(node.id) === id) {
+        return node
+      }
+      if (node.children && node.children.length > 0) {
+        const found = findDeptInTree(node.children, id)
+        if (found) {
+          return found
+        }
+      }
+    }
+    return undefined
+  }
+
+  const deptNames = ids.map(id => {
+    const dept = findDeptInTree(deptList.value, id)
+    return dept ? dept.name : `未知部门(${id})`
+  })
+
+  return deptNames.join(', ')
+}
+
 /** 预览文件 */
 const previewFile = async (file: { id: number; name: string; url: string }) => {
   try {
@@ -264,8 +385,9 @@ const open = async (id: number) => {
     // 并行获取数据
     await Promise.all([
       getMeetingRooms(),
+      getDeptList(),
       OaMeetingApi.getOaMeeting(id)
-    ]).then(async ([_, meetingData]) => {
+    ]).then(async ([_, __, meetingData]) => {
       const processedData = { ...meetingData }
 
       // 处理日期和时间字段
@@ -339,6 +461,60 @@ const open = async (id: number) => {
       } catch (error) {
         console.warn('处理附件列表时出错:', error)
         fileList.value = []
+      }
+      
+      // 处理归档材料列表 - 安全地处理 archiveFileList
+      try {
+        if (processedData.archiveFileList) {
+          let fileIds: (number | string)[] = []
+
+          // 如果archiveFileList是字符串，则按逗号分割并过滤空值
+          if (typeof processedData.archiveFileList === 'string') {
+            // 处理类似 "[1958425949626216449]" 这样的格式
+            let cleanFileList = processedData.archiveFileList.trim()
+
+            // 去除首尾的方括号
+            if (cleanFileList.startsWith('[') && cleanFileList.endsWith(']')) {
+              cleanFileList = cleanFileList.substring(1, cleanFileList.length - 1)
+            }
+
+            // 按逗号分割并处理每个ID
+            if (cleanFileList) {
+              fileIds = cleanFileList
+                .split(',')
+                .map(id => {
+                  // 去除每个ID的首尾空格和引号
+                  return id.trim().replace(/^["']|["']$/g, '')
+                })
+                .filter(id => id !== '') // 过滤空值
+            }
+          } else if (Array.isArray(processedData.archiveFileList)) {
+            fileIds = processedData.archiveFileList
+          }
+
+          console.log('处理后的归档材料fileIds:', fileIds) // 调试信息
+
+          // 如果有文件ID，则获取文件详情
+          if (fileIds.length > 0) {
+            const filesResponse = await FileApi.getFilesByIds(fileIds)
+            const filesData = filesResponse.data || filesResponse
+
+            if (Array.isArray(filesData)) {
+              archiveFileList.value = filesData.map(file => ({
+                id: file.id,
+                name: file.name,
+                url: file.url
+              }))
+            }
+          } else {
+            archiveFileList.value = []
+          }
+        } else {
+          archiveFileList.value = []
+        }
+      } catch (error) {
+        console.warn('处理归档材料列表时出错:', error)
+        archiveFileList.value = []
       }
     })
 
