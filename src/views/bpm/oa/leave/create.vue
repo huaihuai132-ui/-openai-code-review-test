@@ -54,7 +54,7 @@
 <script lang="ts" setup>
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import * as LeaveApi from '@/api/bpm/form/leave'
-import { OaAnnualLeaveApi } from '@/api/business/oaannualleave'
+import { OaAnnualLeaveApi } from 'src/api/business/annualLeave'
 import { useTagsViewStore } from '@/store/modules/tagsView'
 import { BatchFileUpload } from '@/components/UploadFile'
 import PrintPreview from './components/PrintPreview.vue'

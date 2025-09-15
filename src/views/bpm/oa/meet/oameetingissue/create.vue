@@ -28,9 +28,9 @@
                     </el-form-item>
                     <!-- 添加汇报人字段 -->
                     <el-form-item label="汇报人" prop="reporterId">
-                        <el-select 
-                            v-model="formData.reporterId" 
-                            placeholder="请选择汇报人" 
+                        <el-select
+                            v-model="formData.reporterId"
+                            placeholder="请选择汇报人"
                             clearable
                             filterable
                             remote
@@ -50,7 +50,7 @@
                         <el-tree-select
                             v-model="formData.relevantDept"
                             :data="deptList"
-                            :props="{ 
+                            :props="{
                                 value: 'id',
                                 label: 'name',
                                 children: 'children',
@@ -67,32 +67,32 @@
                         />
                     </el-form-item>
                     <el-form-item label="议题概述" prop="description">
-                        <el-input 
-                            v-model="formData.description" 
-                            type="textarea" 
+                        <el-input
+                            v-model="formData.description"
+                            type="textarea"
                             :rows="3"
                             placeholder="请输入议题概述"
                             style="width: 500px;"
                         />
                     </el-form-item>
                     <el-form-item label="议题详细内容" prop="issueContent">
-                        <el-input 
-                            v-model="formData.issueContent" 
-                            type="textarea" 
+                        <el-input
+                            v-model="formData.issueContent"
+                            type="textarea"
                             :rows="6"
                             placeholder="请输入议题详细内容"
-                            style="width: 500px;" 
+                            style="width: 500px;"
                         />
                     </el-form-item>
                     <el-form-item label="议题附件" prop="fileList">
-                        <BatchFileUpload 
+                        <BatchFileUpload
                             ref="fileUploadRef"
                             v-model:fileList="formData.fileList"
                             mode="create"
                             directory="business"
-                            :max-files="5" 
-                            :concurrent="2" 
-                            :drag="true" 
+                            :max-files="5"
+                            :concurrent="2"
+                            :drag="true"
                         />
                     </el-form-item>
                     <el-form-item>
@@ -116,7 +116,7 @@ ref="timelineRef" :activity-nodes="activityNodes" :show-status-icon="false"
 </template>
 <script lang="ts" setup>
 import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
-import { OaMeetingIssueApi, OaMeetingIssueVO, FileAttachmentVO } from 'src/api/business/oameetingissue/index.ts'
+import { OaMeetingIssueApi, OaMeetingIssueVO, FileAttachmentVO } from '@/api/business/meet/meetingIssue/index.ts'
 import { BatchFileUpload } from '@/components/UploadFile'
 import { useTagsViewStore } from '@/store/modules/tagsView'
 import * as UserApi from '@/api/system/user'
@@ -185,7 +185,7 @@ const processDefinitionId = ref('')
 /** 搜索用户 */
 const searchUsers = (query: string) => {
   if (query) {
-    filteredUserList.value = userList.value.filter(user => 
+    filteredUserList.value = userList.value.filter(user =>
       user.nickname && user.nickname.toLowerCase().includes(query.toLowerCase())
     )
   } else {
@@ -251,12 +251,12 @@ const submitForm = async () => {
         ? formData.value.relevantDept.join(',')
         : ''
     } as unknown as OaMeetingIssueVO
-    
+
     // 审批相关：设置指定审批人
     if (startUserSelectTasks.value?.length > 0) {
       data.startUserSelectAssignees = startUserSelectAssignees.value
     }
-    
+
     await OaMeetingIssueApi.createOaMeetingIssue(data)
     message.success('发起成功')
     // 发送成功事件
@@ -324,7 +324,7 @@ const selectUserConfirm = (id: string, userList: any[]) => {
 onMounted(async () => {
   // 获取用户列表和部门列表
   await Promise.all([getUserList(), getDeptList()])
-  
+
   const processDefinitionDetail = await DefinitionApi.getProcessDefinition(
     undefined,
     processDefineKey

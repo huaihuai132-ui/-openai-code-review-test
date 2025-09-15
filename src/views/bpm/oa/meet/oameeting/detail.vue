@@ -74,8 +74,8 @@
             <!-- 会议议题 -->
             <el-descriptions-item label="会议议题" :span="2">
                 <div v-if="issueList.length > 0" class="flex flex-col gap-2">
-                    <div 
-                        v-for="issue in issueList" 
+                    <div
+                        v-for="issue in issueList"
                         :key="issue.id"
                         class="p-3 border rounded hover:bg-gray-50 cursor-pointer"
                         @click="openIssueDetail(issue.id)"
@@ -88,7 +88,7 @@
             </el-descriptions-item>
         </el-descriptions>
     </ContentWrap>
-    
+
     <!-- 议题详情弹窗 -->
     <OaMeetingIssueDetail ref="issueDetailRef" />
 </template>
@@ -97,8 +97,8 @@
 import {formatDate} from '@/utils/formatTime'
 import {DICT_TYPE} from '@/utils/dict'
 import {propTypes} from '@/utils/propTypes'
-import {OaMeetingApi} from '@/api/business/oameeting'
-import {OaMeetingRoomApi} from '@/api/business/oameetingroom'
+import {OaMeetingApi} from 'src/api/business/meet/meeting'
+import {OaMeetingRoomApi} from 'src/api/business/meet/meetingRoom'
 import {useRoute} from 'vue-router'
 import {onMounted, ref} from 'vue'
 import * as FileApi from '@/api/infra/file'
@@ -108,7 +108,7 @@ import {openPreviewWindow} from '@/utils/previewWindow'
 import {View} from '@element-plus/icons-vue'
 import {getDomainUrl} from '@/utils/domainConfig'
 import {useMessage} from '@/hooks/web/useMessage'
-import OaMeetingIssueDetail from '@/views/business/oameetingissue/OaMeetingIssueDetail.vue'
+import OaMeetingIssueDetail from '@/views/business/meet/meetingIssue/OaMeetingIssueDetail.vue'
 
 defineOptions({ name: 'OaMeetingDetail' })
 
@@ -123,7 +123,7 @@ const props = defineProps({
     id: propTypes.number.def(undefined),
     previewMode: propTypes.bool.def(false), // 是否为预览模式
     readonly: propTypes.bool.def(false), // 是否为只读模式
-    modelInfo: propTypes.object.def({}) // 模型信息 
+    modelInfo: propTypes.object.def({}) // 模型信息
 })
 
 const detailLoading = ref(false) // 表单的加载中
@@ -264,17 +264,17 @@ const processFileList = async (fileData: string | any[] | undefined) => {
   try {
     if (fileData) {
       let fileIds: (number | string)[] = []
-      
+
       // 如果fileList是字符串，则按逗号分割并过滤空值
       if (typeof fileData === 'string') {
         // 处理类似 "[1958425949626216449]" 这样的格式
         let cleanFileList = fileData.trim()
-        
+
         // 去除首尾的方括号
         if (cleanFileList.startsWith('[') && cleanFileList.endsWith(']')) {
           cleanFileList = cleanFileList.substring(1, cleanFileList.length - 1)
         }
-        
+
         // 按逗号分割并处理每个ID
         if (cleanFileList) {
           fileIds = cleanFileList
@@ -288,12 +288,12 @@ const processFileList = async (fileData: string | any[] | undefined) => {
       } else if (Array.isArray(fileData)) {
         fileIds = fileData
       }
-      
+
       // 如果有文件ID，则获取文件详情
       if (fileIds.length > 0) {
         const filesResponse = await FileApi.getFilesByIds(fileIds)
         const filesData = filesResponse.data || filesResponse
-        
+
         if (Array.isArray(filesData)) {
           fileList.value = filesData.map(file => ({
             id: file.id,
@@ -330,9 +330,9 @@ const getInfo = async () => {
         // 获取会议室列表
         await getMeetingRooms()
         const meetingData = await OaMeetingApi.getOaMeeting(props.id || queryId)
-        
+
         const processedData = { ...meetingData }
-        
+
         // 处理日期和时间字段
         const processTimestamp = (value: any) => {
           if (value && value !== 0) {
@@ -340,18 +340,18 @@ const getInfo = async () => {
           }
           return undefined
         }
-        
+
         processedData.meetDate = processTimestamp(processedData.meetDate)
         processedData.startTime = processTimestamp(processedData.startTime)
         processedData.endTime = processTimestamp(processedData.endTime)
         detailData.value = processedData
-        
+
         // 处理参会人员
         attendeeList.value = processedData.attendeeList || []
-        
+
         // 处理会议议题
         issueList.value = processedData.issueList || []
-        
+
         // 处理附件列表
         await processFileList(processedData.fileList)
     } finally {

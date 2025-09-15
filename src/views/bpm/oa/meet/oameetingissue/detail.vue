@@ -7,13 +7,13 @@
             <el-descriptions-item label="申请时间">
                 {{ formatToDateTime(detailData.createTime, 'YYYY-MM-DD HH:mm:ss') || '未设置' }}
             </el-descriptions-item>
-            <el-descriptions-item label="议题类型"> 
+            <el-descriptions-item label="议题类型">
                 <dict-tag :type="DICT_TYPE.MEET_ISSUE_TYPE" :value="detailData.issueType" />
             </el-descriptions-item>
             <el-descriptions-item label="上会类型">
                 <dict-tag :type="DICT_TYPE.MEET_TYPE" :value="detailData.meetingType" />
             </el-descriptions-item>
-            
+
             <!-- 汇报人和相关部门 -->
             <el-descriptions-item label="汇报人">
                 {{ getUserName(detailData.reporterId) || '-' }}
@@ -21,17 +21,17 @@
             <el-descriptions-item label="相关部门">
                 {{ getDeptNames(detailData.relevantDept) || '-' }}
             </el-descriptions-item>
-            
+
             <!-- 添加状态显示字段，优先显示议题状态 -->
             <el-descriptions-item label="状态">
-                <dict-tag 
-                  :type="DICT_TYPE.ISSUE_STATUS" 
-                  :value="detailData.issueStatus" 
+                <dict-tag
+                  :type="DICT_TYPE.ISSUE_STATUS"
+                  :value="detailData.issueStatus"
                   v-if="detailData.issueStatus !== undefined && detailData.issueStatus !== null"
                 />
-                <dict-tag 
-                  :type="DICT_TYPE.ISSUE_AUDIT_STATUS" 
-                  :value="detailData.status" 
+                <dict-tag
+                  :type="DICT_TYPE.ISSUE_AUDIT_STATUS"
+                  :value="detailData.status"
                   v-else
                 />
             </el-descriptions-item>
@@ -64,11 +64,11 @@
         </el-descriptions>
     </ContentWrap>
 </template>
-<script lang="ts" setup> 
+<script lang="ts" setup>
 import { formatToDateTime } from '@/utils/dateUtil'
-import { getIntDictOptions, DICT_TYPE } from '@/utils/dict' 
+import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { propTypes } from '@/utils/propTypes'
-import { OaMeetingIssueApi } from 'src/api/business/oameetingissue/index.ts'
+import { OaMeetingIssueApi } from '@/api/business/meet/meetingIssue/index.ts'
 import { useRoute } from 'vue-router'
 import { ref, onMounted } from 'vue'
 import * as UserApi from '@/api/system/user'
@@ -95,7 +95,7 @@ const props = defineProps({
     id: propTypes.number.def(undefined),
     previewMode: propTypes.bool.def(false), // 是否为预览模式
     readonly: propTypes.bool.def(false), // 是否为只读模式
-    modelInfo: propTypes.object.def({}) // 模型信息 
+    modelInfo: propTypes.object.def({}) // 模型信息
 })
 const detailLoading = ref(false) // 表单的加载中
 const detailData = ref<any>({}) // 详情数据
@@ -278,7 +278,7 @@ const processFileList = async (fileData: string | any[] | undefined) => {
   try {
     if (fileData) {
       let fileIds: (number | string)[] = []
-      
+
       // 如果fileList是字符串，则按逗号分割并过滤空值
       if (typeof fileData === 'string') {
         const cleanFileList = fileData.replace(/^\[|\]$/g, '')
@@ -286,12 +286,12 @@ const processFileList = async (fileData: string | any[] | undefined) => {
       } else if (Array.isArray(fileData)) {
         fileIds = fileData
       }
-      
+
       // 如果有文件ID，则获取文件详情
       if (fileIds.length > 0) {
         const filesResponse = await FileApi.getFilesByIds(fileIds)
         const filesData = filesResponse.data || filesResponse
-        
+
         if (Array.isArray(filesData)) {
           fileList.value = filesData.map(file => ({
             id: file.id,

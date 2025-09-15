@@ -51,7 +51,7 @@
 <script lang="ts" setup>
 import { formatDate } from '@/utils/formatTime'
 import { propTypes } from '@/utils/propTypes'
-import { FinanceLeaseApi, type FinanceLeaseVO } from '@/api/business/financelease'
+import { FinanceLeaseApi, type FinanceLeaseVO } from 'src/api/business/finance/financelease'
 
 defineOptions({ name: 'BpmOAFinanceLeaseDetail' })
 
