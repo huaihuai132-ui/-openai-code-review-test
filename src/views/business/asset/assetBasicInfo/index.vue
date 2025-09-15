@@ -7,7 +7,24 @@
           <el-input v-model="searchForm.assetName" placeholder="请输入资产名称" clearable />
         </el-form-item>
         <el-form-item label="区域">
-          <el-input v-model="searchForm.area" placeholder="请输入区域/地址关键词" clearable />
+          <el-select v-model="searchForm.area" placeholder="请选择区域" clearable style="width: 150px">
+            <el-option 
+              v-for="area in areaOptions" 
+              :key="area.value" 
+              :label="area.label" 
+              :value="area.value" 
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="街道">
+          <el-select v-model="searchForm.street" placeholder="请选择街道" clearable style="width: 150px" :disabled="!searchForm.area">
+            <el-option 
+              v-for="street in searchStreetOptions" 
+              :key="street.value" 
+              :label="street.label" 
+              :value="street.value" 
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="是否办证过户">
           <el-select v-model="searchForm.isTransferred" placeholder="请选择状态" clearable>
@@ -40,8 +57,10 @@
       </div>
 
       <el-table :data="filteredTableData" style="width: 100%" stripe>
+        <el-table-column prop="areaName" label="区域" min-width="100" />
+        <el-table-column prop="streetName" label="街道" min-width="120" />
         <el-table-column prop="assetName" label="资产名称" min-width="120" />
-        <el-table-column prop="address" label="地址" min-width="180" />
+        <el-table-column prop="address" label="详细地址" min-width="180" />
         <el-table-column prop="transferUnit" label="移交单位" min-width="140" />
         <el-table-column prop="originalOwnershipUnit" label="原产权单位" min-width="140" />
         <el-table-column prop="buildingArea" label="房产面积" min-width="100">
@@ -125,16 +144,106 @@ const formData = ref({})
 const searchForm = reactive({
   assetName: '',
   area: '',
+  street: '',
   isTransferred: '',
   rentalMethod: '',
 })
+
+// 区域街道配置数据
+const areaOptions = ref([])
+const searchStreetOptions = ref([])
+
+// 区域街道配置数据 (完整版本)
+const areaStreetConfig = {
+  areaStreetConfig: [
+    {
+      areaCode: '001',
+      areaName: '月湖区',
+      streets: [
+        { streetCode: '001001', streetName: '童家街道' },
+        { streetCode: '001002', streetName: '夏埠街道' },
+        { streetCode: '001003', streetName: '四青街道' },
+        { streetCode: '001004', streetName: '梅园街道' },
+        { streetCode: '001005', streetName: '江边街道' },
+        { streetCode: '001006', streetName: '交通街道' },
+        { streetCode: '001007', streetName: '东湖街道' },
+        { streetCode: '001008', streetName: '白露街道' }
+      ]
+    },
+    {
+      areaCode: '002',
+      areaName: '贵溪市',
+      streets: [
+        { streetCode: '002001', streetName: '东门街道' },
+        { streetCode: '002002', streetName: '雄石街道' },
+        { streetCode: '002003', streetName: '花园街道' },
+        { streetCode: '002004', streetName: '泗汥镇' },
+        { streetCode: '002005', streetName: '河潭镇' },
+        { streetCode: '002006', streetName: '周坊镇' },
+        { streetCode: '002007', streetName: '鸿塘镇' },
+        { streetCode: '002008', streetName: '志光镇' },
+        { streetCode: '002009', streetName: '流口镇' },
+        { streetCode: '002010', streetName: '罗河镇' },
+        { streetCode: '002011', streetName: '金屯镇' },
+        { streetCode: '002012', streetName: '塘湾镇' },
+        { streetCode: '002013', streetName: '文坊镇' },
+        { streetCode: '002014', streetName: '冷水镇' },
+        { streetCode: '002015', streetName: '龙虎山镇' },
+        { streetCode: '002016', streetName: '上清镇' },
+        { streetCode: '002017', streetName: '滨江镇' },
+        { streetCode: '002018', streetName: '白田乡' },
+        { streetCode: '002019', streetName: '雷溪乡' },
+        { streetCode: '002020', streetName: '彭湾乡' },
+        { streetCode: '002021', streetName: '樟坪畲族乡' },
+        { streetCode: '002022', streetName: '耳口乡' },
+        { streetCode: '002023', streetName: '余家乡' },
+        { streetCode: '002024', streetName: '塔桥园艺场' },
+        { streetCode: '002025', streetName: '河潭垦殖场' },
+        { streetCode: '002026', streetName: '西窯林场' },
+        { streetCode: '002027', streetName: '双圳林场' },
+        { streetCode: '002028', streetName: '耳口林场' },
+        { streetCode: '002029', streetName: '冷水林场' },
+        { streetCode: '002030', streetName: '三县岭林场' },
+        { streetCode: '002031', streetName: '上清林场' }
+      ]
+    },
+    {
+      areaCode: '003',
+      areaName: '余江区',
+      streets: [
+        { streetCode: '003001', streetName: '邓埠镇' },
+        { streetCode: '003002', streetName: '锦江镇' },
+        { streetCode: '003003', streetName: '画桥镇' },
+        { streetCode: '003004', streetName: '潢溪镇' },
+        { streetCode: '003005', streetName: '中童镇' },
+        { streetCode: '003006', streetName: '马荃镇' },
+        { streetCode: '003007', streetName: '黄庄乡' },
+        { streetCode: '003008', streetName: '春涛乡' },
+        { streetCode: '003009', streetName: '平定乡' },
+        { streetCode: '003010', streetName: '杨溪乡' },
+        { streetCode: '003011', streetName: '洪湖乡' },
+        { streetCode: '003012', streetName: '高公寨林场' },
+        { streetCode: '003013', streetName: '水产场' },
+        { streetCode: '003014', streetName: '大桥良种场' },
+        { streetCode: '003015', streetName: '张公桥农场' },
+        { streetCode: '003016', streetName: '塘潮源林场' },
+        { streetCode: '003017', streetName: '青年农场' },
+        { streetCode: '003018', streetName: '刘垦场' }
+      ]
+    }
+  ]
+}
 
 // 响应式数据
 const tableData = ref([
   {
     id: 1,
-    assetName: '林荫东路南侧C栋9号',
-    address: '江西省鹰潭市林荫东路南侧C栋9号',
+    assetName: '林荫东路南侧C检9号',
+    area: '001',
+    areaName: '月湖区',
+    street: '001005',
+    streetName: '江边街道',
+    address: '林荫东路南侧C检9号',
     transferUnit: '市财政局',
     originalOwnershipUnit: '原国资委',
     buildingArea: 120,
@@ -150,8 +259,12 @@ const tableData = ref([
   },
   {
     id: 2,
-    assetName: '林荫东路南侧C栋8号',
-    address: '江西省鹰潭市林荫东路南侧C栋8号',
+    assetName: '林荫东路南侧C检8号',
+    area: '001',
+    areaName: '月湖区',
+    street: '001005',
+    streetName: '江边街道',
+    address: '林荫东路南侧C检8号',
     transferUnit: '市财政局',
     originalOwnershipUnit: '原国资委',
     buildingArea: 120,
@@ -168,7 +281,11 @@ const tableData = ref([
   {
     id: 3,
     assetName: '民昇佳苑21号楼-02＃、01022#、01023#店面',
-    address: '江西省鹰潭市民昇佳苑21号楼',
+    area: '002',
+    areaName: '贵溪市',
+    street: '002001',
+    streetName: '东门街道',
+    address: '民昇佳苑21号楼',
     transferUnit: '市财政局',
     originalOwnershipUnit: '原国资委',
     buildingArea: 150,
@@ -184,6 +301,11 @@ const tableData = ref([
   },
   {
     id: 4,
+    assetName: '林荫东路南侧C检8号',
+    area: '001',
+    areaName: '月湖区',
+    street: '001005',
+    streetName: '江边街道',
     assetName: '环城西路6号-2#店面',
     address: '江西省鹰潭市环城西路6号',
     transferUnit: '市财政局',
@@ -201,6 +323,11 @@ const tableData = ref([
   },
   {
     id: 5,
+    assetName: '林荫东路南侧C检8号',
+    area: '001',
+    areaName: '月湖区',
+    street: '001005',
+    streetName: '江边街道',
     assetName: '民昇佳苑22号楼-01＃店面',
     address: '江西省鹰潭市民昇佳苑22号楼',
     transferUnit: '市财政局',
@@ -218,6 +345,11 @@ const tableData = ref([
   },
   {
     id: 6,
+    assetName: '林荫东路南侧C检8号',
+    area: '001',
+    areaName: '月湖区',
+    street: '001005',
+    streetName: '江边街道',
     assetName: '岱宝山路9号（1-4层）',
     address: '江西省鹰潭市岱宝山路9号',
     transferUnit: '市财政局',
@@ -235,6 +367,11 @@ const tableData = ref([
   },
   {
     id: 7,
+    assetName: '林荫东路南侧C检8号',
+    area: '001',
+    areaName: '月湖区',
+    street: '001005',
+    streetName: '江边街道',
     assetName: '环城西路6号-1#店面',
     address: '江西省鹰潭市环城西路6号',
     transferUnit: '市财政局',
@@ -252,6 +389,11 @@ const tableData = ref([
   },
   {
     id: 8,
+    assetName: '林荫东路南侧C检8号',
+    area: '001',
+    areaName: '月湖区',
+    street: '001005',
+    streetName: '江边街道',
     assetName: '民昇佳苑22号楼-02＃店面',
     address: '江西省鹰潭市民昇佳苑22号楼',
     transferUnit: '市财政局',
@@ -269,6 +411,11 @@ const tableData = ref([
   },
   {
     id: 9,
+    assetName: '林荫东路南侧C检8号',
+    area: '001',
+    areaName: '月湖区',
+    street: '001005',
+    streetName: '江边街道',
     assetName: '民昇佳苑22号楼-06#店面',
     address: '江西省鹰潭市民昇佳苑22号楼',
     transferUnit: '市财政局',
@@ -286,6 +433,11 @@ const tableData = ref([
   },
   {
     id: 10,
+    assetName: '林荫东路南侧C检8号',
+    area: '001',
+    areaName: '月湖区',
+    street: '001005',
+    streetName: '江边街道',
     assetName: '莲花路菜场南侧',
     address: '江西省鹰潭市莲花路菜场南侧',
     transferUnit: '市财政局',
@@ -303,6 +455,11 @@ const tableData = ref([
   },
   {
     id: 11,
+    assetName: '林荫东路南侧C检8号',
+    area: '001',
+    areaName: '月湖区',
+    street: '001005',
+    streetName: '江边街道',
     assetName: '莲花南路十区17-18号一至三楼商业房',
     address: '江西省鹰潭市莲花南路十区17-18号',
     transferUnit: '市财政局',
@@ -320,6 +477,11 @@ const tableData = ref([
   },
   {
     id: 12,
+    assetName: '林荫东路南侧C检8号',
+    area: '001',
+    areaName: '月湖区',
+    street: '001005',
+    streetName: '江边街道',
     assetName: '民欣佳园24号楼-02#店面',
     address: '江西省鹰潭市民欣佳园24号楼',
     transferUnit: '市财政局',
@@ -374,6 +536,10 @@ const handleAdd = () => {
   isEdit.value = false
   formData.value = {
     assetName: '',
+    area: '',
+    areaName: '',
+    street: '',
+    streetName: '',
     address: '',
     transferUnit: '',
     originalOwnershipUnit: '',
