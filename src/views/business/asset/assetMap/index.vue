@@ -114,6 +114,15 @@
       </div>
     </el-dialog>
 
+    <!-- 地址资产列表弹窗 -->
+    <AddressAssetListDialog
+      v-model:visible="showAddressAssetList"
+      :address="currentAddress"
+      :asset-list="currentAddressAssets"
+      @view-detail="handleViewAssetDetail"
+      @locate-asset="handleLocateAsset"
+    />
+
     <!-- 坐标定位弹窗 -->
     <el-dialog v-model="showLocationInput" title="手动定位坐标" width="400px">
       <div class="location-input">
@@ -187,6 +196,7 @@ import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Location } from '@element-plus/icons-vue'
 import AMapLoader from '@amap/amap-jsapi-loader'
+import AddressAssetListDialog from './components/AddressAssetListDialog.vue'
 
 // AMap 配置（支持 .env 注入）
 const AMAP_KEY = import.meta?.env?.VITE_AMAP_KEY || '247d27bc71d901af6f34cbd6077da5bb'
@@ -212,6 +222,11 @@ const map = ref(null)
 const showAssetDetail = ref(false)
 const selectedAsset = ref(null)
 const mapLoadError = ref(false) // 新增：地图加载失败标志
+
+// 地址资产列表弹窗相关数据
+const showAddressAssetList = ref(false)
+const currentAddress = ref('')
+const currentAddressAssets = ref([])
 const showLocationInput = ref(false) // 坐标输入弹窗显示状态
 const locationForm = ref({
   lng: '117.069202',
@@ -683,28 +698,49 @@ const addAssetMarkers = () => {
           zIndex: asset.isTransferred ? 100 : 50, // 已过户的资产标记层级更高
         })
 
-        // 添加点击事件 - 定位并显示信息窗
+        // 添加点击事件 - 先跳转地图再显示弹窗
         marker.on('click', () => {
           if (map.value && asset.lng && asset.lat) {
             const lngNum = parseFloat(asset.lng)
             const latNum = parseFloat(asset.lat)
             if (!isNaN(lngNum) && !isNaN(latNum)) {
+              // 首先跳转地图到对应位置
               map.value.setZoomAndCenter(16, [lngNum, latNum], true, 800)
-              // 构造小弹窗内容（内联样式避免 scoped 影响）
-              const content = `
-                <div style="min-width:200px;max-width:260px;font-size:12px;line-height:1.4;">
-                  <div style="font-weight:600;margin-bottom:6px;color:#303133;">${asset.assetName}</div>
-                  <div style="color:#606266;">${asset.address}</div>
-                </div>
-              `
-              try {
-                if (infoWindow.value) {
-                  infoWindow.value.setContent(content)
-                  // 延迟打开，使视图移动后展示更平滑
-                  setTimeout(() => infoWindow.value.open(map.value, [lngNum, latNum]), 300)
-                }
-              } catch (iwOpenErr) {
-                console.warn('打开信息窗失败:', iwOpenErr)
+              
+              // 显示跳转反馈
+              ElMessage({
+                message: `正在定位到: ${asset.assetName}`,
+                type: 'info',
+                duration: 1500
+              })
+              
+              // 检查是否有多个资产在同一地址
+              const addressAssets = getAssetsByAddress(asset.address)
+              if (addressAssets.length > 1) {
+                // 多个资产，延迟显示列表弹窗
+                setTimeout(() => {
+                  currentAddress.value = asset.address
+                  currentAddressAssets.value = addressAssets
+                  showAddressAssetList.value = true
+                }, 900)
+              } else {
+                // 单个资产，延迟显示信息窗
+                setTimeout(() => {
+                  const content = `
+                    <div style="min-width:200px;max-width:260px;font-size:12px;line-height:1.4;">
+                      <div style="font-weight:600;margin-bottom:6px;color:#303133;">${asset.assetName}</div>
+                      <div style="color:#606266;">${asset.address}</div>
+                    </div>
+                  `
+                  try {
+                    if (infoWindow.value) {
+                      infoWindow.value.setContent(content)
+                      infoWindow.value.open(map.value, [lngNum, latNum])
+                    }
+                  } catch (iwOpenErr) {
+                    console.warn('打开信息窗失败:', iwOpenErr)
+                  }
+                }, 900)
               }
               console.log(`定位到资产: ${asset.assetName}, 坐标: ${lngNum}, ${latNum}`)
             }
@@ -738,8 +774,62 @@ const addAssetMarkers = () => {
 const selectAsset = (asset) => {
   selectedAsset.value = asset
   console.log('====selectedAsset.value======', selectedAsset.value)
-  // showAssetDetail.value = true
+  
+  // 首先跳转地图到对应位置
+  if (map.value && asset.lng && asset.lat) {
+    const lng = parseFloat(asset.lng)
+    const lat = parseFloat(asset.lat)
 
+    if (!isNaN(lng) && !isNaN(lat)) {
+      // 使用动画效果平滑移动到资产位置
+      map.value.setZoomAndCenter(16, [lng, lat], true, 800)
+      updateCurrentCoordinates()
+      
+      // 显示跳转反馈
+      ElMessage({
+        message: `正在定位到: ${asset.assetName}`,
+        type: 'info',
+        duration: 1500
+      })
+
+      // 检查是否有多个资产在同一地址
+      const addressAssets = getAssetsByAddress(asset.address)
+      if (addressAssets.length > 1) {
+        // 多个资产，延迟显示列表弹窗（等待地图跳转完成）
+        setTimeout(() => {
+          currentAddress.value = asset.address
+          currentAddressAssets.value = addressAssets
+          showAddressAssetList.value = true
+        }, 900) // 稍微延迟一点，确保地图跳转动画完成
+      } else {
+        // 单个资产，延迟显示信息窗
+        setTimeout(() => {
+          const content = `
+            <div style="min-width:200px;max-width:260px;font-size:12px;line-height:1.4;">
+              <div style="font-weight:600;margin-bottom:6px;color:#303133;">${asset.assetName}</div>
+              <div style="color:#606266;">${asset.address}</div>
+            </div>
+          `
+          if (infoWindow.value) {
+            infoWindow.value.setContent(content)
+            infoWindow.value.open(map.value, [lng, lat])
+          }
+        }, 900)
+      }
+    } else {
+      console.warn(`资产 ${asset.assetName} 的坐标无效:`, asset.lng, asset.lat)
+      ElMessage.warning('该资产坐标无效，无法定位')
+    }
+  }
+}
+
+// 根据地址获取资产列表
+const getAssetsByAddress = (address) => {
+  return assetList.value.filter(asset => asset.address === address)
+}
+
+// 定位到特定资产
+const locateToAsset = (asset) => {
   // 如果地图存在，精确定位到该资产
   if (map.value && asset.lng && asset.lat) {
     const lng = parseFloat(asset.lng)
@@ -777,6 +867,18 @@ const selectAsset = (asset) => {
       ElMessage.warning('该资产坐标无效，无法定位')
     }
   }
+}
+
+// 处理从地址资产列表弹窗查看详情
+const handleViewAssetDetail = (asset) => {
+  selectedAsset.value = asset
+  showAssetDetail.value = true
+}
+
+// 处理从地址资产列表弹窗定位资产
+const handleLocateAsset = (asset) => {
+  locateToAsset(asset)
+  ElMessage.success(`已定位到资产: ${asset.assetName}`)
 }
 
 // 刷新地图
@@ -972,58 +1074,6 @@ const geocodeAddress = (address) => {
   })
 }
 
-// // 批量校准所有资产坐标
-// const calibrateAllCoordinates = async (force = false) => {
-//   if (!map.value || !window.AMap) return
-//   if (isGeocoding.value) return
-
-//   isGeocoding.value = true
-//   geocodeProgress.value = { completed: 0, total: assetList.value.length }
-
-//   let successCount = 0
-//   for (const asset of assetList.value) {
-//     try {
-//       // 已有合法坐标且不强制时跳过
-//       const hasValid =
-//         typeof asset.lng === 'number' &&
-//         typeof asset.lat === 'number' &&
-//         asset.lng >= 73 &&
-//         asset.lng <= 135 &&
-//         asset.lat >= 18 &&
-//         asset.lat <= 54
-//       if (hasValid && !force) {
-//         geocodeProgress.value.completed++
-//         continue
-//       }
-
-//       // 拼接更完整的地址：前缀 + 资产地址（若已含前缀则直接用）
-//       const fullAddress = asset.address.includes('江西省鹰潭市月湖区')
-//         ? asset.address
-//         : `江西省鹰潭市月湖区${asset.address}`
-
-//       const coord = await geocodeAddress(fullAddress)
-//       asset.lng = Number(coord.lng)
-//       asset.lat = Number(coord.lat)
-//       successCount++
-//     } catch (err) {
-//       console.warn(`地理编码失败: ${asset.assetName} -> ${asset.address}`, err)
-//     } finally {
-//       geocodeProgress.value.completed++
-//     }
-//   }
-
-//   isGeocoding.value = false
-//   ElMessage.success(`坐标校准完成：成功 ${successCount} / 共 ${assetList.value.length}`)
-
-//   // 刷新地图标记并自适应视图
-//   refreshMap()
-//   // 广播数据更新，其他页面同步
-//   window.dispatchEvent(
-//     new CustomEvent('assetDataUpdated', {
-//       detail: { data: assetList.value },
-//     }),
-//   )
-// }
 
 // 执行地点搜索（使用 PlaceSearch）
 const searchPlaces = () => {

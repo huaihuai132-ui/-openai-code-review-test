@@ -56,64 +56,42 @@
         </el-button>
       </div>
 
-      <el-table :data="filteredTableData" style="width: 100%" stripe>
-        <el-table-column prop="areaName" label="区域" min-width="100" />
-        <el-table-column prop="streetName" label="街道" min-width="120" />
-        <el-table-column prop="assetName" label="资产名称" min-width="120" />
-        <el-table-column prop="address" label="详细地址" min-width="180" />
-        <el-table-column prop="transferUnit" label="移交单位" min-width="140" />
-        <el-table-column prop="originalOwnershipUnit" label="原产权单位" min-width="140" />
-        <el-table-column prop="buildingArea" label="房产面积" min-width="100">
+      <el-table :data="filteredTableData" style="width: 100%" stripe table-layout="fixed">
+        <el-table-column prop="areaName" label="区域" width="80" align="center" header-align="center" />
+        <el-table-column prop="streetName" label="街道" width="100" align="center" header-align="center" />
+        <el-table-column prop="assetName" label="资产名称" width="150" show-overflow-tooltip align="center" header-align="center" />
+        <el-table-column prop="address" label="详细地址" width="150" show-overflow-tooltip align="center" header-align="center" />
+        <el-table-column prop="buildingArea" label="房产面积" width="90" align="center" header-align="center">
           <template #default="scope"> {{ scope.row.buildingArea }}㎡ </template>
         </el-table-column>
-        <el-table-column prop="landArea" label="土地面积" min-width="100">
+        <el-table-column prop="landArea" label="土地面积" width="90" align="center" header-align="center">
           <template #default="scope"> {{ scope.row.landArea }}㎡ </template>
         </el-table-column>
-        <el-table-column prop="propertyNumber" label="产权证号" min-width="140" />
-        <el-table-column prop="isTransferred" label="是否办证过户" min-width="120">
+        <el-table-column prop="isTransferred" label="办证状态" width="100" align="center" header-align="center">
           <template #default="scope">
-            <el-tag :type="scope.row.isTransferred ? 'success' : 'warning'">
+            <el-tag :type="scope.row.isTransferred ? 'success' : 'warning'" size="small">
               {{ scope.row.isTransferred ? '已过户' : '未过户' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="usage" label="使用情况" min-width="100" />
-        <el-table-column prop="rentalMethod" label="出租方式" min-width="100" />
-        <el-table-column prop="rent" label="租金" min-width="100">
+        <el-table-column prop="usage" label="使用情况" width="80" align="center" header-align="center" />
+        <el-table-column prop="rentalMethod" label="出租方式" width="80" align="center" header-align="center" />
+        <el-table-column prop="rent" label="租金" width="90" align="center" header-align="center">
           <template #default="scope"> ¥{{ scope.row.rent }} </template>
         </el-table-column>
-        <el-table-column prop="value" label="价值(万元)" min-width="100">
+        <el-table-column prop="value" label="价值(万元)" width="90" align="center" header-align="center">
           <template #default="scope"> {{ scope.row.value }}万元 </template>
         </el-table-column>
-        <el-table-column prop="transferIssues" label="办证过程中遇到的问题" min-width="150">
+        <el-table-column label="操作"  width="250" fixed="right" align="center" header-align="center">
           <template #default="scope">
-            <el-tooltip
-              v-if="scope.row.transferIssues"
-              :content="scope.row.transferIssues"
-              placement="top"
-            >
-              <span class="issue-text">{{ scope.row.transferIssues }}</span>
+            <el-button size="small" text @click="handleView(scope.row)">查看</el-button>
+            <el-button size="small" text type="primary" @click="handleEdit(scope.row)">编辑</el-button>
+            <el-button size="small" text type="danger" @click="handleDelete(scope.row)">删除</el-button>
+            <el-tooltip content="地图定位" placement="top">
+              <el-button size="small" circle @click="handleLocate(scope.row)">
+                <el-icon><Location /></el-icon>
+              </el-button>
             </el-tooltip>
-            <span v-else>-</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="allocationFile" label="划拨文件" min-width="120">
-          <template #default="scope">
-            <el-button
-              v-if="scope.row.allocationFile"
-              type="text"
-              size="small"
-              @click="viewFile(scope.row)"
-            >
-              查看文件
-            </el-button>
-            <span v-else>-</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
-          <template #default="scope">
-            <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -126,19 +104,33 @@
       :data="formData"
       @submit="handleSubmit"
     />
+
+    <!-- 查看详情对话框 -->
+    <AssetDetailDialog
+      v-model:visible="viewDialogVisible"
+      :data="viewData"
+      @edit="handleEditFromDetail"
+      @view-file="handleViewFile"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete, Search, Refresh } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Search, Refresh, Location } from '@element-plus/icons-vue'
 import AssetBasicInfoDialog from './components/AssetBasicInfoDialog.vue'
+import AssetDetailDialog from './components/AssetDetailDialog.vue'
+import { useRouter } from 'vue-router'
 
 // 对话框相关
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formData = ref({})
+
+// 查看对话框相关
+const viewDialogVisible = ref(false)
+const viewData = ref({})
 
 // 搜索表单
 const searchForm = reactive({
@@ -301,13 +293,12 @@ const tableData = ref([
   },
   {
     id: 4,
-    assetName: '林荫东路南侧C检8号',
+    assetName: '环城西路6号-2#店面',
     area: '001',
     areaName: '月湖区',
-    street: '001005',
-    streetName: '江边街道',
-    assetName: '环城西路6号-2#店面',
-    address: '江西省鹰潭市环城西路6号',
+    street: '001006',
+    streetName: '交通街道',
+    address: '环城西路6号',
     transferUnit: '市财政局',
     originalOwnershipUnit: '原国资委',
     buildingArea: 200,
@@ -323,13 +314,12 @@ const tableData = ref([
   },
   {
     id: 5,
-    assetName: '林荫东路南侧C检8号',
-    area: '001',
-    areaName: '月湖区',
-    street: '001005',
-    streetName: '江边街道',
     assetName: '民昇佳苑22号楼-01＃店面',
-    address: '江西省鹰潭市民昇佳苑22号楼',
+    area: '002',
+    areaName: '贵溪市',
+    street: '002002',
+    streetName: '雄石街道',
+    address: '民昇佳苑22号楼',
     transferUnit: '市财政局',
     originalOwnershipUnit: '原国资委',
     buildingArea: 100,
@@ -499,20 +489,52 @@ const tableData = ref([
   },
 ])
 
+// 初始化区域街道数据
+const initAreaStreetOptions = () => {
+  areaOptions.value = areaStreetConfig.areaStreetConfig.map(area => ({
+    label: area.areaName,
+    value: area.areaCode,
+    streets: area.streets
+  }))
+}
+
+// 监听搜索区域变化
+watch(() => searchForm.area, (newAreaCode) => {
+  searchForm.street = '' // 清空街道选择
+  
+  if (newAreaCode) {
+    const selectedArea = areaStreetConfig.areaStreetConfig.find(area => area.areaCode === newAreaCode)
+    if (selectedArea) {
+      searchStreetOptions.value = selectedArea.streets.map(street => ({
+        label: street.streetName,
+        value: street.streetCode
+      }))
+    }
+  } else {
+    searchStreetOptions.value = []
+  }
+})
+const router = useRouter()
+// 地图定位
+const handleLocate = (row) => {
+  if (!row.id) return
+  router.push({ name: 'assetMap', query: { assetId: row.id } })
+}
+
 // 计算属性：过滤后的表格数据
 const filteredTableData = computed(() => {
   return tableData.value.filter((item) => {
     const nameMatch = !searchForm.assetName || item.assetName.includes(searchForm.assetName)
-    const areaMatch = !searchForm.area || (item.address && item.address.includes(searchForm.area))
-    const statusMatch = !searchForm.isTransferred || item.isTransferred === searchForm.isTransferred
-    const rentalMethodMatch =
-      !searchForm.rentalMethod || item.rentalMethod === searchForm.rentalMethod
-    return nameMatch && areaMatch && statusMatch && rentalMethodMatch
+    const areaMatch = !searchForm.area || item.area === searchForm.area
+    const streetMatch = !searchForm.street || item.street === searchForm.street
+    const statusMatch = searchForm.isTransferred === '' || item.isTransferred === searchForm.isTransferred
+    const rentalMethodMatch = !searchForm.rentalMethod || item.rentalMethod === searchForm.rentalMethod
+    return nameMatch && areaMatch && streetMatch && statusMatch && rentalMethodMatch
   })
 })
 
 // 查看文件
-const viewFile = (row) => {
+const handleViewFile = (row) => {
   ElMessage.info(`查看文件：${row.allocationFile}`)
   // 这里可以添加实际的文件查看逻辑，比如打开新窗口或下载文件
 }
@@ -526,8 +548,21 @@ const handleSearch = () => {
 const resetSearch = () => {
   searchForm.assetName = ''
   searchForm.area = ''
+  searchForm.street = ''
   searchForm.isTransferred = ''
   searchForm.rentalMethod = ''
+}
+
+// 查看资产详情
+const handleView = (row) => {
+  viewData.value = { ...row }
+  viewDialogVisible.value = true
+}
+
+// 从详情组件跳转到编辑
+const handleEditFromDetail = (data) => {
+  viewDialogVisible.value = false
+  handleEdit(data)
 }
 
 // 添加资产
@@ -551,6 +586,7 @@ const handleAdd = () => {
     rentalMethod: '',
     rent: '',
     value: '',
+    assessmentDate: '', // 资产评估时间
     transferIssues: '',
     allocationFile: '',
   }
@@ -608,6 +644,9 @@ const handleSubmit = (formData) => {
 
 // 页面加载时更新数据
 onMounted(() => {
+  // 初始化区域街道数据
+  initAreaStreetOptions()
+  
   // 监听地图组件的资产数据更新事件
   window.addEventListener('assetDataUpdated', handleAssetDataUpdate)
 
@@ -748,17 +787,78 @@ const handleDeleteSuccess = (assetId) => {
 }
 
 :deep(.el-table__body-wrapper) {
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 :deep(.el-table__header-wrapper) {
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 :deep(.el-table .cell) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 表格行高统一 */
+:deep(.el-table .el-table__row) {
+  height: 50px;
+}
+
+:deep(.el-table .el-table__header-wrapper th) {
+  height: 45px;
+}
+
+/* 表格列对齐样式 */
+:deep(.el-table th) {
+  text-align: center;
+  vertical-align: middle;
+}
+
+:deep(.el-table td) {
+  text-align: center;
+  vertical-align: middle;
+}
+
+:deep(.el-table th .cell) {
+  text-align: center;
+  padding: 0 10px;
+  line-height: 1.5;
+}
+
+:deep(.el-table td .cell) {
+  text-align: center;
+  padding: 0 10px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+
+/* 标签特殊处理 */
+:deep(.el-table td .cell .el-tag) {
+  flex-shrink: 0;
+}
+
+/* 操作列特殊处理 */
+:deep(.el-table th:last-child .cell) {
+  text-align: center;
+}
+
+:deep(.el-table td:last-child .cell) {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 40px;
+}
+
+/* 确保按钮在操作列中垂直居中 */
+:deep(.el-table td:last-child .el-button) {
+  margin: 2px;
 }
 
 /* 响应式表格 */

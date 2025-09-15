@@ -42,10 +42,11 @@
           <template #default="scope"> ¥{{ scope.row.annualRent }} </template>
         </el-table-column>
         <el-table-column prop="phoneNumber" label="联系电话" min-width="120" />
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="250" fixed="right">
           <template #default="scope">
-            <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(scope.$index)"
+            <el-button size="small" text type="info" @click="handleView(scope.row)">查看</el-button>
+            <el-button size="small" text type="primary" @click="handleEdit(scope.row)">编辑</el-button>
+            <el-button size="small"  text type="danger" @click="handleDelete(scope.$index)"
               >删除</el-button
             >
             <el-tooltip content="地图定位" placement="top">
@@ -65,6 +66,14 @@
       :data="currentData"
       @submit="handleSubmit"
     />
+
+    <!-- 查看详情对话框 -->
+    <AssetDetailDialog
+      v-model:visible="detailDialogVisible"
+      :data="currentDetailData"
+      @edit="handleEditFromDetail"
+      @locate="handleLocate"
+    />
   </div>
 </template>
 
@@ -74,12 +83,17 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Location } from '@element-plus/icons-vue'
 import AssetRentalInfoDialog from './components/AssetRentalInfoDialog.vue'
+import AssetDetailDialog from './components/AssetDetailDialog.vue'
 
 // 对话框相关
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const currentData = ref({})
 const router = useRouter()
+
+// 查看详情对话框相关
+const detailDialogVisible = ref(false)
+const currentDetailData = ref({})
 
 // 搜索表单
 const searchForm = reactive({
@@ -283,8 +297,21 @@ const handleAdd = () => {
   dialogVisible.value = true
 }
 
+// 查看详情
+const handleView = (row) => {
+  currentDetailData.value = { ...row }
+  detailDialogVisible.value = true
+}
+
 // 编辑租赁
 const handleEdit = (row) => {
+  isEdit.value = true
+  currentData.value = { ...row }
+  dialogVisible.value = true
+}
+
+// 从详情对话框编辑
+const handleEditFromDetail = (row) => {
   isEdit.value = true
   currentData.value = { ...row }
   dialogVisible.value = true
@@ -393,11 +420,11 @@ const handleSubmit = (formData) => {
 }
 
 :deep(.el-table__body-wrapper) {
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 :deep(.el-table__header-wrapper) {
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 :deep(.el-table .cell) {

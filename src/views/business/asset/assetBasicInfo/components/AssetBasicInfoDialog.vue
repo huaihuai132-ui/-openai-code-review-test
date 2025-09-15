@@ -115,6 +115,21 @@
       </el-row>
       
       <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="资产评估时间" prop="assessmentDate">
+            <el-date-picker
+              v-model="form.assessmentDate"
+              type="date"
+              placeholder="请选择评估时间"
+              style="width: 100%"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+            />
+          </el-form-item>
+        </el-col>
+      </el-row>
+      
+      <el-row :gutter="20">
         <el-col :span="24">
           <el-form-item label="办证过程中遇到的问题" prop="transferIssues">
             <el-input 
@@ -285,6 +300,7 @@ const form = reactive({
   rentalMethod: '',
   rent: 0,
   value: 0,
+  assessmentDate: '', // 资产评估时间
   transferIssues: '',
   allocationFile: ''
 })
@@ -366,10 +382,8 @@ const rules = {
   ],
   usage: [
     { required: true, message: '请选择使用情况', trigger: 'change' }
-  ],
-  rentalMethod: [
-    { required: true, message: '请选择出租方式', trigger: 'change' }
   ]
+  // rentalMethod 已改为非必填
 }
 
 // 监听数据变化，用于编辑模式
@@ -409,6 +423,7 @@ const resetForm = () => {
     rentalMethod: '',
     rent: 0,
     value: 0,
+    assessmentDate: '', // 资产评估时间
     transferIssues: '',
     allocationFile: ''
   })
