@@ -95,7 +95,7 @@
   </Dialog>
 
   <!-- 议题详情弹窗 -->
-  <OaMeetingIssueDetail ref="issueDetailRef" />
+  <MeetingIssueDetail ref="issueDetailRef" />
 </template>
 
 <script setup lang="ts">
@@ -111,10 +111,10 @@ import {useUserStore} from '@/store/modules/user'
 import {openPreviewWindow} from '@/utils/previewWindow'
 import {ref} from 'vue'
 import {useRouter} from 'vue-router'
-import OaMeetingIssueDetail from '@/views/business/meet/meetingIssue/OaMeetingIssueDetail.vue'
+import MeetingIssueDetail from '@/views/business/meet/meetingIssue/MeetingIssueDetail.vue'
 
 /** 会议详情 */
-defineOptions({ name: 'OaMeetingDetail' })
+defineOptions({ name: 'MeetingDetail' })
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
@@ -128,7 +128,7 @@ const fileList = ref<Array<{ id: number; name: string; url: string }>>([]) // �
 const attendeeList = ref<any[]>([]) // 参会人员列表
 const issueList = ref<any[]>([]) // 会议议题列表
 const meetingRooms = ref<any[]>([]) // 会议室列表
-const issueDetailRef = ref<InstanceType<typeof OaMeetingIssueDetail>>()
+const issueDetailRef = ref<InstanceType<typeof MeetingIssueDetail>>()
 
 // 固定域名配置
 const FIXED_DOMAIN = 'http://182.109.52.126:49090'

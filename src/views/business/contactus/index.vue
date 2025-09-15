@@ -177,18 +177,18 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <OaContactUsForm ref="formRef" @success="getList" />
+  <ContactUsForm ref="formRef" @success="getList" />
 
   <!-- 详情弹窗 -->
-  <OaContactUsDetail ref="detailRef" />
+  <ContactUsDetail ref="detailRef" />
 </template>
 
 <script setup lang="ts">
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { OaContactUsApi, OaContactUsVO } from 'src/api/business/contactus'
-import OaContactUsForm from './OaContactUsForm.vue'
-import OaContactUsDetail from './OaContactUsDetail.vue'
+import ContactUsForm from './ContactUsForm.vue'
+import ContactUsDetail from './ContactUsDetail.vue'
 
 /** 联系我们 列表 */
 defineOptions({ name: 'OaContactUs' })

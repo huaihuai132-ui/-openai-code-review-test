@@ -36,7 +36,7 @@ import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { OaMeetingRoomApi, OaMeetingRoomVO } from '@/api/business/meet/meetingRoom'
 
 /** 会议室信息 表单 */
-defineOptions({ name: 'OaMeetingRoomForm' })
+defineOptions({ name: 'MeetingRoomForm' })
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗

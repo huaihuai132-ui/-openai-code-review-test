@@ -286,7 +286,7 @@
             </Dialog>
 
             <!-- 议题详情弹窗 -->
-            <OaMeetingIssueDetail ref="issueDetailRef" />
+            <MeetingIssueDetail ref="issueDetailRef" />
           </el-form-item>
         </el-form>
 
@@ -316,7 +316,7 @@ import DictTag from '@/components/DictTag/src/DictTag.vue'
 import * as UserApi from '@/api/system/user'
 import * as DeptApi from '@/api/system/dept'
 import {handleTree} from '@/utils/tree'
-import OaMeetingIssueDetail from '@/views/business/meet/meetingIssue/OaMeetingIssueDetail.vue'
+import MeetingIssueDetail from '@/views/business/meet/meetingIssue/MeetingIssueDetail.vue'
 
 defineOptions({ name: 'OaMeetingCreate' })
 
@@ -329,7 +329,7 @@ const formLoading = ref(false)
 const submitLoading = ref(false)
 const batchUploadRef = ref<typeof BatchFileUpload>()
 const userSelectFormRef = ref<typeof UserSelectForm>()
-const issueDetailRef = ref<typeof OaMeetingIssueDetail>()
+const issueDetailRef = ref<typeof MeetingIssueDetail>()
 
 // 表单数据
 const formData = ref({

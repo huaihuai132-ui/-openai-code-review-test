@@ -222,7 +222,7 @@
     </Dialog>
 
     <!-- 议题详情弹窗 -->
-    <OaMeetingIssueDetail ref="issueDetailRef" />
+    <MeetingIssueDetail ref="issueDetailRef" />
   </div>
 </template>
 
@@ -231,7 +231,7 @@ import {computed, ref} from 'vue'
 import {DICT_TYPE} from '@/utils/dict'
 import {Dialog} from '@/components/Dialog'
 import {Icon} from '@/components/Icon'
-import OaMeetingIssueDetail from '@/views/business/meet/meetingIssue/OaMeetingIssueDetail.vue'
+import MeetingIssueDetail from '@/views/business/meet/meetingIssue/MeetingIssueDetail.vue'
 import {useMessage} from '@/hooks/web/useMessage'
 
 const message = useMessage()

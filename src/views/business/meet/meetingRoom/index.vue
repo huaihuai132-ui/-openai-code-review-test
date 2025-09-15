@@ -122,7 +122,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <OaMeetingRoomForm ref="formRef" @success="getList" />
+  <MeetingRoomForm ref="formRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -130,7 +130,7 @@ import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { OaMeetingRoomApi, OaMeetingRoomVO } from '@/api/business/meet/meetingRoom'
-import OaMeetingRoomForm from './OaMeetingRoomForm.vue'
+import MeetingRoomForm from './MeetingRoomForm.vue'
 
 /** 会议室信息 列表 */
 defineOptions({ name: 'OaMeetingRoom' })

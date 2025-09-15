@@ -83,7 +83,7 @@
         <template #default="scope">
           <el-tabs model-value="oaFormLeave">
             <el-tab-pane label="OA 请假申请表单" name="oaFormLeave">
-              <OaFormLeaveList :user-id="scope.row.userId" />
+              <FormLeaveList :user-id="scope.row.userId" />
             </el-tab-pane>
           </el-tabs>
         </template>
@@ -131,15 +131,15 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <OaAnnualLeaveForm ref="formRef" @success="getList" />
+  <AnnualLeaveForm ref="formRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { OaAnnualLeaveApi, OaAnnualLeaveVO } from 'src/api/business/annualLeave'
-import OaAnnualLeaveForm from './OaAnnualLeaveForm.vue'
-import OaFormLeaveList from './components/OaFormLeaveList.vue'
+import AnnualLeaveForm from './AnnualLeaveForm.vue'
+import FormLeaveList from './components/FormLeaveList.vue'
 
 /** 年假 列表 */
 defineOptions({ name: 'OaAnnualLeave' })

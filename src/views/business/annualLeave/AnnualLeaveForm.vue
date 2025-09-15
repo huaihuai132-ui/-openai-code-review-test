@@ -29,7 +29,7 @@
     <!-- 子表的表单 -->
     <el-tabs v-model="subTabsName">
       <el-tab-pane label="OA 请假申请表单" name="oaFormLeave">
-        <OaFormLeaveForm ref="oaFormLeaveFormRef" :user-id="formData.userId" />
+        <FormLeaveForm ref="oaFormLeaveFormRef" :user-id="formData.userId" />
       </el-tab-pane>
     </el-tabs>
     <template #footer>
@@ -40,10 +40,10 @@
 </template>
 <script setup lang="ts">
 import { OaAnnualLeaveApi, OaAnnualLeaveVO } from 'src/api/business/annualLeave'
-import OaFormLeaveForm from './components/OaFormLeaveForm.vue'
+import FormLeaveForm from './components/FormLeaveForm.vue'
 
 /** 年假 表单 */
-defineOptions({ name: 'OaAnnualLeaveForm' })
+defineOptions({ name: 'AnnualLeaveForm' })
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗

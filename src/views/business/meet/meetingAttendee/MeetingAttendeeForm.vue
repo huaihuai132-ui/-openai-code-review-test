@@ -66,7 +66,7 @@ import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { OaMeetingAttendeeApi, OaMeetingAttendeeVO } from '@/api/business/meet/meetingAttendee'
 
 /** 会议参会人员 表单 */
-defineOptions({ name: 'OaMeetingAttendeeForm' })
+defineOptions({ name: 'MeetingAttendeeForm' })
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗

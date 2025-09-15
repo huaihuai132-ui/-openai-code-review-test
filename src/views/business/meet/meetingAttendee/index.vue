@@ -191,7 +191,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <OaMeetingAttendeeForm ref="formRef" @success="getList" />
+  <MeetingAttendeeForm ref="formRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
@@ -199,7 +199,7 @@ import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { OaMeetingAttendeeApi, OaMeetingAttendeeVO } from '@/api/business/meet/meetingAttendee'
-import OaMeetingAttendeeForm from './OaMeetingAttendeeForm.vue'
+import MeetingAttendeeForm from './MeetingAttendeeForm.vue'
 
 /** 会议参会人员 列表 */
 defineOptions({ name: 'OaMeetingAttendee' })

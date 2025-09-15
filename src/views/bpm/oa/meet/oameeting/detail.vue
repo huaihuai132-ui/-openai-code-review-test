@@ -90,7 +90,7 @@
     </ContentWrap>
 
     <!-- 议题详情弹窗 -->
-    <OaMeetingIssueDetail ref="issueDetailRef" />
+    <MeetingIssueDetail ref="issueDetailRef" />
 </template>
 
 <script lang="ts" setup>
@@ -108,9 +108,9 @@ import {openPreviewWindow} from '@/utils/previewWindow'
 import {View} from '@element-plus/icons-vue'
 import {getDomainUrl} from '@/utils/domainConfig'
 import {useMessage} from '@/hooks/web/useMessage'
-import OaMeetingIssueDetail from '@/views/business/meet/meetingIssue/OaMeetingIssueDetail.vue'
+import MeetingIssueDetail from '@/views/business/meet/meetingIssue/MeetingIssueDetail.vue'
 
-defineOptions({ name: 'OaMeetingDetail' })
+defineOptions({ name: 'MeetingDetail' })
 
 const { query } = useRoute() // 查询参数
 const userStore = useUserStore() // 用户信息
@@ -133,7 +133,7 @@ const fileList = ref<Array<{ id: number; name: string; url: string }>>([]) // �
 const attendeeList = ref<any[]>([]) // 参会人员列表
 const issueList = ref<any[]>([]) // 会议议题列表
 const meetingRooms = ref<any[]>([]) // 会议室列表
-const issueDetailRef = ref<InstanceType<typeof OaMeetingIssueDetail>>()
+const issueDetailRef = ref<InstanceType<typeof MeetingIssueDetail>>()
 
 /** 获取会议室名称 */
 const getMeetingRoomName = (roomId?: number) => {

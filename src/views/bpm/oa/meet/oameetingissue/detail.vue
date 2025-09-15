@@ -82,7 +82,7 @@ import { View } from '@element-plus/icons-vue'
 import { getDomainUrl } from '@/utils/domainConfig'
 import { useMessage } from '@/hooks/web/useMessage'
 
-defineOptions({ name: 'OaMeetingIssueDetail' })
+defineOptions({ name: 'MeetingIssueDetail' })
 
 const { query } = useRoute() // 查询参数
 const userStore = useUserStore() // 用户信息

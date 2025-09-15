@@ -199,9 +199,9 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <OaMeetingIssueForm ref="formRef" @success="getList" />
+  <MeetingIssueForm ref="formRef" @success="getList" />
   <!-- 详情弹窗 -->
-  <OaMeetingIssueDetail ref="detailRef" />
+  <MeetingIssueDetail ref="detailRef" />
 
   <!-- 关联会议弹窗 -->
   <Dialog v-model="meetingDialogVisible" title="关联会议" width="800">
@@ -242,8 +242,8 @@ import download from '@/utils/download'
 import {OaMeetingIssueApi, OaMeetingIssueVO} from '@/api/business/meet/meetingIssue'
 import {OaMeetingApi} from '@/api/business/meet/meeting'
 // 引用 oameetingissue 模块中的表单和详情组件
-import OaMeetingIssueForm from '@/views/business/meet/meetingIssue/OaMeetingIssueForm.vue'
-import OaMeetingIssueDetail from '@/views/business/meet/meetingIssue/OaMeetingIssueDetail.vue'
+import MeetingIssueForm from '@/views/business/meet/meetingIssue/MeetingIssueForm.vue'
+import MeetingIssueDetail from '@/views/business/meet/meetingIssue/MeetingIssueDetail.vue'
 import * as UserApi from '@/api/system/user'
 import * as DeptApi from '@/api/system/dept'
 import {handleTree} from '@/utils/tree'

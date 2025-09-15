@@ -187,7 +187,7 @@
     </Dialog>
 
     <!-- 议题详情弹窗 -->
-    <OaMeetingIssueDetail ref="issueDetailRef" />
+    <MeetingIssueDetail ref="issueDetailRef" />
   </div>
 </template>
 
@@ -201,7 +201,7 @@ import DictTag from '../../../../../components/DictTag/src/DictTag.vue'
 import * as UserApi from '@/api/system/user'
 import * as DeptApi from '@/api/system/dept'
 import {handleTree} from '@/utils/tree'
-import OaMeetingIssueDetail from '@/views/business/meet/meetingIssue/OaMeetingIssueDetail.vue'
+import MeetingIssueDetail from '@/views/business/meet/meetingIssue/MeetingIssueDetail.vue'
 
 interface Props {
   issues: OaMeetingIssueVO[]

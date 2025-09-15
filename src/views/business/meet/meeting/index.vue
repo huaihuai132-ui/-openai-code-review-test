@@ -225,9 +225,9 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <OaMeetingForm ref="formRef" @success="getList" />
+  <MeetingForm ref="formRef" @success="getList" />
   <!-- 详情弹窗 -->
-  <OaMeetingDetail ref="detailRef" />
+  <MeetingDetail ref="detailRef" />
 
   <!-- 会议通知弹窗 -->
   <Dialog v-model="notificationDialogVisible" title="会议通知" width="600px" @closed="handleNotificationDialogClosed">
@@ -453,7 +453,7 @@
   </Dialog>
 
   <!-- 议题详情弹窗 -->
-  <OaMeetingIssueDetail ref="issueDetailRef" @closed="handleIssueDetailClosed"/>
+  <MeetingIssueDetail ref="issueDetailRef" @closed="handleIssueDetailClosed"/>
 </template>
 
 <script setup lang="ts">
@@ -461,14 +461,14 @@ import {DICT_TYPE, getStrDictOptions} from '@/utils/dict'
 import {formatDate} from '@/utils/formatTime'
 import download from '@/utils/download'
 import {OaMeetingApi, OaMeetingVO} from '@/api/business/meet/meeting'
-import OaMeetingForm from './OaMeetingForm.vue'
-import OaMeetingDetail from './OaMeetingDetail.vue'
+import MeetingForm from './MeetingForm.vue'
+import MeetingDetail from './MeetingDetail.vue'
 import {Dialog} from '@/components/Dialog'
 import AttendeeSelect from './components/AttendeeSelect.vue'
 import {BatchFileUpload} from '@/components/UploadFile'
 import SigninManager from './components/SigninManager.vue'
 import VoteManager from './components/VoteManager.vue'
-import OaMeetingIssueDetail from '@/views/business/meet/meetingIssue/OaMeetingIssueDetail.vue'
+import MeetingIssueDetail from '@/views/business/meet/meetingIssue/MeetingIssueDetail.vue'
 
 /** 会议 列表 */
 defineOptions({ name: 'OaMeeting' })
@@ -540,7 +540,7 @@ const issueVoteRules = {
 }
 const currentVotingIssue = ref<any>({})
 const issueVoteLoading = ref(false)
-const issueDetailRef = ref<typeof OaMeetingIssueDetail>()
+const issueDetailRef = ref<typeof MeetingIssueDetail>()
 
 // 签到状态管理
 const meetingSigninStatus = ref<Record<number, boolean>>({})
@@ -601,13 +601,13 @@ const resetQuery = () => {
 }
 
 /** 添加/修改操作 */
-const formRef = ref<InstanceType<typeof OaMeetingForm>>()
+const formRef = ref<InstanceType<typeof MeetingForm>>()
 const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
 }
 
 /** 详情操作 */
-const detailRef = ref<InstanceType<typeof OaMeetingDetail>>()
+const detailRef = ref<InstanceType<typeof MeetingDetail>>()
 const openDetail = (id: number) => {
   detailRef.value.open(id)
 }

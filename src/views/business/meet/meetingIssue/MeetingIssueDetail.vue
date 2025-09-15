@@ -91,7 +91,7 @@ import {getDomainUrl} from '@/utils/domainConfig'
 
 
 /** 会议议题 详情 */
-defineOptions({ name: 'OaMeetingIssueDetail' })
+defineOptions({ name: 'MeetingIssueDetail' })
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗

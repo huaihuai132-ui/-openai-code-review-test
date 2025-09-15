@@ -6,7 +6,7 @@
 import MeetingFormContainer from './components/MeetingFormContainer.vue'
 
 /** 会议表单 - 新版本 */
-defineOptions({ name: 'OaMeetingForm' })
+defineOptions({ name: 'MeetingForm' })
 
 const meetingFormContainerRef = ref<typeof MeetingFormContainer>()
 

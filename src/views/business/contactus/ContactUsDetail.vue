@@ -60,7 +60,7 @@ import { useUserStore } from '@/store/modules/user'
 import { openPreviewWindow } from '@/utils/previewWindow'
 
 /** 联系我们详情 */
-defineOptions({ name: 'OaContactUsDetail' })
+defineOptions({ name: 'ContactUsDetail' })
 
 const message = useMessage() // 消息弹窗
 const userStore = useUserStore() // 用户信息

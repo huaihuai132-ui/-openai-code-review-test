@@ -146,7 +146,7 @@ import {handleTree} from '@/utils/tree'
 import {OaMeetingApi} from '@/api/business/meet/meeting'
 
 /** 会议议题 表单 */
-defineOptions({ name: 'OaMeetingIssueForm' })
+defineOptions({ name: 'MeetingIssueForm' })
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
