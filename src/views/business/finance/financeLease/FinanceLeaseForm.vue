@@ -14,7 +14,14 @@
         <h3 class="section-title">基本信息</h3>
         <div class="form-row">
           <el-form-item label="立项编号" prop="applicationId">
-            <el-input v-model="formData.applicationId" placeholder="请输入立项编号" />
+            <el-select v-model="formData.applicationId" placeholder="请选择立项编号">
+              <el-option
+                v-for="item in applicationList"
+                :key="item.id"
+                :label="item.applicationCode"
+                :value="item.id"
+              />
+            </el-select>
           </el-form-item>
           <el-form-item label="企业名称" prop="companyId">
             <el-select v-model="formData.companyId" placeholder="请选择企业">
@@ -132,7 +139,15 @@
         <h3 class="section-title">基本信息</h3>
         <div class="form-row">
           <el-form-item label="立项编号" prop="applicationId">
-            <el-input v-model="formData.applicationId" placeholder="请输入立项编号" />
+            <el-select v-model="formData.applicationId" placeholder="请选择立项编号"
+                       @change="applicationIdChange">
+              <el-option
+                v-for="item in applicationList"
+                :key="item.id"
+                :label="item.applicationCode"
+                :value="item.id"
+              />
+            </el-select>
           </el-form-item>
           <el-form-item label="企业名称" prop="companyId">
             <el-select v-model="formData.companyId" placeholder="请选择企业">
@@ -252,6 +267,10 @@ import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/finance/financ
 import { BatchFileUpload } from '@/components/UploadFile'
 import { useUserStore } from '@/store/modules/user'
 import EquipmentList from './components/EquipmentList.vue'
+import {
+  FinanceApplicationApi,
+  FinanceApplicationVO
+} from "@/api/business/finance/financeapplication";
 
 const userStore = useUserStore()
 
@@ -344,6 +363,7 @@ const formRules = reactive({
 
 const formRef = ref() // 表单 Ref
 const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
+const applicationList = ref<FinanceApplicationVO[]>([]) // 融资租赁立项列表
 const activeTab = ref('equipment') // 当前激活的tab
 
 /**
@@ -449,8 +469,18 @@ const open = async (type: string, id?: number) => {
   }
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
   companyList.value = response
+  const applicationListResponse = await FinanceApplicationApi.getSimpleFinanceApplicationListApproved()
+  applicationList.value = applicationListResponse
 }
-
+const applicationIdChange = async (val) => {
+  const financeApplication = await FinanceApplicationApi.getFinanceApplication(val);
+  formData.value.companyId = financeApplication.companyId;
+  formData.value.leasedProperty = financeApplication.leasedProperty;
+  formData.value.leasedPropertyNum = financeApplication.leasedPropertyNum;
+  formData.value.leasedPropertyValue = financeApplication.leasedPropertyValue;
+  formData.value.leaseAmount = financeApplication.leaseAmount;
+  formData.value.leaseTerm = financeApplication.leaseTerm;
+}
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 
 /** 提交表单 */
@@ -519,7 +549,8 @@ const resetForm = () => {
       // 加载企业列表
       const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
       companyList.value = response
-
+      const applicationListResponse = await FinanceApplicationApi.getSimpleFinanceApplicationListApproved()
+      applicationList.value = applicationListResponse
       // 如果 watchEffect 没有触发，在这里也尝试加载数据
       if (props.processInstance?.businessKey && !formData.value.id) {
         console.log('onMounted 中尝试加载数据，业务键:', props.processInstance.businessKey)

@@ -8,14 +8,21 @@
       :inline="true"
       label-width="128px"
     >
-      <el-form-item label="融资租赁立项编号" prop="applicationId">
-        <el-input
+      <el-form-item label="立项编号" prop="applicationId">
+        <el-select
           v-model="queryParams.applicationId"
-          placeholder="请输入融资租赁立项编号"
+          placeholder="请选择立项编号"
           clearable
-          @keyup.enter="handleQuery"
+          filterable
           class="!w-240px"
-        />
+        >
+          <el-option
+            v-for="item in applicationList"
+            :key="item.id"
+            :label="item.applicationCode"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="企业名称" prop="companyId">
         <el-select
@@ -136,7 +143,7 @@
 <!--      <el-table-column label="编号" align="center" prop="id" />-->
       <el-table-column label="项目申请编码" align="center" prop="leasedCode" />
 
-      <el-table-column label="融资租赁立项编号" align="center" prop="applicationId" />
+      <el-table-column label="立项编号" align="center" prop="applicationId" />
       <el-table-column label="企业名称" align="center" prop="companyId" width="180">
         <template #default="scope">
           <span>{{ companyList.find((item) => item.id === scope.row.companyId)?.enterpriseName }}</span>
@@ -240,6 +247,10 @@ import FinanceLeaseForm from './FinanceLeaseForm.vue'
 import DeviceListDisplay from './components/DeviceListDisplay.vue'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/finance/financecompany";
 import { status } from 'nprogress'
+import {
+  FinanceApplicationApi,
+  FinanceApplicationVO
+} from "@/api/business/finance/financeapplication";
 
 /** 融资租赁 列表 */
 defineOptions({ name: 'FinanceLease' })
@@ -273,6 +284,7 @@ const exportLoading = ref(false) // 导出的加载中
 const selectedIds = ref<number[]>([]) // 表格的选中 ID 数组
 const selectedRows = ref<FinanceLeaseVO[]>([]) // 表格的选中 数据 数组
 const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
+const applicationList = ref<FinanceApplicationVO[]>([]) // 融资租赁立项列表
 
 // 设备清单相关变量
 const deviceDialogVisible = ref(false)
@@ -450,5 +462,8 @@ onMounted(async () => {
   getList()
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
   companyList.value = response
+  const applicationListResponse = await FinanceApplicationApi.getSimpleFinanceApplicationList()
+  applicationList.value = applicationListResponse
+
 })
 </script>

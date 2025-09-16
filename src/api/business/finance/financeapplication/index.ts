@@ -73,4 +73,12 @@ export const FinanceApplicationApi = {
   exportFinanceApplicationDoc: async (id: number) => {
     return await request.download({ url: `/business/finance-application/fill-word-template?id=` + id })
   },
+  // 获取已审核的融资租赁立项列表
+  getSimpleFinanceApplicationListApproved: async () => {
+    return await request.get({ url: `/business/finance-application/list-approved-simple`})
+  },
+  // 获取全部融资租赁项目立项列表
+  getSimpleFinanceApplicationList: async () => {
+    return await request.get({ url: `/business/finance-application/list-all-simple`})
+  }
 }
