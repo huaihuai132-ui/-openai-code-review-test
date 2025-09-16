@@ -33,12 +33,12 @@
                     <div v-loading="processInstanceLoading" class="form-box flex flex-col mb-30px flex-1">
                       <!-- 情况二：业务表单 -->
                       <div v-if="processDefinition?.formType === BpmModelFormType.CUSTOM">
-                        <FinanceLeaseForm
+                        <FinanceLeaseDetail
                           v-if="processDefinition?.key === 'bpm_oa_finance_lease'"
-                          :process-instance="processInstance"
-                          :process-definition="processDefinition"
-                          :form-variables="processInstance.formVariables"
+                          :id="processInstance.businessKey"
+                          :preview-mode="true"
                           :readonly="true"
+                          :model-info="processInstance.formVariables"
                         />
                         <!-- 其他业务表单使用原有的 BusinessFormComponent -->
                         <component
@@ -108,7 +108,7 @@ import ProcessInstanceSimpleViewer from './ProcessInstanceSimpleViewer.vue'
 import ProcessInstanceTaskList from './ProcessInstanceTaskList.vue'
 import ProcessInstanceOperationButton from './ProcessInstanceOperationButton.vue'
 import ProcessInstanceTimeline from './ProcessInstanceTimeline.vue'
-import FinanceLeaseForm from '@/views/business/finance/financeLease/FinanceLeaseForm.vue'
+import FinanceLeaseDetail from '@/views/bpm/oa/financeLease/detail.vue'
 import { TaskStatusEnum } from '@/api/bpm/task'
 import runningSvg from '@/assets/svgs/bpm/running.svg'
 import approveSvg from '@/assets/svgs/bpm/approve.svg'

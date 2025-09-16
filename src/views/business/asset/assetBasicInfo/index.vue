@@ -50,10 +50,16 @@
     <el-card class="table-card">
       <div class="table-header">
         <h3>资产列表</h3>
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
-          新增资产
-        </el-button>
+        <div class="header-actions">
+          <el-button type="success" @click="handleImport">
+            <el-icon><Upload /></el-icon>
+            导入资产
+          </el-button>
+          <el-button type="primary" @click="handleAdd">
+            <el-icon><Plus /></el-icon>
+            新增资产
+          </el-button>
+        </div>
       </div>
 
       <el-table :data="filteredTableData" style="width: 100%" stripe table-layout="fixed">
@@ -112,13 +118,112 @@
       @edit="handleEditFromDetail"
       @view-file="handleViewFile"
     />
+
+    <!-- 隐藏的文件输入元素 -->
+    <input 
+      ref="fileInputRef" 
+      type="file" 
+      accept=".xlsx,.xls,.csv" 
+      style="display: none" 
+      @change="handleFileChange"
+    />
+
+    <!-- 导入进度对话框 -->
+    <el-dialog 
+      v-model="importDialogVisible" 
+      title="资产导入" 
+      width="600px" 
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="!importing"
+    >
+      <div class="import-content">
+        <div v-if="!importing && !importResult" class="import-tips">
+          <el-alert 
+            title="导入说明" 
+            type="info" 
+            :closable="false"
+            show-icon
+          >
+            <template #default>
+              <ul class="tips-list">
+                <li>支持 Excel (.xlsx, .xls) 和 CSV 格式文件</li>
+                <li>请确保文件包含以下列：资产名称、地址、建筑面积、土地面积、产权证号等</li>
+                <li>数据将被验证后添加到系统中</li>
+              </ul>
+            </template>
+          </el-alert>
+          <div class="file-info" v-if="selectedFile">
+            <el-descriptions :column="2" border>
+              <el-descriptions-item label="文件名">
+                <el-tag type="primary">{{ selectedFile.name }}</el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="文件大小">
+                {{ formatFileSize(selectedFile.size) }}
+              </el-descriptions-item>
+            </el-descriptions>
+          </div>
+        </div>
+
+        <div v-if="importing" class="importing">
+          <el-progress 
+            :percentage="importProgress" 
+            :status="importProgress === 100 ? 'success' : undefined"
+            :stroke-width="20"
+          />
+          <p class="progress-text">{{ importStatus }}</p>
+        </div>
+
+        <div v-if="importResult" class="import-result">
+          <el-result 
+            :icon="importResult.success ? 'success' : 'error'"
+            :title="importResult.success ? '导入成功' : '导入失败'"
+            :sub-title="importResult.message"
+          >
+            <template #extra v-if="importResult.success">
+              <div class="result-stats">
+                <el-statistic title="成功导入" :value="importResult.successCount" />
+                <el-statistic title="失败数量" :value="importResult.errorCount" />
+              </div>
+            </template>
+          </el-result>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancelImport" :disabled="importing">取消</el-button>
+          <el-button 
+            v-if="!selectedFile && !importing && !importResult" 
+            type="primary" 
+            @click="selectFile"
+          >
+            选择文件
+          </el-button>
+          <el-button 
+            v-if="selectedFile && !importing && !importResult" 
+            type="success" 
+            @click="startImport"
+          >
+            开始导入
+          </el-button>
+          <el-button 
+            v-if="importResult" 
+            type="primary" 
+            @click="finishImport"
+          >
+            完成
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete, Search, Refresh, Location } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Search, Refresh, Location, Upload } from '@element-plus/icons-vue'
 import AssetBasicInfoDialog from './components/AssetBasicInfoDialog.vue'
 import AssetDetailDialog from './components/AssetDetailDialog.vue'
 import { useRouter } from 'vue-router'
@@ -131,6 +236,15 @@ const formData = ref({})
 // 查看对话框相关
 const viewDialogVisible = ref(false)
 const viewData = ref({})
+
+// 导入相关
+const importDialogVisible = ref(false)
+const importing = ref(false)
+const importProgress = ref(0)
+const importStatus = ref('')
+const selectedFile = ref(null)
+const fileInputRef = ref(null)
+const importResult = ref(null)
 
 // 搜索表单
 const searchForm = reactive({
@@ -727,6 +841,191 @@ const handleDeleteSuccess = (assetId) => {
     }),
   )
 }
+
+// 导入相关方法
+// 打开导入对话框
+const handleImport = () => {
+  importDialogVisible.value = true
+  importing.value = false
+  importProgress.value = 0
+  importStatus.value = ''
+  selectedFile.value = null
+  importResult.value = null
+}
+
+// 选择文件
+const selectFile = () => {
+  if (fileInputRef.value) {
+    fileInputRef.value.click()
+  }
+}
+
+// 处理文件选择
+const handleFileChange = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    // 验证文件类型
+    const allowedTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+                         'application/vnd.ms-excel', 
+                         'text/csv']
+    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+      ElMessage.error('请选择 Excel (.xlsx, .xls) 或 CSV 格式的文件')
+      return
+    }
+    
+    // 验证文件大小 (限制为10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      ElMessage.error('文件大小不能超过 10MB')
+      return
+    }
+    
+    selectedFile.value = file
+  }
+  // 清空input值，以便可以重复选择同一个文件
+  event.target.value = ''
+}
+
+// 开始导入
+const startImport = async () => {
+  if (!selectedFile.value) {
+    ElMessage.error('请先选择要导入的文件')
+    return
+  }
+  
+  importing.value = true
+  importProgress.value = 0
+  importStatus.value = '正在读取文件...'
+  
+  try {
+    // 模拟导入过程
+    await simulateImportProcess()
+  } catch (error) {
+    console.error('导入失败:', error)
+    importResult.value = {
+      success: false,
+      message: '导入过程中发生错误: ' + error.message,
+      successCount: 0,
+      errorCount: 0
+    }
+  } finally {
+    importing.value = false
+  }
+}
+
+// 模拟导入过程
+const simulateImportProcess = () => {
+  return new Promise((resolve) => {
+    let progress = 0
+    const interval = setInterval(() => {
+      progress += Math.random() * 15 + 5
+      if (progress >= 100) {
+        progress = 100
+        clearInterval(interval)
+        
+        // 模拟导入结果
+        const successCount = Math.floor(Math.random() * 20) + 10
+        const errorCount = Math.floor(Math.random() * 3)
+        
+        importResult.value = {
+          success: true,
+          message: `成功导入 ${successCount} 条资产数据，${errorCount > 0 ? `${errorCount} 条数据导入失败` : '所有数据导入成功'}`,
+          successCount,
+          errorCount
+        }
+        
+        // 模拟添加一些数据到表格中
+        const newAssets = []
+        for (let i = 0; i < Math.min(successCount, 3); i++) {
+          const newAsset = {
+            id: Math.max(...tableData.value.map(item => item.id)) + i + 1,
+            assetName: `导入资产-${Date.now()}-${i + 1}`,
+            area: '001',
+            areaName: '月湖区',
+            street: '001001',
+            streetName: '童家街道',
+            address: `导入地址-${Date.now()}-${i + 1}`,
+            transferUnit: '市财政局',
+            originalOwnershipUnit: '原国资委',
+            buildingArea: Math.floor(Math.random() * 200) + 50,
+            landArea: Math.floor(Math.random() * 150) + 30,
+            propertyNumber: `导入证${Date.now()}-${i + 1}`,
+            isTransferred: Math.random() > 0.5,
+            usage: '出租',
+            rentalMethod: Math.random() > 0.5 ? '整租' : '分租',
+            rent: Math.floor(Math.random() * 50000) + 10000,
+            value: Math.floor(Math.random() * 200) + 50,
+            transferIssues: '无',
+            allocationFile: '已上传'
+          }
+          newAssets.push(newAsset)
+        }
+        
+        // 添加到表格数据中
+        tableData.value.push(...newAssets)
+        
+        // 通知地图组件更新数据
+        newAssets.forEach(asset => {
+          handleAddSuccess(asset)
+        })
+        
+        resolve()
+      } else {
+        importProgress.value = Math.floor(progress)
+        
+        if (progress < 30) {
+          importStatus.value = '正在读取文件...'
+        } else if (progress < 60) {
+          importStatus.value = '正在验证数据格式...'
+        } else if (progress < 90) {
+          importStatus.value = '正在导入数据...'
+        } else {
+          importStatus.value = '正在完成导入...'
+        }
+      }
+    }, 200)
+  })
+}
+
+// 取消导入
+const cancelImport = () => {
+  if (importing.value) {
+    ElMessageBox.confirm('导入正在进行中，确定要取消吗？', '确认取消', {
+      confirmButtonText: '确定',
+      cancelButtonText: '继续导入',
+      type: 'warning'
+    }).then(() => {
+      importing.value = false
+      importDialogVisible.value = false
+      ElMessage.info('已取消导入')
+    }).catch(() => {
+      // 用户选择继续导入，不做任何操作
+    })
+  } else {
+    importDialogVisible.value = false
+  }
+}
+
+// 完成导入
+const finishImport = () => {
+  importDialogVisible.value = false
+  // 重置所有导入相关状态
+  importing.value = false
+  importProgress.value = 0
+  importStatus.value = ''
+  selectedFile.value = null
+  importResult.value = null
+  
+  ElMessage.success('导入操作已完成')
+}
+
+// 格式化文件大小
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
 </script>
 
 <style scoped>
@@ -859,6 +1158,63 @@ const handleDeleteSuccess = (assetId) => {
 /* 确保按钮在操作列中垂直居中 */
 :deep(.el-table td:last-child .el-button) {
   margin: 2px;
+}
+
+/* 导入对话框样式 */
+.import-content {
+  padding: 10px 0;
+}
+
+.import-tips {
+  margin-bottom: 20px;
+}
+
+.tips-list {
+  margin: 10px 0 0 0;
+  padding: 0 0 0 20px;
+}
+
+.tips-list li {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.file-info {
+  margin-top: 20px;
+}
+
+.importing {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.progress-text {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #666;
+}
+
+.import-result {
+  text-align: center;
+  padding: 20px;
+}
+
+.result-stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 20px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
 }
 
 /* 响应式表格 */

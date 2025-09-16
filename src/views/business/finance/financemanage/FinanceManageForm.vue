@@ -12,7 +12,8 @@
         <h3 class="section-title">基本信息</h3>
         <div class="form-row">
           <el-form-item label="融资租赁单编号" prop="leaseId" label-width="140px" >
-          <el-select
+            <el-input v-model="formData.leaseId" placeholder="请输入融资租赁单编号" />
+          <!-- <el-select
           v-model="formData.leaseId"
           placeholder="请选择融资租赁单编号"
           clearable
@@ -23,7 +24,7 @@
               :label="item.leasedCode || item.name || String(item.id)"
               :value="item.id"
             />
-          </el-select>
+          </el-select> -->
         </el-form-item>
           <el-form-item label="租后管理编码" prop="manageCode">
             <el-input v-model="formData.manageCode" placeholder="请输入租后管理编码" />

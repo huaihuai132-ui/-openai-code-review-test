@@ -102,30 +102,19 @@
           <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status || 0" />
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" min-width="120px">
+      <el-table-column label="操作" align="center" min-width="280px">
         <template #default="scope">
           <el-button
             link
             type="primary"
-            v-if="isShowEdit(scope.row)"
-            @click="openForm('edit', scope.row.id)"
+            @click="openForm('update', scope.row.id)"
             v-hasPermi="['business:finance-application:update']"
           >
             编辑
           </el-button>
           <el-button
             link
-            type="info"
-            v-if="isShowDetail(scope.row)"
-            @click="openForm('view', scope.row.id)"
-            v-hasPermi="['business:finance-application:query']"
-          >
-            详情
-          </el-button>
-          <el-button
-            link
             type="primary"
-            v-if="isShowEdit(scope.row)"
             @click="sendApprove(scope.row.id)"
             v-hasPermi="['business:finance-application:sendApprove']"
           >
@@ -134,11 +123,18 @@
           <el-button
             link
             type="danger"
-            v-if="isShowEdit(scope.row)"
             @click="handleDelete(scope.row.id)"
             v-hasPermi="['business:finance-application:delete']"
           >
             删除
+          </el-button>
+          <el-button
+            link
+            type="info"
+            @click="openForm('view', scope.row.id)"
+            v-hasPermi="['business:finance-application:query']"
+          >
+            详情
           </el-button>
         </template>
       </el-table-column>
@@ -162,7 +158,6 @@ import download from '@/utils/download'
 import { FinanceApplicationApi, FinanceApplicationVO } from 'src/api/business/finance/financeapplication'
 import FinanceApplicationForm from './FinanceApplicationForm.vue'
 import {FinanceCompanyApi, FinanceCompanyVO} from "src/api/business/finance/financecompany";
-import {isShowEdit, isShowDetail} from "@/api/bpm/task";
 
 /** 融资租赁立项 列表 */
 defineOptions({ name: 'FinanceApplication' })
