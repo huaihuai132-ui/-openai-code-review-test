@@ -182,34 +182,38 @@
           <el-button
             link
             type="primary"
+            v-if="isShowEdit(scope.row)"
             @click="openForm('update', scope.row.id)"
-            v-hasPermi="['business:finance-lease:update']"
+            v-hasPermi="['business:finance-application:update']"
           >
             编辑
           </el-button>
           <el-button
             link
+            type="info"
+            v-if="isShowDetail(scope.row)"
+            @click="openForm('detail', scope.row.id)"
+            v-hasPermi="['business:finance-application:query']"
+          >
+            详情
+          </el-button>
+          <el-button
+            link
             type="primary"
+            v-if="isShowEdit(scope.row)"
             @click="sendApprove(scope.row.id)"
-            v-hasPermi="['business:finance-lease:sendApprove']"
+            v-hasPermi="['business:finance-application:sendApprove']"
           >
             送审
           </el-button>
           <el-button
             link
             type="danger"
+            v-if="isShowEdit(scope.row)"
             @click="handleDelete(scope.row.id)"
-            v-hasPermi="['business:finance-lease:delete']"
+            v-hasPermi="['business:finance-application:delete']"
           >
             删除
-          </el-button>
-          <el-button
-            link
-            type="primary"
-            @click="queryDeviceList(scope.row.id)"
-            v-hasPermi="['business:finance-device:query']"
-          >
-            查看设备清单
           </el-button>
         </template>
       </el-table-column>
@@ -247,6 +251,7 @@ import FinanceLeaseForm from './FinanceLeaseForm.vue'
 import DeviceListDisplay from './components/DeviceListDisplay.vue'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/finance/financecompany";
 import { status } from 'nprogress'
+import {isShowEdit, isShowDetail} from "@/api/bpm/task";
 import {
   FinanceApplicationApi,
   FinanceApplicationVO

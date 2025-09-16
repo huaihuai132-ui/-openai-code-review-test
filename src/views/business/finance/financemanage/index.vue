@@ -129,24 +129,36 @@
           <el-button
             link
             type="primary"
+            v-if="isShowEdit(scope.row)"
             @click="openForm('update', scope.row.id)"
-            v-hasPermi="['business:finance-manage:update']"
+            v-hasPermi="['business:finance-application:update']"
           >
             编辑
           </el-button>
           <el-button
             link
+            type="info"
+            v-if="isShowDetail(scope.row)"
+            @click="openForm('detail', scope.row.id)"
+            v-hasPermi="['business:finance-application:query']"
+          >
+            详情
+          </el-button>
+          <el-button
+            link
             type="primary"
+            v-if="isShowEdit(scope.row)"
             @click="sendApprove(scope.row.id)"
-            v-hasPermi="['business:finance-manage:sendApprove']"
+            v-hasPermi="['business:finance-application:sendApprove']"
           >
             送审
           </el-button>
           <el-button
             link
             type="danger"
+            v-if="isShowEdit(scope.row)"
             @click="handleDelete(scope.row.id)"
-            v-hasPermi="['business:finance-manage:delete']"
+            v-hasPermi="['business:finance-application:delete']"
           >
             删除
           </el-button>
@@ -175,6 +187,8 @@ import FinanceManageForm from './FinanceManageForm.vue'
 import {FinanceLeaseApi, FinanceLeaseVO} from "@/api/business/finance/financelease";
 import {FinanceApplicationApi} from "@/api/business/finance/financeapplication";
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/finance/financecompany";
+import {isShowEdit, isShowDetail} from "@/api/bpm/task";
+
 
 
 const financeLeaseOptions = ref<any[]>([])
