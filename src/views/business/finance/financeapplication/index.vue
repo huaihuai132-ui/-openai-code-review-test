@@ -307,9 +307,10 @@ const handleDocExport = async () => {
 
 /** 初始化 **/
 onMounted(async () => {
-  getList()
-  // 加载岗位列表
+  // 先加载企业列表，确保在渲染表格时企业名称能正确显示
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
   companyList.value = response
+  // 然后加载数据列表
+  await getList()
 })
 </script>
