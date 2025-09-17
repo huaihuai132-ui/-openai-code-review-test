@@ -613,12 +613,12 @@ const openDetail = (id: number) => {
 }
 
 /** 删除按钮操作 */
-const handleDelete = async (id: number | string) => {
+const handleDelete = async (id: number) => {
   try {
     // 删除的二次确认
     await message.delConfirm()
     // 发起删除
-    await OaMeetingApi.deleteOaMeeting(Number(id))
+    await OaMeetingApi.deleteOaMeeting(id)
     message.success(t('common.delSuccess'))
     // 刷新列表
     await getList()
