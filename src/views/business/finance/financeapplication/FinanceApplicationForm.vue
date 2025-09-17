@@ -245,7 +245,7 @@ const formData = ref({
   badCreditRecordReason: undefined,
   fileList: [] as string[],
   sequenceCode: undefined,
-  status: 0,
+  status: -1,
   processInstanceId: undefined,
   deptId: undefined,
 })
@@ -361,7 +361,7 @@ const resetForm = () => {
     badCreditRecordReason: undefined,
     fileList: [],
     sequenceCode: undefined,
-    status: 0,
+    status: -1,
     processInstanceId: undefined,
     deptId: undefined,
   }
