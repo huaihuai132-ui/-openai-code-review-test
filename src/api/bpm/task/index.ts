@@ -43,8 +43,9 @@ export enum TaskStatusEnum {
 
 /** 用于有审批流的列表页是否显示编辑、送审、删除 */
 export const isShowEdit = (row: any) => {
-  return row.status == TaskStatusEnum.NOT_START || row.status == TaskStatusEnum.REJECT
-    || row.status == TaskStatusEnum.CANCEL || row.status == TaskStatusEnum.RETURN;
+  return row.status == TaskStatusEnum.NOT_START || row.status == TaskStatusEnum.WAIT 
+    || row.status == TaskStatusEnum.REJECT || row.status == TaskStatusEnum.CANCEL 
+    || row.status == TaskStatusEnum.RETURN;
 }
 
 /** 用于有审批流的列表页是否显示详情 */
