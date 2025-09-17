@@ -371,7 +371,7 @@
                     <span class="remark-value">{{ formData.fsObviouslyFalseReason }}</span>
                   </div>
                 </div>
-                
+
                 <div class="warning-item">
                   <div class="warning-row">
                     <div class="radio-item">
@@ -386,7 +386,7 @@
                     <span class="remark-value">{{ formData.arSharpRiseDelayReason }}</span>
                   </div>
                 </div>
-                
+
                 <div class="warning-item">
                   <div class="warning-row">
                     <div class="radio-item">
@@ -401,7 +401,7 @@
                     <span class="remark-value">{{ formData.inventorySurgeReason }}</span>
                   </div>
                 </div>
-                
+
                 <div class="warning-item">
                   <div class="warning-row">
                     <div class="radio-item">
@@ -416,7 +416,7 @@
                     <span class="remark-value">{{ formData.bankDebtRiseReason }}</span>
                   </div>
                 </div>
-                
+
                 <div class="warning-item">
                   <div class="warning-row">
                     <div class="radio-item">
@@ -431,7 +431,7 @@
                     <span class="remark-value">{{ formData.debtStructChangeReason }}</span>
                   </div>
                 </div>
-                
+
                 <div class="warning-item">
                   <div class="warning-row">
                     <div class="radio-item">
@@ -446,7 +446,7 @@
                     <span class="remark-value">{{ formData.currentRatioLowReason }}</span>
                   </div>
                 </div>
-                
+
                 <div class="warning-item">
                   <div class="warning-row">
                     <div class="radio-item">
@@ -461,7 +461,7 @@
                     <span class="remark-value">{{ formData.costUpProfitDownReason }}</span>
                   </div>
                 </div>
-                
+
                 <div class="warning-item">
                   <div class="warning-row">
                     <div class="radio-item">
@@ -476,7 +476,7 @@
                     <span class="remark-value">{{ formData.cashBalanceDeclineReason }}</span>
                   </div>
                 </div>
-                
+
                 <div class="warning-item">
                   <div class="warning-row">
                     <div class="radio-item">
@@ -491,7 +491,7 @@
                     <span class="remark-value">{{ formData.paymentDelayReason }}</span>
                   </div>
                 </div>
-                
+
                 <div class="warning-item">
                   <div class="warning-row">
                     <div class="radio-item full-width">
@@ -509,20 +509,20 @@
                 <div class="conclusion-item">
                   <div class="form-row">
                     <el-form-item label="对项目风险状况的总体评价" prop="overallRiskEval" label-width="230px" class="full-width">
-                      <el-input 
-                        v-model="formData.overallRiskEval" 
-                        placeholder="无" 
-                        readonly 
+                      <el-input
+                        v-model="formData.overallRiskEval"
+                        placeholder="无"
+                        readonly
                         type="textarea"
                         :rows="3" />
                     </el-form-item>
                   </div>
                   <div class="form-row">
                     <el-form-item label="对租赁物件状况的总体评价" prop="overallLeaseEval" label-width="230px" class="full-width">
-                      <el-input 
-                        v-model="formData.overallLeaseEval" 
-                        placeholder="无" 
-                        readonly 
+                      <el-input
+                        v-model="formData.overallLeaseEval"
+                        placeholder="无"
+                        readonly
                         type="textarea"
                         :rows="3" />
                     </el-form-item>
@@ -556,9 +556,9 @@
 <script lang="ts" setup>
 import { formatDate } from '@/utils/formatTime'
 import { propTypes } from '@/utils/propTypes'
-import { FinanceManageApi, type FinanceManageVO } from 'src/api/business/finance/financemanage'
-import { FinanceCompanyApi, type FinanceCompanyVO } from 'src/api/business/finance/financecompany'
-import { FinanceLeaseApi } from 'src/api/business/finance/financelease'
+import { FinanceManageApi, type FinanceManageVO } from '@/api/business/finance/financemanage'
+import { FinanceCompanyApi, type FinanceCompanyVO } from '@/api/business/finance/financecompany'
+import { FinanceLeaseApi } from '@/api/business/finance/financelease'
 import { Document } from '@element-plus/icons-vue'
 import { BatchFileUpload } from '@/components/UploadFile'
 
@@ -733,7 +733,7 @@ const getStatusText = (status: number) => {
 /** 解析附件列表 */
 const parseFileList = (fileData: any) => {
     if (!fileData) return []
-    
+
     // 如果是字符串，尝试按逗号分割
     if (typeof fileData === 'string') {
         // 先尝试 JSON 解析
@@ -744,12 +744,12 @@ const parseFileList = (fileData: any) => {
             return fileData.split(',').filter(id => id.trim() !== '')
         }
     }
-    
+
     // 如果已经是数组，直接返回
     if (Array.isArray(fileData)) {
         return fileData
     }
-    
+
     return []
 }
 
@@ -770,12 +770,12 @@ const loadFinanceManageData = async (businessKey: string) => {
           formData.value[key] = response[key]
         }
       })
-      
+
       // 处理数值类型转换为字符串用于显示
       formData.value.leaseAmount = response.leaseAmount ? String(response.leaseAmount) : ''
       formData.value.leaseAmountSurplus = response.leaseAmountSurplus ? String(response.leaseAmountSurplus) : ''
       formData.value.userId = response.userId ? String(response.userId) : ''
-      
+
       // 处理财务指标数值
       formData.value.totalAssets = response.totalAssets ? String(response.totalAssets) : ''
       formData.value.inventory = response.inventory ? String(response.inventory) : ''
@@ -786,17 +786,17 @@ const loadFinanceManageData = async (businessKey: string) => {
       formData.value.mainBizIncome = response.mainBizIncome ? String(response.mainBizIncome) : ''
       formData.value.netProfit = response.netProfit ? String(response.netProfit) : ''
       formData.value.debtAssetRatio = response.debtAssetRatio ? String(response.debtAssetRatio) : ''
-      
+
       // 处理日期显示
       formData.value.manageDateText = response.manageDate ? formatDate(response.manageDate, 'YYYY-MM-DD') : ''
-      
+
       // 处理风险管理建议文本
       formData.value.riskMgmtSuggestionText = getRiskMgmtSuggestionText(response.riskMgmtSuggestion)
-      
+
       // 处理文件列表
       const processedFileList = response.fileList ? (typeof response.fileList === 'string' ? response.fileList.split(',').filter(id => id.trim() !== '') : response.fileList) : []
       formData.value.fileList = processedFileList
-      
+
       // 加载企业信息和租赁单信息
       await loadCompanyData()
       await loadLeaseData()
@@ -813,7 +813,7 @@ const loadCompanyData = async () => {
   try {
     const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
     companyList.value = response
-    
+
     // 找到对应的企业名称
     const company = companyList.value.find(c => c.id === formData.value.companyId)
     formData.value.companyName = company?.enterpriseName || ''
@@ -827,7 +827,7 @@ const loadLeaseData = async () => {
   try {
     const list = await FinanceLeaseApi.getFinanceLeaseListApproved()
     financeLeaseOptions.value = Array.isArray(list) ? list : []
-    
+
     // 找到对应的租赁单编号
     const lease = financeLeaseOptions.value.find(l => l.id === formData.value.leaseId)
     formData.value.leaseIdText = lease?.leasedCode || lease?.name || String(formData.value.leaseId || '')
@@ -852,16 +852,16 @@ const getInfo = async () => {
     if (!targetId && queryId) {
         targetId = queryId
     }
-    
+
     if (!targetId) {
         console.error('没有找到有效的 ID 来加载数据')
         return
     }
-    
+
     await loadFinanceManageData(targetId as string)
 }
 
-defineExpose({ 
+defineExpose({
     open: getInfo
 }) // 提供 open 方法，用于打开弹窗
 

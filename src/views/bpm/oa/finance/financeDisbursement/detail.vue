@@ -204,10 +204,10 @@
 <script lang="ts" setup>
 import { formatDate } from '@/utils/formatTime'
 import { propTypes } from '@/utils/propTypes'
-import { FinanceDisbursementApi, type FinanceDisbursementVO } from 'src/api/business/finance/financedisbursement'
-import { FinanceCompanyApi, type FinanceCompanyVO } from 'src/api/business/finance/financecompany'
-import { FinanceLeaseApi } from 'src/api/business/finance/financelease'
-import { FinanceRepaymentApi, type FinanceRepaymentVO } from 'src/api/business/finance/financerepayment'
+import { FinanceDisbursementApi, type FinanceDisbursementVO } from '@/api/business/finance/financedisbursement'
+import { FinanceCompanyApi, type FinanceCompanyVO } from '@/api/business/finance/financecompany'
+import { FinanceLeaseApi } from '@/api/business/finance/financelease'
+import { FinanceRepaymentApi, type FinanceRepaymentVO } from '@/api/business/finance/financerepayment'
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
 import { Document } from '@element-plus/icons-vue'
 import { BatchFileUpload } from '@/components/UploadFile'
@@ -334,7 +334,7 @@ const getStatusText = (status: number) => {
 /** 解析附件列表 */
 const parseFileList = (fileData: any) => {
     if (!fileData) return []
-    
+
     // 如果是字符串，尝试按逗号分割
     if (typeof fileData === 'string') {
         // 先尝试 JSON 解析
@@ -345,12 +345,12 @@ const parseFileList = (fileData: any) => {
             return fileData.split(',').filter(id => id.trim() !== '')
         }
     }
-    
+
     // 如果已经是数组，直接返回
     if (Array.isArray(fileData)) {
         return fileData
     }
-    
+
     return []
 }
 
@@ -371,7 +371,7 @@ const loadFinanceDisbursementData = async (businessKey: string) => {
           formData.value[key] = response[key]
         }
       })
-      
+
       // 处理数值类型转换为字符串用于显示
       formData.value.propertyOriginalValue = response.propertyOriginalValue ? String(response.propertyOriginalValue) : ''
       formData.value.propertyAssessmentValue = response.propertyAssessmentValue ? String(response.propertyAssessmentValue) : ''
@@ -385,19 +385,19 @@ const loadFinanceDisbursementData = async (businessKey: string) => {
       formData.value.thistimeAmount = response.thistimeAmount ? String(response.thistimeAmount) : ''
       formData.value.accruedAmount = response.accruedAmount ? String(response.accruedAmount) : ''
       formData.value.userId = response.userId ? String(response.userId) : ''
-      
+
       // 处理文件列表
       const processedFileList = response.fileList ? (typeof response.fileList === 'string' ? response.fileList.split(',').filter(id => id.trim() !== '') : response.fileList) : []
       formData.value.fileList = processedFileList
-      
+
       // 处理文本字段
       formData.value.leaseModeText = getLeaseModeText(response.leaseMode)
       formData.value.repaymentModeText = getRepaymentModeText(response.repaymentMode)
-      
+
       // 加载企业信息和租赁单信息
       await loadCompanyData()
       await loadLeaseData()
-      
+
       // 加载还款计划
       if (response.id) {
         queryParams.disbursementId = response.id
@@ -416,7 +416,7 @@ const loadCompanyData = async () => {
   try {
     const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
     companyList.value = response
-    
+
     // 找到对应的企业名称
     const company = companyList.value.find(c => c.id === formData.value.companyId)
     formData.value.companyName = company?.enterpriseName || ''
@@ -430,7 +430,7 @@ const loadLeaseData = async () => {
   try {
     const list = await FinanceLeaseApi.getFinanceLeaseListApproved()
     financeLeaseOptions.value = Array.isArray(list) ? list : []
-    
+
     // 找到对应的租赁单编号
     const lease = financeLeaseOptions.value.find(l => l.id === formData.value.leaseId)
     formData.value.leaseIdText = lease?.leasedCode || lease?.name || String(formData.value.leaseId || '')
@@ -473,16 +473,16 @@ const getInfo = async () => {
     if (!targetId && queryId) {
         targetId = queryId
     }
-    
+
     if (!targetId) {
         console.error('没有找到有效的 ID 来加载数据')
         return
     }
-    
+
     await loadFinanceDisbursementData(targetId as string)
 }
 
-defineExpose({ 
+defineExpose({
     open: getInfo
 }) // 提供 open 方法，用于打开弹窗
 

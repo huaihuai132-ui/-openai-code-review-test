@@ -128,7 +128,7 @@
 <script lang="ts" setup>
 import { formatDate } from '@/utils/formatTime'
 import { propTypes } from '@/utils/propTypes'
-import { FinanceLeaseApi, type FinanceLeaseVO } from 'src/api/business/finance/financelease'
+import { FinanceLeaseApi, type FinanceLeaseVO } from '@/api/business/finance/financelease'
 import { Document } from '@element-plus/icons-vue'
 import { BatchFileUpload } from '@/components/UploadFile'
 
@@ -254,7 +254,7 @@ const getDeviceStatusType = (status: number) => {
 /** 解析附件列表 */
 const parseFileList = (fileData: any) => {
     if (!fileData) return []
-    
+
     // 如果是字符串，尝试按逗号分割
     if (typeof fileData === 'string') {
         // 先尝试 JSON 解析
@@ -265,12 +265,12 @@ const parseFileList = (fileData: any) => {
             return fileData.split(',').filter(id => id.trim() !== '')
         }
     }
-    
+
     // 如果已经是数组，直接返回
     if (Array.isArray(fileData)) {
         return fileData
     }
-    
+
     return []
 }
 
@@ -291,12 +291,12 @@ const loadFinanceLeaseData = async (businessKey: string) => {
           formData.value[key] = response[key]
         }
       })
-      
+
       // 处理一些特殊字段
       formData.value.leaseModeText = getLeaseModeText(response.leaseMode)
       formData.value.lienModeText = getLienModeText(response.lienMode)
       formData.value.leaseDateText = response.leaseDate ? formatDate(response.leaseDate, 'YYYY-MM-DD') : ''
-      
+
       // 将数值类型转换为字符串用于显示
       formData.value.leasedPropertyNum = response.leasedPropertyNum ? String(response.leasedPropertyNum) : ''
       formData.value.leasedPropertyValue = response.leasedPropertyValue ? String(response.leasedPropertyValue) : ''
@@ -304,7 +304,7 @@ const loadFinanceLeaseData = async (businessKey: string) => {
       formData.value.leaseTerm = response.leaseTerm ? String(response.leaseTerm) : ''
       formData.value.interestRate = response.interestRate ? String(response.interestRate) : ''
       formData.value.userId = response.userId ? String(response.userId) : ''
-      
+
       // 处理文件列表 - 与 FinanceLeaseForm 保持一致
       const processedFileList = response.fileList ? (typeof response.fileList === 'string' ? response.fileList.split(',').filter(id => id.trim() !== '') : response.fileList) : []
       formData.value.fileList = processedFileList
@@ -325,16 +325,16 @@ const getInfo = async () => {
     }
 
     const targetId = props.id || queryId
-    
+
     if (!targetId) {
         console.error('没有找到有效的 ID 来加载数据')
         return
     }
-    
+
     await loadFinanceLeaseData(targetId as string)
 }
 
-defineExpose({ 
+defineExpose({
     open: getInfo
 }) // 提供 open 方法，用于打开弹窗
 

@@ -355,7 +355,7 @@ const remainingRouter: AppRouteRecordRaw[] = [
       },
       {
         path: 'oa/financeLease/create',
-        component: () => import('@/views/bpm/oa/financeLease/create.vue'),
+        component: () => import('@/views/bpm/oa/finance/financeLease/create.vue'),
         name: 'OAFinanceLeaseCreate',
         meta: {
           noCache: true,
@@ -367,7 +367,7 @@ const remainingRouter: AppRouteRecordRaw[] = [
       },
       {
         path: 'oa/financeLease/detail',
-        component: () => import('@/views/bpm/oa/financeLease/detail.vue'),
+        component: () => import('@/views/bpm/oa/finance/financeLease/detail.vue'),
         name: 'OAFinanceLeaseDetail',
         meta: {
           noCache: true,

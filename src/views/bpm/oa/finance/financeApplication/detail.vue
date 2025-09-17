@@ -167,8 +167,8 @@
 <script lang="ts" setup>
 import { formatDate } from '@/utils/formatTime'
 import { propTypes } from '@/utils/propTypes'
-import { FinanceApplicationApi, type FinanceApplicationVO } from 'src/api/business/finance/financeapplication'
-import { FinanceCompanyApi, type FinanceCompanyVO } from 'src/api/business/finance/financecompany'
+import { FinanceApplicationApi, type FinanceApplicationVO } from '@/api/business/finance/financeapplication'
+import { FinanceCompanyApi, type FinanceCompanyVO } from '@/api/business/finance/financecompany'
 import { Document } from '@element-plus/icons-vue'
 import { BatchFileUpload } from '@/components/UploadFile'
 
@@ -260,7 +260,7 @@ const getStatusText = (status: number) => {
 /** 解析附件列表 */
 const parseFileList = (fileData: any) => {
     if (!fileData) return []
-    
+
     // 如果是字符串，尝试按逗号分割
     if (typeof fileData === 'string') {
         // 先尝试 JSON 解析
@@ -271,12 +271,12 @@ const parseFileList = (fileData: any) => {
             return fileData.split(',').filter(id => id.trim() !== '')
         }
     }
-    
+
     // 如果已经是数组，直接返回
     if (Array.isArray(fileData)) {
         return fileData
     }
-    
+
     return []
 }
 
@@ -297,18 +297,18 @@ const loadFinanceApplicationData = async (businessKey: string) => {
           formData.value[key] = response[key]
         }
       })
-      
+
       // 处理数值类型转换为字符串用于显示
       formData.value.leasedPropertyNum = response.leasedPropertyNum ? String(response.leasedPropertyNum) : ''
       formData.value.leasedPropertyValue = response.leasedPropertyValue ? String(response.leasedPropertyValue) : ''
       formData.value.leaseAmount = response.leaseAmount ? String(response.leaseAmount) : ''
       formData.value.leaseTerm = response.leaseTerm ? String(response.leaseTerm) : ''
       formData.value.userId = response.userId ? String(response.userId) : ''
-      
+
       // 处理文件列表
       const processedFileList = response.fileList ? (typeof response.fileList === 'string' ? response.fileList.split(',').filter(id => id.trim() !== '') : response.fileList) : []
       formData.value.fileList = processedFileList
-      
+
       // 加载企业信息
       await loadCompanyData()
     }
@@ -324,7 +324,7 @@ const loadCompanyData = async () => {
   try {
     const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
     companyList.value = response
-    
+
     // 找到对应的企业名称
     const company = companyList.value.find(c => c.id === formData.value.companyId)
     formData.value.companyName = company?.enterpriseName || ''
@@ -349,16 +349,16 @@ const getInfo = async () => {
     if (!targetId && queryId) {
         targetId = queryId
     }
-    
+
     if (!targetId) {
         console.error('没有找到有效的 ID 来加载数据')
         return
     }
-    
+
     await loadFinanceApplicationData(targetId as string)
 }
 
-defineExpose({ 
+defineExpose({
     open: getInfo
 }) // 提供 open 方法，用于打开弹窗
 
