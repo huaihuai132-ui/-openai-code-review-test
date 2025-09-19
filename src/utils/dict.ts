@@ -263,4 +263,6 @@ export enum DICT_TYPE {
   ISSUE_STATUS = 'issue_status',
   ISSUE_AUDIT_STATUS = 'issue_audit_status',
   MEET_STATUS = 'meet_status',
+  SUPPLYCHAIN_PRODUCT = 'supplychain_product',
+  SUPPLYCHAIN_APPLYSTATUS = 'supplychain_applystatus',
 }
