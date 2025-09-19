@@ -185,6 +185,7 @@
             v-if="isShowEdit(scope.row)"
             @click="openForm('update', scope.row.id)"
             v-hasPermi="['business:finance-application:update']"
+            :disabled="approveLoading[scope.row.id]"
           >
             编辑
           </el-button>
@@ -194,6 +195,7 @@
             v-if="isShowDetail(scope.row)"
             @click="openForm('detail', scope.row.id)"
             v-hasPermi="['business:finance-application:query']"
+            :disabled="approveLoading[scope.row.id]"
           >
             详情
           </el-button>
@@ -203,6 +205,8 @@
             v-if="isShowEdit(scope.row)"
             @click="sendApprove(scope.row.id)"
             v-hasPermi="['business:finance-application:sendApprove']"
+            :disabled="approveLoading[scope.row.id]"
+            :loading="approveLoading[scope.row.id]"
           >
             送审
           </el-button>
@@ -212,6 +216,7 @@
             v-if="isShowEdit(scope.row)"
             @click="handleDelete(scope.row.id)"
             v-hasPermi="['business:finance-application:delete']"
+            :disabled="approveLoading[scope.row.id]"
           >
             删除
           </el-button>
@@ -251,6 +256,7 @@ import FinanceLeaseForm from './FinanceLeaseForm.vue'
 import DeviceListDisplay from './components/DeviceListDisplay.vue'
 import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/finance/financecompany";
 import { status } from 'nprogress'
+const approveLoading = ref<Record<number, boolean>>({}) // 送审按钮的加载状态，按ID管理
 import {isShowEdit, isShowDetail} from "@/api/bpm/task";
 import {
   FinanceApplicationApi,
@@ -374,14 +380,17 @@ const sendApprove = async (id: number) => {
   try {
     // 送审的二次确认
     await message.sendApproveConfirm()
-    // 发起删除
+    // 设置加载状态
+    approveLoading.value[id] = true
+    // 发起送审
     await FinanceLeaseApi.sendApprove(id)
     message.success(t('common.sendApproveSuccess'))
     // 刷新列表
     await getList()
   } catch {
   } finally {
-
+    // 清除加载状态
+    approveLoading.value[id] = false
   }
 }
 
