@@ -68,4 +68,9 @@ export const FinanceDisbursementApi = {
   sendApprove: async (id: number) => {
     return await request.post({ url: `/business/finance-disbursement/sendApprove?id=` + id })
   },
+
+    // 融资租赁申请送审
+    sendApprove: async (id: number) => {
+      return await request.post({ url: `/business/finance-disbursement/sendApprove?id=` + id })
+    },
 }

@@ -12,7 +12,13 @@
         <h3 class="section-title">基本信息</h3>
         <div class="form-row">
           <el-form-item label="融资租赁单编号" prop="leaseId">
-            <el-select v-model="formData.leaseId" placeholder="请选择融资租赁单编号" filterable clearable>
+            <el-select
+              v-model="formData.leaseId"
+              placeholder="请选择融资租赁单编号"
+              filterable
+              clearable
+              @change="handleLeaseIdChange"
+            >
               <el-option
                 v-for="item in financeLeaseOptions"
                 :key="item.id"
@@ -233,7 +239,7 @@ const formData = ref({
   beneficiaryAccount: undefined,
   fileList: [] as string[],
   sequenceCode: undefined,
-  status: -1,
+  status: 1,
   processInstanceId: undefined,
   deptId: undefined,
 })
@@ -277,6 +283,45 @@ const loadFinanceLeaseOptions = async () => {
     financeLeaseOptions.value = Array.isArray(list) ? list : []
   } catch (e) {
     financeLeaseOptions.value = []
+  }
+}
+
+// 监听融资租赁单编号变化，自动填充相关数据
+const handleLeaseIdChange = async (leaseId: number) => {
+  if (!leaseId) {
+    // 如果清空选择，则清空相关字段
+    formData.value.companyId = undefined
+    formData.value.projectName = undefined
+    formData.value.leaseMode = undefined
+    formData.value.propertyMain = undefined
+    formData.value.propertyOriginalValue = undefined
+    formData.value.propertyAssessmentValue = undefined
+    formData.value.usefulLife = undefined
+    formData.value.leaseAmount = undefined
+    formData.value.leaseTerm = undefined
+    formData.value.interestRate = undefined
+    return
+  }
+
+  try {
+    // 获取选中的融资租赁详情
+    const leaseDetail = await FinanceLeaseApi.getFinanceLease(leaseId)
+    if (leaseDetail) {
+      // 自动填充相关字段
+      formData.value.companyId = leaseDetail.companyId
+      formData.value.projectName = leaseDetail.leasedProperty // 使用融资标的物名称作为项目名称
+      formData.value.leaseMode = leaseDetail.leaseMode
+      formData.value.propertyMain = leaseDetail.leasedProperty
+      formData.value.propertyOriginalValue = leaseDetail.leasedPropertyValue
+      formData.value.propertyAssessmentValue = leaseDetail.leasedPropertyValue
+      formData.value.usefulLife = undefined // 这个字段在租赁表中没有，保持为空
+      formData.value.leaseAmount = leaseDetail.leaseAmount
+      formData.value.leaseTerm = leaseDetail.leaseTerm
+      formData.value.interestRate = leaseDetail.interestRate
+    }
+  } catch (error) {
+    console.error('获取融资租赁详情失败:', error)
+    message.error('获取融资租赁详情失败')
   }
 }
 
@@ -369,7 +414,7 @@ const resetForm = () => {
     beneficiaryAccount: undefined,
     fileList: [],
     sequenceCode: undefined,
-    status: -1,
+    status: 1,
     processInstanceId: undefined,
     deptId: undefined,
   }
