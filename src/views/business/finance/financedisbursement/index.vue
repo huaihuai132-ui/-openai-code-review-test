@@ -330,6 +330,21 @@ const handleDelete = async (id: number) => {
     await getList()
   } catch {}
 }
+/** 送审按钮操作 */
+const sendApprove = async (id: number) => {
+  try {
+    // 送审的二次确认
+    await message.sendApproveConfirm()
+    // 发起删除
+    await FinanceDisbursementApi.sendApprove(id)
+    message.success(t('common.sendApproveSuccess'))
+    // 刷新列表
+    await getList()
+  } catch {
+  } finally {
+
+  }
+}
 
 /** 导出按钮操作 */
 const handleExport = async () => {

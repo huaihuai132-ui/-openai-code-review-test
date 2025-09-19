@@ -233,7 +233,7 @@ const formData = ref({
   beneficiaryAccount: undefined,
   fileList: [] as string[],
   sequenceCode: undefined,
-  status: 1,
+  status: -1,
   processInstanceId: undefined,
   deptId: undefined,
 })
@@ -369,7 +369,7 @@ const resetForm = () => {
     beneficiaryAccount: undefined,
     fileList: [],
     sequenceCode: undefined,
-    status: 1,
+    status: -1,
     processInstanceId: undefined,
     deptId: undefined,
   }

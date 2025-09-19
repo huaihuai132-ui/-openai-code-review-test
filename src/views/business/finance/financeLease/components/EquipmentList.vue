@@ -5,6 +5,14 @@
       <el-button type="primary" @click="handleAdd">
         <Icon icon="ep:plus" class="mr-5px" /> 新增设备
       </el-button>
+      <el-button
+          type="warning"
+          plain
+          @click="handleImport"
+          v-hasPermi="['system:user:import']"
+        >
+        <Icon icon="ep:upload" /> 导入
+      </el-button>
     </div>
 
     <!-- 设备列表表格 -->
@@ -124,11 +132,15 @@
       </template>
     </el-dialog>
   </div>
+
+    <!-- 设备导入对话框 -->
+    <DeviceImportForm ref="importFormRef" @success="getDeviceList" />
 </template>
 
 <script setup lang="ts">
 import { formatDate } from '@/utils/formatTime'
 import { FinanceDeviceApi, FinanceDeviceVO } from '@/api/business/finance/financedevice'
+import DeviceImportForm from './DeviceImportForm.vue'
 
 // 定义设备数据结构
 interface Equipment {
@@ -158,6 +170,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emits>()
+
+
 
 // 响应式数据
 const loading = ref(false)
@@ -323,6 +337,13 @@ defineExpose({
     equipmentList.value = list
   }
 })
+
+/** 设备导入 */
+const importFormRef = ref()
+const handleImport = () => {
+  importFormRef.value.open()
+}
+
 
 // 组件挂载时获取设备列表
 onMounted(() => {
