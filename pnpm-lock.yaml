@@ -155,6 +155,9 @@ importers:
       url:
         specifier: ^0.11.3
         version: 0.11.4
+      v-region:
+        specifier: ^3.4.1
+        version: 3.4.1(vue@3.5.12(typescript@5.3.3))
       v3-jsoneditor:
         specifier: ^0.0.6
         version: 0.0.6
@@ -5209,6 +5212,16 @@ packages:
   uuid@10.0.0:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
     hasBin: true
+
+  v-dropdown@3.4.0:
+    resolution: {integrity: sha512-wgMb9P2jNhwrCVdD4ckcuou2XivK0ac9XNUH4cXithWMi4LRdOYgNNoT/Gl9ltXaIdO0I7izxpOZG/ddRJUkow==}
+    peerDependencies:
+      vue: ^3.3.0
+
+  v-region@3.4.1:
+    resolution: {integrity: sha512-x1EMWwcTNE6HABTmSTz2+ejTFU+0ydYF+THWOmrfhy2dk7WSa0822F6ihFDJADsAL4EuHaqI+QR1ggLsOo3d+w==}
+    peerDependencies:
+      vue: ^3.4.0
 
   v3-jsoneditor@0.0.6:
     resolution: {integrity: sha512-9G0sXWXUn67SBkn46ycWfwPwjuJu/lcsQaNzMtXAR2/95hMV21WfcRNsqJ+vVVrSHQehohB/9fVLwYEXz0u/KA==}
@@ -10925,6 +10938,15 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   uuid@10.0.0: {}
+
+  v-dropdown@3.4.0(vue@3.5.12(typescript@5.3.3)):
+    dependencies:
+      vue: 3.5.12(typescript@5.3.3)
+
+  v-region@3.4.1(vue@3.5.12(typescript@5.3.3)):
+    dependencies:
+      v-dropdown: 3.4.0(vue@3.5.12(typescript@5.3.3))
+      vue: 3.5.12(typescript@5.3.3)
 
   v3-jsoneditor@0.0.6:
     dependencies:
