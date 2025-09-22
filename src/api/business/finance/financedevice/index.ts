@@ -22,6 +22,11 @@ export const FinanceDeviceApi = {
     return await request.get({ url: `/business/finance-device/page`, params })
   },
 
+  //查询去重过滤后的融资租赁设备分页
+  getFinancDistincteDevicePage: async (params: any) => {
+    return await request.get({ url: `/business/finance-device/get-distinct`, params })
+  },
+
   // 查询融资租赁设备详情
   getFinanceDevice: async (id: number) => {
     return await request.get({ url: `/business/finance-device/get?id=` + id })

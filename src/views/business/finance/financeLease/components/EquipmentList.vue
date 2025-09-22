@@ -234,8 +234,9 @@ const getStatusText = (status: number) => {
 // 获取设备列表
 const getDeviceList = async () => {
   try {
-    const data = await FinanceDeviceApi.getFinanceDevicePage({ pageSize: 100 }) // 获取所有设备
-    deviceList.value = data.list
+    const data = await FinanceDeviceApi.getFinancDistincteDevicePage({ pageSize: 100 }) // 获取所有设备
+    deviceList.value = Array.isArray(data) ? data : []
+    console.log('设备列表加载成功:', deviceList.value)
   } catch (error) {
     console.error('Error loading device list:', error)
     ElMessage.error('加载设备列表失败')
