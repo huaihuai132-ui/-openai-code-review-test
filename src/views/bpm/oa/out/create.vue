@@ -28,6 +28,10 @@
             <el-button :disabled="formLoading" type="primary" @click="submitForm">
               确 定
             </el-button>
+            <el-button type="info" @click="showPrintPreview">
+              <Icon icon="ep:view" class="mr-5px" />
+              打印预览
+            </el-button>
           </el-form-item>
         </el-form>
       </ContentWrap>
@@ -41,12 +45,16 @@
       </ContentWrap>
     </el-col>
   </el-row>
+  <!-- 打印预览弹窗 -->
+  <PrintPreview v-model="printPreviewVisible" :out-data="previewData" />
 </template>
 <script lang="ts" setup>
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import * as OutApi from '@/api/bpm/form/out'
 import { useTagsViewStore } from '@/store/modules/tagsView'
 import { BatchFileUpload } from '@/components/UploadFile'
+import PrintPreview from './components/PrintPreview.vue'
+import { useUserStore } from '@/store/modules/user'
 
 // 审批相关：import
 import * as DefinitionApi from '@/api/bpm/definition'
@@ -60,9 +68,13 @@ defineOptions({ name: 'BpmOAOutCreate' })
 const message = useMessage() // 消息弹窗
 const { delView } = useTagsViewStore() // 视图操作
 const { push, currentRoute } = useRouter() // 路由
+const userStore = useUserStore() // 用户信息
 
 // 定义 emit 事件
 const emit = defineEmits(['success'])
+
+const printPreviewVisible = ref(false) // 打印预览弹窗显示状态
+const previewData = ref({}) // 预览数据
 
 const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
 const formData = ref({
@@ -89,6 +101,59 @@ const startUserSelectAssignees = ref<Record<string, number[]>>({}) // 添加类�
 const tempStartUserSelectAssignees = ref<Record<string, number[]>>({}) // 添加类型
 const activityNodes = ref<ProcessInstanceApi.ApprovalNodeInfo[]>([]) // 已有类型
 const processDefinitionId = ref('')
+
+/** 显示打印预览 */
+const showPrintPreview = () => {
+  // 准备预览数据
+  previewData.value = {
+    creator: userStore.getUser?.nickname || '当前用户',
+    createTime: new Date(),
+    type: formData.value.type,
+    startTime: formData.value.startTime,
+    endTime: formData.value.endTime,
+    reason: formData.value.reason,
+    day: calculateDays()
+  }
+  printPreviewVisible.value = true
+}
+
+// 计算天数差
+const calculateDays = () => {
+  if (!formData.value.startTime || !formData.value.endTime) {
+    return 0
+  }
+  
+  try {
+    // 处理时间戳（毫秒或秒）
+    let startTimestamp = Number(formData.value.startTime)
+    let endTimestamp = Number(formData.value.endTime)
+    
+    // 如果是秒级时间戳，转换为毫秒
+    if (startTimestamp.toString().length === 10) {
+      startTimestamp = startTimestamp * 1000
+    }
+    if (endTimestamp.toString().length === 10) {
+      endTimestamp = endTimestamp * 1000
+    }
+    
+    const diffTime = Math.abs(endTimestamp - startTimestamp)
+    if (diffTime === 0) {
+      return 0
+    }
+    
+    // 计算小时数
+    const hours = diffTime / (60 * 60 * 1000)
+    if (hours < 4) {
+      return 0.5
+    }
+    
+    // 大于等于4小时，向上取整算一天
+    const oneDay = 24 * 60 * 60 * 1000 // 一天的毫秒数
+    return Math.ceil(diffTime / oneDay)
+  } catch (error) {
+    return 0
+  }
+}
 
 /** 提交表单 */
 const submitForm = async () => {

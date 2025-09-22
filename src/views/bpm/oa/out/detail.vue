@@ -1,5 +1,12 @@
 <template>
-    <ContentWrap title="外出申请详情" v-loading="detailLoading">
+  <div v-loading="detailLoading">
+    <div class="mb-10px text-right">
+      <el-button type="info" @click="showPrintPreview" v-if="detailData.id">
+        <Icon icon="ep:view" class="mr-5px" />
+        打印预览
+      </el-button>
+    </div>
+    <ContentWrap title="外出申请详情">
         <el-descriptions :column="1" border>
             <el-descriptions-item label="外出类型">
                 <dict-tag :type="DICT_TYPE.BPM_OA_OUT_TYPE" :value="detailData.type" />
@@ -12,9 +19,6 @@
             </el-descriptions-item>
             <el-descriptions-item label="结束时间">
                 {{ formatDate(detailData.endTime) }}
-            </el-descriptions-item>
-            <el-descriptions-item label="外出天数">
-                {{ detailData.day }} 天
             </el-descriptions-item>
             <el-descriptions-item label="申请时间">
                 {{ formatDate(detailData.createTime) }}
@@ -30,6 +34,10 @@
             </el-descriptions-item>
         </el-descriptions>
     </ContentWrap>
+  </div>
+  
+  <!-- 打印预览弹窗 -->
+  <PrintPreview v-model="printPreviewVisible" :out-data="detailData" />
 </template>
 
 <script setup lang="ts">
@@ -38,6 +46,7 @@ import * as OutApi from '@/api/bpm/form/out'
 import { formatDate } from '@/utils/formatTime'
 import { propTypes } from '@/utils/propTypes'
 import { BatchFileUpload } from '@/components/UploadFile'
+import PrintPreview from './components/PrintPreview.vue'
 
 defineOptions({ name: 'BpmOAOutDetail' })
 
@@ -66,6 +75,7 @@ const detailData = ref<OutApi.OutVO>({
     sequenceCode: ''
 })
 const fileIdList = ref<string[]>([]) // 文件ID列表（使用字符串避免精度丢失）
+const printPreviewVisible = ref(false) // 打印预览弹窗显示状态
 
 /** 解析文件ID列表 */
 const parseFileIdList = (fileList: string): string[] => {
@@ -91,6 +101,11 @@ const getInfo = async () => {
     } finally {
         detailLoading.value = false
     }
+}
+
+/** 显示打印预览 */
+const showPrintPreview = () => {
+  printPreviewVisible.value = true
 }
 
 /** 初始化 */

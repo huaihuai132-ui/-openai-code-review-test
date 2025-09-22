@@ -205,16 +205,46 @@ const processTaskList = async (tasks: any[]) => {
     return task.name !== '发起人'
   })
 
+  // 获取审批人姓名的辅助函数
+  const getApproverName = (task: any): string => {
+    try {
+      // 第一优先级：使用 assigneeUser.nickname（根据实际返回格式）
+      if (task.assigneeUser && task.assigneeUser.nickname) {
+        return task.assigneeUser.nickname
+      }
+      
+      // 第二优先级：使用 assigneeName 字段
+      if (task.assigneeName) {
+        return task.assigneeName
+      }
+      
+      // 第三优先级：使用 assignee 字段
+      if (task.assignee) {
+        return task.assignee
+      }
+      
+      // 默认值
+      return '审批人'
+    } catch (error) {
+      console.warn('获取审批人姓名失败', error)
+      return '审批人'
+    }
+  }
+
   // 将任务转换为审批意见格式，根据状态显示不同内容
   const opinions = approvalTasks.map(task => {
     let reason = ''
 
     if (task.status === 2) {
-      // 已完成的任务
+      // 已完成的任务，获取审批人姓名
+      const approverName = getApproverName(task)
+      
       if (task.reason && task.reason.trim() !== '') {
-        reason = task.reason // 有意见就显示意见
+        // 有意见时，格式为：审批人姓名 + 意见内容
+        reason = `${approverName}：${task.reason}`
       } else {
-        reason = '无意见' // 已完成但没有意见
+        // 已完成但没有意见时，格式为：审批人姓名 + 无意见
+        reason = `${approverName}：无意见`
       }
     } else {
       // 还未开始或进行中的任务，意见为空白
@@ -277,7 +307,8 @@ const handlePrint = () => {
               width: 120px;
             }
             .value-cell {
-              padding-left: 10px;
+              padding: 8px;
+              text-align: center;
             }
             .date-cell {
               text-align: center;
@@ -313,6 +344,7 @@ const handlePrint = () => {
               height: 60px;
               vertical-align: top;
               padding: 10px;
+              text-align: center;
             }
             @media print {
               body { margin: 0; }
@@ -371,7 +403,8 @@ const handlePrint = () => {
 }
 
 .value-cell {
-  padding-left: 10px;
+  padding: 8px;
+  text-align: center;
 }
 
 .date-cell {
@@ -416,6 +449,7 @@ const handlePrint = () => {
   height: 60px;
   vertical-align: top;
   padding: 10px;
+  text-align: center;
 }
 
 @media print {
