@@ -26,87 +26,6 @@
           class="!w-240px"
         />
       </el-form-item>
-      <!-- <el-form-item label="企业简称" prop="shortName">
-        <el-input
-          v-model="queryParams.shortName"
-          placeholder="请输入企业简称"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item> -->
-      <!-- <el-form-item label="地址" prop="address">
-        <el-input
-          v-model="queryParams.address"
-          placeholder="请输入地址"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item> -->
-      <!-- <el-form-item label="法定代表人" prop="legalRepresentative">
-        <el-input
-          v-model="queryParams.legalRepresentative"
-          placeholder="请输入法定代表人"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item> -->
-      <!-- <el-form-item label="所属行业" prop="industry">
-        <el-input
-          v-model="queryParams.industry"
-          placeholder="请输入所属行业"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="注册资本" prop="registeredCapital">
-        <el-input
-          v-model="queryParams.registeredCapital"
-          placeholder="请输入注册资本"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item> -->
-      <!-- <el-form-item label="企业性质" prop="companyNature">
-        <el-input
-          v-model="queryParams.companyNature"
-          placeholder="请输入企业性质"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item>
-      <el-form-item label="主营业务" prop="mainBusiness">
-        <el-input
-          v-model="queryParams.mainBusiness"
-          placeholder="请输入主营业务"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        /> -->
-      <!-- </el-form-item> -->
-      <!-- <el-form-item label="主要产品" prop="mainProducts">
-        <el-input
-          v-model="queryParams.mainProducts"
-          placeholder="请输入主要产品"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item> -->
-      <!-- <el-form-item label="备注信息" prop="remark">
-        <el-input
-          v-model="queryParams.remark"
-          placeholder="请输入备注信息"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item> -->
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
@@ -118,15 +37,6 @@
           class="!w-220px"
         />
       </el-form-item>
-      <!-- <el-form-item label="部门编号" prop="deptId">
-        <el-input
-          v-model="queryParams.deptId"
-          placeholder="请输入部门编号"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
-      </el-form-item> -->
       <el-form-item label="企业联系电话" prop="phone">
         <el-input
           v-model="queryParams.phone"
@@ -143,7 +53,7 @@
           type="primary"
           plain
           @click="openForm('create')"
-          v-hasPermi="['business:finance-company:create']"
+          v-hasPermi="['business:supply-chain-cooperating-enterprise:create']"
         >
           <Icon icon="ep:plus" class="mr-5px" /> 新增
         </el-button>
@@ -152,7 +62,7 @@
           plain
           @click="handleExport"
           :loading="exportLoading"
-          v-hasPermi="['business:finance-company:export']"
+          v-hasPermi="['business:supply-chain-cooperating-enterprise:export']"
         >
           <Icon icon="ep:download" class="mr-5px" /> 导出
         </el-button>
@@ -163,27 +73,20 @@
   <!-- 列表 -->
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
-      <!-- <el-table-column label="主键ID" align="center" prop="id" /> -->
       <el-table-column label="企业全称" align="center" prop="enterpriseName" />
       <el-table-column label="统一社会信用代码" align="center" prop="creditCode" />
-      <!-- <el-table-column label="企业简称" align="center" prop="shortName" /> -->
       <el-table-column label="地址" align="center" prop="address" />
-      <!-- <el-table-column label="法定代表人" align="center" prop="legalRepresentative" /> -->
       <el-table-column label="所属行业" align="center" prop="industry" />
       <el-table-column label="注册资本(万)" align="center" prop="registeredCapital" />
       <el-table-column label="企业联系电话" align="center" prop="phone" />
-      <el-table-column label="是否为供应链金融合作企业" align="center" prop="supplyChainFinancePartner">
-        <template #default="scope">
-          {{ getDictLabel(DICT_TYPE.INFRA_BOOLEAN_STRING, scope.row.supplyChainFinancePartner) }}
-        </template>
-      </el-table-column>
+      <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
           <el-button
             link
             type="primary"
             @click="openForm('update', scope.row.id)"
-            v-hasPermi="['business:finance-company:update']"
+            v-hasPermi="['business:supply-chain-cooperating-enterprise:update']"
           >
             编辑
           </el-button>
@@ -191,7 +94,7 @@
             link
             type="danger"
             @click="handleDelete(scope.row.id)"
-            v-hasPermi="['business:finance-company:delete']"
+            v-hasPermi="['business:supply-chain-cooperating-enterprise:delete']"
           >
             删除
           </el-button>
@@ -208,18 +111,18 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <FinanceCompanyForm ref="formRef" @success="getList" />
+  <SupplyChainCooperatingEnterpriseForm ref="formRef" @success="getList" />
 </template>
 
 <script setup lang="ts">
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
-import { FinanceCompanyApi, FinanceCompanyVO } from 'src/api/business/finance/financecompany'
-import FinanceCompanyForm from './FinanceCompanyForm.vue'
+import { FinanceCompanyApi, FinanceCompanyVO } from '@/api/business/finance/financecompany'
+import SupplyChainCooperatingEnterpriseForm from './SupplyChainCooperatingEnterpriseForm.vue'
 import { DICT_TYPE, getStrDictOptions, getDictLabel } from '@/utils/dict'
 
-/** 企业名单管理 列表 */
-defineOptions({ name: 'FinanceCompany' })
+/** 供应链金融合作企业管理 列表 */
+defineOptions({ name: 'SupplyChainCooperatingEnterprise' })
 
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
@@ -244,6 +147,7 @@ const queryParams = reactive({
   createTime: [],
   deptId: undefined,
   phone: undefined,
+  supplyChainFinancePartner: true // 只查询供应链金融合作企业
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
@@ -269,6 +173,8 @@ const handleQuery = () => {
 /** 重置按钮操作 */
 const resetQuery = () => {
   queryFormRef.value.resetFields()
+  // 重置后仍然保持只查询供应链金融合作企业
+  queryParams.supplyChainFinancePartner = true
   handleQuery()
 }
 
@@ -278,14 +184,29 @@ const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
 }
 
-/** 删除按钮操作 */
+/** 删除按钮操作 - 将供应链金融合作企业标志设为0 */
 const handleDelete = async (id: number) => {
   try {
     // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await FinanceCompanyApi.deleteFinanceCompany(id)
-    message.success(t('common.delSuccess'))
+    await message.confirm('确定要移除该企业的供应链金融合作企业标识吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    // 获取企业详情
+    const companyData = await FinanceCompanyApi.getFinanceCompany(id)
+    
+    // 将供应链金融合作企业标志设为false
+    const updateData = {
+      ...companyData,
+      supplyChainFinancePartner: false
+    }
+    
+    // 更新企业信息
+    await FinanceCompanyApi.updateFinanceCompany(updateData)
+    message.success('移除成功')
+    
     // 刷新列表
     await getList()
   } catch {}
@@ -299,7 +220,7 @@ const handleExport = async () => {
     // 发起导出
     exportLoading.value = true
     const data = await FinanceCompanyApi.exportFinanceCompany(queryParams)
-    download.excel(data, '企业名单管理.xls')
+    download.excel(data, '供应链金融合作企业.xls')
   } catch {
   } finally {
     exportLoading.value = false

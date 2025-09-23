@@ -43,6 +43,12 @@
       <el-form-item label="部门编号" prop="deptId">
         <el-input v-model="formData.deptId" placeholder="请输入部门编号" />
       </el-form-item>
+      <el-form-item label="是否为供应链金融合作企业" prop="supplyChainFinancePartner">
+        <el-select v-model="formData.supplyChainFinancePartner" placeholder="请选择是否为供应链金融合作企业" clearable class="!w-240px">
+          <el-option v-for="dict in getStrDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)" :key="dict.value"
+            :label="dict.label" :value="dict.value" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="附件文件" prop="fileList">
         <BatchFileUpload
           ref="fileUploadRef"
@@ -64,6 +70,7 @@
 <script setup lang="ts">
 import { FinanceCompanyApi, FinanceCompanyVO } from 'src/api/business/finance/financecompany'
 import { BatchFileUpload } from '@/components/UploadFile'
+import { DICT_TYPE, getIntDictOptions, getStrDictOptions } from '@/utils/dict'
 
 /** 企业名单管理 表单 */
 defineOptions({ name: 'FinanceCompanyForm' })
@@ -96,6 +103,7 @@ const formData = ref({
   mainProducts: undefined,
   remark: undefined,
   deptId: undefined,
+  supplyChainFinancePartner: undefined,
   fileList: [] as string[],
   sequenceCode: undefined,
   phone: undefined,
@@ -139,6 +147,10 @@ const submitForm = async () => {
   try {
     const data = {
       ...formData.value,
+      // 转换字符串布尔值为真正的布尔值
+      supplyChainFinancePartner: formData.value.supplyChainFinancePartner === '1' ? true : 
+                                 formData.value.supplyChainFinancePartner === '0' ? false : 
+                                 formData.value.supplyChainFinancePartner,
       fileList: Array.isArray(formData.value.fileList) && formData.value.fileList.length > 0
         ? formData.value.fileList.join(',')
         : ''
@@ -175,6 +187,7 @@ const resetForm = () => {
     mainProducts: undefined,
     remark: undefined,
     deptId: undefined,
+    supplyChainFinancePartner: undefined,
     fileList: [],
     sequenceCode: undefined,
     phone: undefined,

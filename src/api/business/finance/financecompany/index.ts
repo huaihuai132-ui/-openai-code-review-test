@@ -18,6 +18,7 @@ export interface FinanceCompanyVO {
   fileList: string // 文件id列表
   sequenceCode: string // 文件序列编码
   phone: string // 企业联系电话（手机号）
+  supplyChainFinancePartner: boolean // 是否为供应链金融合作企业
 }
 
 // 企业名单管理 API
