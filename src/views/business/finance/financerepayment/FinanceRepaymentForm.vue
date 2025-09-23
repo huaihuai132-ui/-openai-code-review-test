@@ -217,21 +217,6 @@ const resetForm = () => {
 }
 </script>
 <style scoped>
-/* 表单区域样式 */
-.form-section {
-  margin-bottom: 30px;
-}
-/* 一行三列布局 */
-.form-row {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.form-row .el-form-item {
-  flex: 1;
-  margin-bottom: 0;
-}
 .form-tabs {
   margin-top: 20px;
 }

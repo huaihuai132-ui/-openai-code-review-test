@@ -887,32 +887,7 @@ watch(
   padding: 20px;
 }
 
-/* 表单区域样式 */
-.form-section {
-  margin-bottom: 30px;
-}
-
-.section-title {
-  margin: 0 0 20px 0;
-  padding: 0 0 10px 0;
-  border-bottom: 2px solid #e4e7ed;
-  color: #303133;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-/* 一行三列布局 */
-.form-row {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.form-row .el-form-item {
-  flex: 1;
-  margin-bottom: 0;
-}
-
+/* 全宽度表单项样式 */
 .form-row .el-form-item.full-width {
   flex: 1;
 }
