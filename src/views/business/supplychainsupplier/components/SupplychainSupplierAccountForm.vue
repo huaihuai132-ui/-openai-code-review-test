@@ -38,7 +38,7 @@
     </el-table>
   </el-form>
   <el-row justify="center" class="mt-3">
-    <el-button @click="handleAdd" round>+ 添加供应链金融供应商账户</el-button>
+    <el-button @click="handleAdd" round>+ 添加账户信息</el-button>
   </el-row>
 </template>
 <script setup lang="ts">

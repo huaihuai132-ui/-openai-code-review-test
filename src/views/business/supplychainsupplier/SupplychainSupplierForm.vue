@@ -13,7 +13,7 @@
     </el-form>
     <!-- 子表的表单 -->
     <el-tabs v-model="subTabsName">
-      <el-tab-pane label="供应链金融供应商账户" name="supplychainSupplierAccount">
+      <el-tab-pane label="账户信息" name="supplychainSupplierAccount">
         <SupplychainSupplierAccountForm ref="supplychainSupplierAccountFormRef" :supplier-id="formData.id" />
       </el-tab-pane>
     </el-tabs>
