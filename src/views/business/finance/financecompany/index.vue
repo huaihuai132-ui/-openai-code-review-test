@@ -172,11 +172,11 @@
       <el-table-column label="所属行业" align="center" prop="industry" />
       <el-table-column label="注册资本(万)" align="center" prop="registeredCapital" />
       <el-table-column label="企业联系电话" align="center" prop="phone" />
-      <el-table-column label="是否为供应链金融合作企业" align="center" prop="supplyChainFinancePartner">
+      <!-- <el-table-column label="是否为供应链金融合作企业" align="center" prop="supplyChainFinancePartner">
         <template #default="scope">
           {{ getDictLabel(DICT_TYPE.INFRA_BOOLEAN_STRING, scope.row.supplyChainFinancePartner) }}
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
           <el-button

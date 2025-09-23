@@ -43,12 +43,12 @@
       <el-form-item label="部门编号" prop="deptId">
         <el-input v-model="formData.deptId" placeholder="请输入部门编号" />
       </el-form-item>
-      <el-form-item label="是否为供应链金融合作企业" prop="supplyChainFinancePartner">
+      <!-- <el-form-item label="是否为供应链金融合作企业" prop="supplyChainFinancePartner">
         <el-select v-model="formData.supplyChainFinancePartner" placeholder="请选择是否为供应链金融合作企业" clearable class="!w-240px">
           <el-option v-for="dict in getStrDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)" :key="dict.value"
             :label="dict.label" :value="dict.value" />
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="附件文件" prop="fileList">
         <BatchFileUpload
           ref="fileUploadRef"
