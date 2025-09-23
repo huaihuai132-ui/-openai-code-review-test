@@ -7,6 +7,14 @@ export interface SupplychainSupplierVO {
   deptId: number // 部门id
 }
 
+export interface SupplychainSupplierAccountVO {
+  id: number // 供应链金融供应商主键
+  supplierName: string // 供应商名称
+  accountName: string
+  accountNum: string
+  accountBanklocation: string
+}
+
 // 供应链金融供应商 API
 export const SupplychainSupplierApi = {
   // 查询供应链金融供应商分页
@@ -39,10 +47,16 @@ export const SupplychainSupplierApi = {
     return await request.download({ url: `/business/supplychain-supplier/export-excel`, params })
   },
 
+  getSimpleSupplychainSupplierList: async (): Promise<SupplychainSupplierVO[]> => {
+    return await request.get({ url: `/business/supplychain-supplier/list-all-simple` })
+  },
 // ==================== 子表（供应链金融供应商账户） ====================
 
   // 获得供应链金融供应商账户列表
   getSupplychainSupplierAccountListBySupplierId: async (supplierId) => {
     return await request.get({ url: `/business/supplychain-supplier/supplychain-supplier-account/list-by-supplier-id?supplierId=` + supplierId })
+  },
+  getSupplychainSupplierAccount: async (accountId) => {
+    return await request.get({ url: `/business/supplychain-supplier/supplychain-supplier-account/by-account-id?accountId=` + accountId })
   },
 }
