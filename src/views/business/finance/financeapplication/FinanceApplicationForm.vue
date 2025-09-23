@@ -49,8 +49,15 @@
             <template #append>月</template>
             </el-input>
           </el-form-item>
-          <el-form-item label="申请人编码" prop="userId">
-            <el-input v-model="formData.userId" placeholder="请输入申请人编码" readonly :disabled="true"/>
+          <el-form-item label="申请人" prop="userId">
+            <el-select v-model="formData.userId" readonly :disabled="true">
+              <el-option
+                v-for="user in userList"
+                :key="user.id"
+                :label="user.nickname"
+                :value="user.id"
+              />
+            </el-select>
           </el-form-item>
           <el-form-item label="" prop="">
             <div></div>
@@ -204,6 +211,7 @@ import { FinanceApplicationApi, FinanceApplicationVO } from 'src/api/business/fi
 import {FinanceCompanyApi, FinanceCompanyVO} from "src/api/business/finance/financecompany";
 import { BatchFileUpload } from '@/components/UploadFile'
 import { useUserStore } from '@/store/modules/user'
+import * as UserApi from "@/api/system/user";
 
 /** 融资租赁立项 表单 */
 defineOptions({ name: 'FinanceApplicationForm' })
@@ -269,6 +277,7 @@ const formRules = reactive({
 const formRef = ref() // 表单 Ref
 const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
 const activeTab = ref('radio') // 当前激活的tab
+const userList = ref<UserApi.UserVO[]>([]) // 用户列表
 
 /** 获取上传组件的模式 */
 const getUploadMode = () => {
@@ -301,6 +310,7 @@ const open = async (type: string, id?: number) => {
   }
   const response = await FinanceCompanyApi.getSimpleFinanceCompanyList()
   companyList.value = response
+  userList.value = await UserApi.getSimpleUserList()
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 

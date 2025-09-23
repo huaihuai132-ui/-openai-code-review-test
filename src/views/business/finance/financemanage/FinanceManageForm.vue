@@ -47,8 +47,15 @@
           <el-form-item label="租赁余额" prop="leaseAmountSurplus">
             <el-input v-model="formData.leaseAmountSurplus" placeholder="请输入租赁余额" />
           </el-form-item>
-            <el-form-item label="申请人编码" prop="userId">
-            <el-input v-model="formData.userId" placeholder="请输入申请人编码" readonly :disabled="true"/>
+          <el-form-item label="申请人" prop="userId">
+            <el-select v-model="formData.userId" readonly :disabled="true">
+              <el-option
+                v-for="user in userList"
+                :key="user.id"
+                :label="user.nickname"
+                :value="user.id"
+              />
+            </el-select>
           </el-form-item>
         </div>
         <div class="form-row">
@@ -728,6 +735,7 @@ import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/finance/financ
 import { BatchFileUpload } from '@/components/UploadFile'
 import { useUserStore } from '@/store/modules/user'
 import {FinanceLeaseApi, FinanceLeaseVO} from "@/api/business/finance/financelease";
+import * as UserApi from "@/api/system/user";
 
 const userStore = useUserStore()
 
@@ -890,6 +898,7 @@ const formRules = reactive({
 const formRef = ref() // 表单 Ref
 const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
 const activeTab = ref('basic') // 当前激活的tab
+const userList = ref<UserApi.UserVO[]>([]) // 用户列表
 
 const financeLeaseOptions = ref<any[]>([])
 // 加载已审批的融资租赁列表作为下拉选项
@@ -926,6 +935,8 @@ const open = async (type: string, id?: number) => {
   companyList.value = response
       // 加载租赁单编号选项
     await loadFinanceLeaseOptions()
+  userList.value = await UserApi.getSimpleUserList()
+
 
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗

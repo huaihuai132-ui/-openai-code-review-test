@@ -91,8 +91,15 @@
           </el-form-item>
         </div>
         <div class="form-row">
-          <el-form-item label="申请人编码" prop="userId" >
-            <el-input v-model="formData.userId" placeholder="请输入申请人编码" readonly :disabled="true"/>
+          <el-form-item label="申请人" prop="userId">
+            <el-select v-model="formData.userId" readonly :disabled="true">
+              <el-option
+                v-for="user in userList"
+                :key="user.id"
+                :label="user.nickname"
+                :value="user.id"
+              />
+            </el-select>
           </el-form-item>
         </div>
       </div>
@@ -217,8 +224,15 @@
           </el-form-item>
         </div>
         <div class="form-row">
-          <el-form-item label="申请人编码" prop="userId" style="flex:1/3">
-            <el-input v-model="formData.userId" placeholder="请输入申请人编码" readonly :disabled="true"/>
+          <el-form-item label="申请人" prop="userId">
+            <el-select v-model="formData.userId" readonly :disabled="true">
+              <el-option
+                v-for="user in userList"
+                :key="user.id"
+                :label="user.nickname"
+                :value="user.id"
+              />
+            </el-select>
           </el-form-item>
           <el-form-item label="" prop=""/>
           <el-form-item label="" prop=""/>
@@ -271,8 +285,10 @@ import {
   FinanceApplicationApi,
   FinanceApplicationVO
 } from "@/api/business/finance/financeapplication";
+import * as UserApi from "@/api/system/user";
 
 const userStore = useUserStore()
+const userList = ref<UserApi.UserVO[]>([]) // 用户列表
 
 /** 融资租赁 表单 */
 defineOptions({ name: 'FinanceLeaseForm' })
@@ -471,6 +487,7 @@ const open = async (type: string, id?: number) => {
   companyList.value = response
   const applicationListResponse = await FinanceApplicationApi.getSimpleFinanceApplicationListApproved()
   applicationList.value = applicationListResponse
+  userList.value = await UserApi.getSimpleUserList()
 }
 const applicationIdChange = async (val) => {
   const financeApplication = await FinanceApplicationApi.getFinanceApplication(val);
