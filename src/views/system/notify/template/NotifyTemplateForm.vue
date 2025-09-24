@@ -13,8 +13,8 @@
       <el-form-item label="模板名称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入模版名称" />
       </el-form-item>
-      <el-form-item label="发件人名称" prop="nickname">
-        <el-input v-model="formData.nickname" placeholder="请输入发件人名称" />
+      <el-form-item label="标题" prop="title">
+        <el-input v-model="formData.title" placeholder="请输入发件人名称" />
       </el-form-item>
       <el-form-item label="模板内容" prop="content">
         <el-input type="textarea" v-model="formData.content" placeholder="请输入模板内容" />
@@ -63,7 +63,7 @@ const formType = ref('') // 表单的类型
 const formData = ref<NotifyTemplateApi.NotifyTemplateVO>({
   id: undefined,
   name: '',
-  nickname: '',
+  title: '',
   code: '',
   content: '',
   type: undefined,
@@ -76,7 +76,7 @@ const formRules = reactive({
   status: [{ required: true, message: '开启状态不能为空', trigger: 'blur' }],
   code: [{ required: true, message: '模板编码不能为空', trigger: 'blur' }],
   name: [{ required: true, message: '模板名称不能为空', trigger: 'blur' }],
-  nickname: [{ required: true, message: '发件人姓名不能为空', trigger: 'blur' }],
+  title: [{ required: true, message: '标题不能为空', trigger: 'blur' }],
   content: [{ required: true, message: '模板内容不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref
@@ -128,7 +128,7 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     name: '',
-    nickname: '',
+    title: '',
     code: '',
     content: '',
     type: undefined,

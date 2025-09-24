@@ -3,7 +3,7 @@ import request from '@/config/axios'
 export interface NotifyTemplateVO {
   id?: number
   name: string
-  nickname: string
+  title: string
   code: string
   content: string
   type?: number

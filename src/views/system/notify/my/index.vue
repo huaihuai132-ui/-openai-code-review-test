@@ -59,7 +59,7 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" :selectable="selectable" :reserve-selection="true" />
-      <el-table-column label="发送人" align="center" prop="templateNickname" width="180" />
+      <el-table-column label="标题" align="center" prop="title" width="180" />
       <el-table-column
         label="发送时间"
         align="center"
@@ -75,7 +75,7 @@
       <el-table-column
         label="消息内容"
         align="center"
-        prop="templateContent"
+        prop="content"
         show-overflow-tooltip
       />
       <el-table-column label="是否已读" align="center" prop="readStatus" width="160">

@@ -7,8 +7,8 @@ export interface NotifyMessageVO {
   userType: number
   templateId: number
   templateCode: string
-  templateNickname: string
-  templateContent: string
+  title: string
+  content: string
   templateType: number
   templateParams: string
   readStatus: boolean

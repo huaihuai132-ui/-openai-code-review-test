@@ -16,11 +16,11 @@
       <el-descriptions-item label="模板编码">
         {{ detailData.templateCode }}
       </el-descriptions-item>
-      <el-descriptions-item label="发送人名称">
-        {{ detailData.templateNickname }}
+      <el-descriptions-item label="标题">
+        {{ detailData.title }}
       </el-descriptions-item>
       <el-descriptions-item label="模版内容">
-        {{ detailData.templateContent }}
+        {{ detailData.content }}
       </el-descriptions-item>
       <el-descriptions-item label="模版参数">
         {{ detailData.templateParams }}

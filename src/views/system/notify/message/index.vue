@@ -87,11 +87,11 @@
       </el-table-column>
       <el-table-column label="用户编号" align="center" prop="userId" width="80" />
       <el-table-column label="模板编码" align="center" prop="templateCode" width="80" />
-      <el-table-column label="发送人名称" align="center" prop="templateNickname" width="180" />
+      <el-table-column label="标题" align="center" prop="title" width="180" />
       <el-table-column
         label="模版内容"
         align="center"
-        prop="templateContent"
+        prop="content"
         width="200"
         show-overflow-tooltip
       />
