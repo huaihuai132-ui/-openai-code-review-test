@@ -100,13 +100,18 @@
                     <template #append>元</template>
                   </el-input>
                 </el-form-item>
+                <el-form-item label="保证金" prop="depositAmount">
+                  <el-input v-model="formData.depositAmount" placeholder="请输入保证金"  type="number" >
+                    <template #append>元</template>
+                  </el-input>
+                </el-form-item>
+              </div>
+              <div class="form-row">
                 <el-form-item label="承租租期" prop="leaseTerm">
                   <el-input v-model="formData.leaseTerm" placeholder="请输入承租租期"  type="number" >
                     <template #append>月</template>
                   </el-input>
                 </el-form-item>
-              </div>
-              <div class="form-row">
                 <el-form-item label="还租方式" prop="repaymentMode">
                   <el-select v-model="formData.repaymentMode" placeholder="请选择还租方式">
                     <el-option label="每月" :value="1" />
@@ -115,32 +120,27 @@
                     <el-option label="每年" :value="4" />
                   </el-select>
                 </el-form-item>
+              </div>
+              <div class="form-row">
                 <el-form-item label="投放期数" prop="putNumbers">
                   <el-input v-model="formData.putNumbers" readonly placeholder="请输入投放期数"  type="number" >
                     <template #append>期</template>
                   </el-input>
                 </el-form-item>
+                <el-form-item label="" prop="">
+                  <div></div>
+                </el-form-item>
               </div>
               <div class="form-row">
                 <el-form-item label="年租息率" prop="interestRate">
-                  <el-input v-model="formData.interestRate" readonly placeholder="请输入年租息率"  type="number" >
+                  <el-input v-model="formData.interestRate" placeholder="请输入年租息率"  type="number" >
                     <template #append>%</template>
                   </el-input>
                 </el-form-item>
                 <el-form-item label="服务费比率" prop="serveRate">
-                  <el-input v-model="formData.serveRate" readonly placeholder="请输入服务费比率"  type="number" >
+                  <el-input v-model="formData.serveRate" placeholder="请输入服务费比率"  type="number" >
                     <template #append>%</template>
                   </el-input>
-                </el-form-item>
-              </div>
-              <div class="form-row">
-                <el-form-item label="保证金" prop="depositAmount">
-                  <el-input v-model="formData.depositAmount" placeholder="请输入保证金"  type="number" >
-                    <template #append>元</template>
-                  </el-input>
-                </el-form-item>
-                <el-form-item label="" prop="">
-                  <div></div>
                 </el-form-item>
               </div>
             </div>
@@ -373,8 +373,28 @@ const open = async (type: string, id?: number) => {
 
 }
 
+// 1. 定义还租方式 → 每期多少月的映射
+const repaymentModeMap: Record<number, number> = {
+  1: 1,   // 每月
+  2: 3,   // 每三个月
+  3: 6,   // 每半年
+  4: 12,  // 每年
+}
+// 2. 计算属性：自动得出投放期数
+const putNumbers = computed<number>(() => {
+  const leaseTerm = Number(formData.value.leaseTerm)   // 承租租期（月）
+  const mode = Number(formData.value.repaymentMode)    // 还租方式
+  const months = repaymentModeMap[mode] || 1           // 每期多少月
 
+  if (!leaseTerm || !months || months <= 0) return 0
 
+  // ✅ 正确的期数计算方式
+  return Math.ceil(leaseTerm / months)
+})
+// 3. 当「承租租期」或「还租方式」变化时，把结果同步到表单
+watchEffect(() => {
+  formData.value.putNumbers = putNumbers.value
+})
 
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 
