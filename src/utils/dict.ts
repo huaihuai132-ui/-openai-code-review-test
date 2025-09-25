@@ -1,8 +1,8 @@
 /**
  * 数据字典工具类
  */
-import { useDictStoreWithOut } from '@/store/modules/dict'
-import { ElementPlusInfoType } from '@/types/elementPlus'
+import {useDictStoreWithOut} from '@/store/modules/dict'
+import {ElementPlusInfoType} from '@/types/elementPlus'
 
 const dictStore = useDictStoreWithOut()
 
@@ -265,4 +265,5 @@ export enum DICT_TYPE {
   MEET_STATUS = 'meet_status',
   SUPPLYCHAIN_PRODUCT = 'supplychain_product',
   SUPPLYCHAIN_APPLYSTATUS = 'supplychain_applystatus',
+  SUP_REPT_STATUS = 'sup_rept_status',
 }
