@@ -12,8 +12,8 @@
         <h3 class="section-title">基本信息</h3>
         <div class="form-row">
           <el-form-item label="融资租赁单编号" prop="leaseId" label-width="140px" >
-            <el-input v-model="formData.leaseId" placeholder="请输入融资租赁单编号" />
-          <!-- <el-select
+            <!-- <el-input v-model="formData.leaseId" placeholder="请输入融资租赁单编号" /> -->
+          <el-select
           v-model="formData.leaseId"
           placeholder="请选择融资租赁单编号"
           clearable
@@ -24,7 +24,7 @@
               :label="item.leasedCode || item.name || String(item.id)"
               :value="item.id"
             />
-          </el-select> -->
+          </el-select>
         </el-form-item>
           <el-form-item label="租后管理编码" prop="manageCode">
             <el-input v-model="formData.manageCode" placeholder="请输入租后管理编码" />
@@ -42,10 +42,24 @@
         </div>
         <div class="form-row">
           <el-form-item label="租赁总额" prop="leaseAmount" label-width="140px"  >
-            <el-input v-model="formData.leaseAmount" placeholder="请输入租赁总额" />
+            <el-input
+                v-model="formData.leaseAmount"
+                placeholder="请输入租赁总额" 
+                :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+              >
+                <template #append>元</template>
+            </el-input>
           </el-form-item>
           <el-form-item label="租赁余额" prop="leaseAmountSurplus">
-            <el-input v-model="formData.leaseAmountSurplus" placeholder="请输入租赁余额" />
+            <el-input
+              v-model="formData.leaseAmountSurplus"
+              placeholder="请输入租赁总额" 
+              :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+              :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+            >
+            <template #append>元</template>
+            </el-input>
           </el-form-item>
           <el-form-item label="申请人" prop="userId">
             <el-select v-model="formData.userId" readonly :disabled="true">
@@ -441,7 +455,14 @@
             <div class="tab-content">
               <div class="form-row">
                 <el-form-item label="总资产" prop="totalAssets"  >
-                  <el-input v-model="formData.totalAssets" placeholder="请输入总资产" />
+                  <el-input
+                    v-model="formData.totalAssets"
+                    placeholder="请输入总资产" 
+                    :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+                  >
+                    <template #append>元</template>
+                  </el-input>
                 </el-form-item>
                 <el-form-item label="总资产备注" prop="totalAssetsRemark"  >
                   <el-input v-model="formData.totalAssetsRemark" placeholder="请输入总资产备注" />
@@ -457,7 +478,14 @@
               </div>
               <div class="form-row">
                 <el-form-item label="应收账款" prop="accountsReceivable"  >
-                  <el-input v-model="formData.accountsReceivable" placeholder="请输入应收账款" />
+                  <el-input
+                    v-model="formData.accountsReceivable"
+                    placeholder="请输入应收账款" 
+                    :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+                  >
+                    <template #append>元</template>
+                  </el-input>
                 </el-form-item>
                 <el-form-item label="应收账款备注" prop="accountsReceivableRemark"  >
                   <el-input v-model="formData.accountsReceivableRemark" placeholder="请输入应收账款备注" />
@@ -465,7 +493,14 @@
               </div>
               <div class="form-row">
                 <el-form-item label="总负债" prop="totalLiabilities"  >
-                  <el-input v-model="formData.totalLiabilities" placeholder="请输入总负债" />
+                  <el-input
+                    v-model="formData.totalLiabilities"
+                    placeholder="请输入总负债" 
+                    :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+                  >
+                    <template #append>元</template>
+                  </el-input>
                 </el-form-item>
                 <el-form-item label="总负债备注" prop="totalLiabilitiesRemark"  >
                   <el-input v-model="formData.totalLiabilitiesRemark" placeholder="请输入总负债备注" />
@@ -473,7 +508,14 @@
               </div>
               <div class="form-row">
                 <el-form-item label="银行借款" prop="bankLoans"  >
-                  <el-input v-model="formData.bankLoans" placeholder="请输入银行借款" />
+                  <el-input
+                    v-model="formData.bankLoans"
+                    placeholder="请输入银行借款" 
+                    :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+                  >
+                    <template #append>元</template>
+                  </el-input>
                 </el-form-item>
                 <el-form-item label="银行借款备注" prop="bankLoansRemark"  >
                   <el-input v-model="formData.bankLoansRemark" placeholder="请输入银行借款备注" />
@@ -481,7 +523,14 @@
               </div>
               <div class="form-row">
                 <el-form-item label="应付账款" prop="accountsPayable"  >
-                  <el-input v-model="formData.accountsPayable" placeholder="请输入应付账款" />
+                  <el-input
+                    v-model="formData.accountsPayable"
+                    placeholder="请输入应付账款" 
+                    :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+                  >
+                    <template #append>元</template>
+                  </el-input>
                 </el-form-item>
                 <el-form-item label="应付账款备注" prop="accountsPayableRemark"  >
                   <el-input v-model="formData.accountsPayableRemark" placeholder="请输入应付账款备注" />
@@ -489,7 +538,14 @@
               </div>
               <div class="form-row">
                 <el-form-item label="主营业务收入" prop="mainBizIncome"  >
-                  <el-input v-model="formData.mainBizIncome" placeholder="请输入主营业务收入" />
+                  <el-input
+                    v-model="formData.mainBizIncome"
+                    placeholder="请输入主营业务收入" 
+                    :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+                  >
+                    <template #append>元</template>
+                  </el-input>
                 </el-form-item>
                 <el-form-item label="主营业务收入备注" prop="mainBizIncomeRemark"  >
                   <el-input v-model="formData.mainBizIncomeRemark" placeholder="请输入主营业务收入备注" />
@@ -497,7 +553,14 @@
               </div>
               <div class="form-row">
                 <el-form-item label="净利润" prop="netProfit"  >
-                  <el-input v-model="formData.netProfit" placeholder="请输入净利润" />
+                    <el-input
+                    v-model="formData.netProfit"
+                    placeholder="请输入净利润" 
+                    :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+                  >
+                    <template #append>元</template>
+                  </el-input>
                 </el-form-item>
                 <el-form-item label="净利润备注" prop="netProfitRemark"  >
                   <el-input v-model="formData.netProfitRemark" placeholder="请输入净利润备注" />

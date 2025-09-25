@@ -62,33 +62,33 @@
         </div>
       </div>
 
-      <el-table :data="filteredTableData" style="width: 100%" stripe table-layout="fixed">
-        <el-table-column prop="areaName" label="区域" width="80" align="center" header-align="center" />
-        <el-table-column prop="streetName" label="街道" width="100" align="center" header-align="center" />
-        <el-table-column prop="assetName" label="资产名称" width="150" show-overflow-tooltip align="center" header-align="center" />
-        <el-table-column prop="address" label="详细地址" width="150" show-overflow-tooltip align="center" header-align="center" />
-        <el-table-column prop="buildingArea" label="房产面积" width="90" align="center" header-align="center">
+      <el-table :data="filteredTableData" style="width: 100%" stripe>
+        <el-table-column prop="areaName" label="区域" min-width="80" align="center" header-align="center" />
+        <el-table-column prop="streetName" label="街道" min-width="100" align="center" header-align="center" />
+        <el-table-column prop="assetName" label="资产名称" min-width="180" show-overflow-tooltip align="center" header-align="center" />
+        <el-table-column prop="address" label="详细地址" min-width="200" show-overflow-tooltip align="center" header-align="center" />
+        <el-table-column prop="buildingArea" label="房产面积" min-width="100" align="center" header-align="center">
           <template #default="scope"> {{ scope.row.buildingArea }}㎡ </template>
         </el-table-column>
-        <el-table-column prop="landArea" label="土地面积" width="90" align="center" header-align="center">
+        <el-table-column prop="landArea" label="土地面积" min-width="100" align="center" header-align="center">
           <template #default="scope"> {{ scope.row.landArea }}㎡ </template>
         </el-table-column>
-        <el-table-column prop="isTransferred" label="办证状态" width="100" align="center" header-align="center">
+        <el-table-column prop="isTransferred" label="办证状态" min-width="110" align="center" header-align="center">
           <template #default="scope">
             <el-tag :type="scope.row.isTransferred ? 'success' : 'warning'" size="small">
               {{ scope.row.isTransferred ? '已过户' : '未过户' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="usage" label="使用情况" width="80" align="center" header-align="center" />
-        <el-table-column prop="rentalMethod" label="出租方式" width="80" align="center" header-align="center" />
-        <el-table-column prop="rent" label="租金" width="90" align="center" header-align="center">
+        <el-table-column prop="usage" label="使用情况" min-width="90" align="center" header-align="center" />
+        <el-table-column prop="rentalMethod" label="出租方式" min-width="100" align="center" header-align="center" />
+        <el-table-column prop="rent" label="租金" min-width="120" align="center" header-align="center">
           <template #default="scope"> ¥{{ scope.row.rent }} </template>
         </el-table-column>
-        <el-table-column prop="value" label="价值(万元)" width="90" align="center" header-align="center">
+        <el-table-column prop="value" label="价值(万元)" min-width="120" align="center" header-align="center">
           <template #default="scope"> {{ scope.row.value }}万元 </template>
         </el-table-column>
-        <el-table-column label="操作"  width="250" fixed="right" align="center" header-align="center">
+        <el-table-column label="操作" width="250" fixed="right" align="center" header-align="center">
           <template #default="scope">
             <el-button size="small" text @click="handleView(scope.row)">查看</el-button>
             <el-button size="small" text type="primary" @click="handleEdit(scope.row)">编辑</el-button>
@@ -1083,6 +1083,17 @@ const formatFileSize = (bytes) => {
 /* 表格样式优化 */
 :deep(.el-table) {
   width: 100% !important;
+  table-layout: auto;
+}
+
+/* 确保表格容器占满宽度 */
+.table-card {
+  width: 100%;
+}
+
+.table-card :deep(.el-card__body) {
+  padding: 20px;
+  overflow-x: auto;
 }
 
 :deep(.el-table__body-wrapper) {

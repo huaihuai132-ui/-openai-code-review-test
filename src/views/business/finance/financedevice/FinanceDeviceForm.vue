@@ -20,10 +20,24 @@
         <el-input v-model="formData.quantity" placeholder="请输入数量" />
       </el-form-item>
       <el-form-item label="原值" prop="originalWorth">
-        <el-input v-model="formData.originalWorth" placeholder="请输入原值" />
+        <el-input
+          v-model="formData.originalWorth"
+          placeholder="请输入原值" 
+          :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+          :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+        >
+          <template #append>元</template>
+        </el-input>
       </el-form-item>
       <el-form-item label="净值" prop="netWorth">
-        <el-input v-model="formData.netWorth" placeholder="请输入净值" />
+        <el-input
+          v-model="formData.netWorth"
+          placeholder="请输入净值" 
+          :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+          :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+        >
+          <template #append>元</template>
+        </el-input>
       </el-form-item>
       <el-form-item label="设备状态" prop="deviceStatus">
         <el-radio-group v-model="formData.deviceStatus">

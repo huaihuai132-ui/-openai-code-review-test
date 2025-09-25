@@ -45,7 +45,12 @@
             <el-input v-model="formData.leasedPropertyNum" placeholder="请输入融资标的物数量"  type="number"/>
           </el-form-item>
           <el-form-item label="标的净值" prop="leasedPropertyValue">
-            <el-input v-model="formData.leasedPropertyValue" placeholder="请输入拟融资标的物净值"  type="number" >
+              <el-input
+              v-model="formData.leasedPropertyValue"
+              placeholder="请输入标的净值" 
+              :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+              :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+            >
               <template #append>元</template>
             </el-input>
           </el-form-item>
@@ -64,8 +69,13 @@
               <el-option label="保证担保" value="3" />
             </el-select>
           </el-form-item>
-          <el-form-item label="申请额度" prop="leaseAmount">
-            <el-input v-model="formData.leaseAmount" placeholder="请输入申请额度"  type="number" >
+          <el-form-item label="申请额度" prop="leaseAmount">      
+              <el-input
+              v-model="formData.leaseAmount" 
+              placeholder="请输入申请额度" 
+              :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+              :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+            >
               <template #append>元</template>
             </el-input>
           </el-form-item>
@@ -178,7 +188,12 @@
             <el-input v-model="formData.leasedPropertyNum" placeholder="请输入融资标的物数量"  type="number"/>
           </el-form-item>
           <el-form-item label="标的净值" prop="leasedPropertyValue">
-            <el-input v-model="formData.leasedPropertyValue" placeholder="请输入拟融资标的物净值"  type="number" >
+              <el-input
+              v-model="formData.leasedPropertyValue"
+              placeholder="请输入拟标的净值" 
+              :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+              :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+            >
               <template #append>元</template>
             </el-input>
           </el-form-item>
@@ -198,7 +213,12 @@
             </el-select>
           </el-form-item>
           <el-form-item label="申请额度" prop="leaseAmount">
-            <el-input v-model="formData.leaseAmount" placeholder="请输入申请额度"  type="number" >
+            <el-input
+              v-model="formData.leaseAmount" 
+              placeholder="请输入申请额度" 
+              :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+              :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+            >
               <template #append>元</template>
             </el-input>
           </el-form-item>

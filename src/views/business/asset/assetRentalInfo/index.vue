@@ -24,25 +24,25 @@
       </div>
 
       <el-table :data="filteredTableData" style="width: 100%" stripe>
-        <el-table-column prop="tenant" label="承租户" min-width="120" />
-        <el-table-column prop="assetName" label="资产名称" min-width="180" />
-        <el-table-column prop="address" label="资产地址" min-width="220" />
-        <el-table-column prop="deposit" label="押金" min-width="100">
+        <el-table-column prop="tenant" label="承租户" min-width="120" align="center" header-align="center" />
+        <el-table-column prop="assetName" label="资产名称" min-width="180" align="center" header-align="center" show-overflow-tooltip />
+        <el-table-column prop="address" label="资产地址" min-width="220" align="center" header-align="center" show-overflow-tooltip />
+        <el-table-column prop="deposit" label="押金" min-width="100" align="center" header-align="center">
           <template #default="scope"> ¥{{ scope.row.deposit }} </template>
         </el-table-column>
-        <el-table-column prop="externalAssetName" label="外部资产名称" min-width="180" />
-        <el-table-column prop="businessPurpose" label="经营用途" min-width="140" />
-        <el-table-column prop="contractPeriod" label="合同期限" min-width="180">
+        <el-table-column prop="externalAssetName" label="外部资产名称" min-width="180" align="center" header-align="center" show-overflow-tooltip />
+        <el-table-column prop="businessPurpose" label="经营用途" min-width="140" align="center" header-align="center" />
+        <el-table-column prop="contractPeriod" label="合同期限" min-width="180" align="center" header-align="center">
           <template #default="scope">
             {{ scope.row.contractPeriod }}
           </template>
         </el-table-column>
-        <el-table-column prop="rentEndDate" label="收租截止期限" min-width="120" />
-        <el-table-column prop="annualRent" label="年租金" min-width="100">
+        <el-table-column prop="rentEndDate" label="收租截止期限" min-width="120" align="center" header-align="center" />
+        <el-table-column prop="annualRent" label="年租金" min-width="100" align="center" header-align="center">
           <template #default="scope"> ¥{{ scope.row.annualRent }} </template>
         </el-table-column>
-        <el-table-column prop="phoneNumber" label="联系电话" min-width="120" />
-        <el-table-column label="操作" width="250" fixed="right">
+        <el-table-column prop="phoneNumber" label="联系电话" min-width="120" align="center" header-align="center" />
+        <el-table-column label="操作" width="250" fixed="right" align="center" header-align="center">
           <template #default="scope">
             <el-button size="small" text type="info" @click="handleView(scope.row)">查看</el-button>
             <el-button size="small" text type="primary" @click="handleEdit(scope.row)">编辑</el-button>
@@ -417,20 +417,147 @@ const handleSubmit = (formData) => {
 /* 表格样式优化 */
 :deep(.el-table) {
   width: 100% !important;
+  table-layout: auto;
+  overflow: hidden;
+}
+
+/* 隐藏所有水平滚动条 */
+:deep(.el-table__body),
+:deep(.el-table__header) {
+  overflow-x: hidden !important;
+}
+
+/* 确保表格列宽度自适应 */
+:deep(.el-table col) {
+  min-width: auto !important;
+}
+
+/* 确保表格容器占满宽度 */
+.table-card {
+  width: 100%;
+}
+
+.table-card :deep(.el-card__body) {
+  padding: 20px;
+  overflow-x: hidden;
+}
+
+/* 修复表头和内容对齐问题 */
+:deep(.el-table__header-wrapper) {
+  overflow-x: hidden;
 }
 
 :deep(.el-table__body-wrapper) {
   overflow-x: hidden;
 }
 
-:deep(.el-table__header-wrapper) {
-  overflow-x: hidden;
+/* 确保表头和内容列宽一致 */
+:deep(.el-table th),
+:deep(.el-table td) {
+  text-align: center;
+  vertical-align: middle;
+  border-right: 1px solid #EBEEF5;
 }
 
+:deep(.el-table th:last-child),
+:deep(.el-table td:last-child) {
+  border-right: none;
+}
+
+/* 单元格内容样式 */
 :deep(.el-table .cell) {
+  padding: 0 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 表头单元格特殊处理 */
+:deep(.el-table th .cell) {
+  font-weight: 600;
+  color: #303133;
+}
+
+/* 操作列特殊处理 */
+:deep(.el-table td:last-child .cell) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+/* 确保按钮在操作列中不换行 */
+:deep(.el-table td:last-child .el-button) {
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+/* 额外的对齐修复 */
+:deep(.el-table__header),
+:deep(.el-table__body) {
+  width: 100% !important;
+}
+
+/* 修复表格列对齐问题 */
+:deep(.el-table colgroup) {
+  width: 100% !important;
+}
+
+/* 表格行高统一 */
+:deep(.el-table .el-table__row) {
+  height: 50px;
+}
+
+:deep(.el-table .el-table__header-wrapper th) {
+  height: 50px;
+}
+
+/* 解决滚动条导致的对齐问题 */
+:deep(.el-table__header-wrapper) {
+  margin-bottom: 0 !important;
+}
+
+:deep(.el-table__body-wrapper) {
+  margin-top: 0 !important;
+}
+
+/* 解决固定列对齐问题 */
+:deep(.el-table__fixed),
+:deep(.el-table__fixed-right) {
+  height: 100% !important;
+}
+
+:deep(.el-table__fixed-header-wrapper),
+:deep(.el-table__fixed-right .el-table__fixed-header-wrapper) {
+  top: 0 !important;
+}
+
+/* 强制隐藏所有可能的滚动条 */
+:deep(.el-table),
+:deep(.el-table *) {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+:deep(.el-table)::-webkit-scrollbar,
+:deep(.el-table *)::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
+}
+
+/* 确保表格容器不产生滚动条 */
+:deep(.el-scrollbar__wrap) {
+  overflow-x: hidden !important;
+}
+
+:deep(.el-scrollbar__bar.is-horizontal) {
+  display: none !important;
 }
 
 /* 响应式表格 */
@@ -444,6 +571,18 @@ const handleSubmit = (formData) => {
   }
 }
 
+@media (max-width: 1024px) {
+  /* 小屏幕时允许水平滚动 */
+  .table-card :deep(.el-card__body) {
+    overflow-x: auto;
+  }
+  
+  :deep(.el-table__header-wrapper),
+  :deep(.el-table__body-wrapper) {
+    overflow-x: auto;
+  }
+}
+
 @media (max-width: 768px) {
   .search-form {
     flex-direction: column;
@@ -452,6 +591,15 @@ const handleSubmit = (formData) => {
 
   .search-form .el-form-item {
     margin-bottom: 10px;
+  }
+  
+  /* 调整表格字体大小 */
+  :deep(.el-table) {
+    font-size: 12px;
+  }
+  
+  :deep(.el-table .cell) {
+    padding: 0 4px;
   }
 }
 </style>

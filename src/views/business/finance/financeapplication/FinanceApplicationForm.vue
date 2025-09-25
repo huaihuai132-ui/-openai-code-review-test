@@ -33,12 +33,22 @@
             <el-input v-model="formData.leasedPropertyNum" placeholder="请输入标的数量"  type="number"/>
           </el-form-item>
           <el-form-item label="拟标的净值" prop="leasedPropertyValue">
-            <el-input v-model="formData.leasedPropertyValue" placeholder="请输入拟标的净值"  type="number" >
+            <el-input
+              v-model="formData.leasedPropertyValue"
+              placeholder="请输入拟标的净值" 
+              :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+              :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+            >
               <template #append>元</template>
             </el-input>
           </el-form-item>
           <el-form-item label="申请额度" prop="leaseAmount">
-            <el-input v-model="formData.leaseAmount" placeholder="请输入申请额度"  type="number" >
+            <el-input
+              v-model="formData.leaseAmount" 
+              placeholder="请输入申请额度" 
+              :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+              :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+            >
               <template #append>元</template>
             </el-input>
           </el-form-item>
@@ -279,6 +289,63 @@ const companyList = ref<FinanceCompanyVO[]>([]) // 公司列表
 const activeTab = ref('radio') // 当前激活的tab
 const userList = ref<UserApi.UserVO[]>([]) // 用户列表
 
+// 金额格式化相关
+const formattedLeasedPropertyValue = ref('')
+const formattedLeaseAmount = ref('')
+
+// 金额格式化工具函数
+const formatNumber = (value: string | number): string => {
+  if (!value && value !== 0) return ''
+  
+  // 移除所有非数字字符（保留小数点）
+  const numStr = String(value).replace(/[^\d.]/g, '')
+  
+  if (!numStr) return ''
+  
+  // 处理小数点
+  const parts = numStr.split('.')
+  const integerPart = parts[0]
+  const decimalPart = parts[1]
+  
+  // 添加千分位分隔符
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  
+  // 返回格式化后的数字
+  return decimalPart !== undefined ? `${formattedInteger}.${decimalPart}` : formattedInteger
+}
+
+// 移除格式化，获取纯数字
+const removeFormat = (value: string): number | undefined => {
+  if (!value) return undefined
+  const numStr = value.replace(/,/g, '')
+  const num = parseFloat(numStr)
+  return isNaN(num) ? undefined : num
+}
+
+// 拟标的净值输入处理
+const handleLeasedPropertyValueInput = (value: string) => {
+  // 实时更新原始数值
+  formData.value.leasedPropertyValue = removeFormat(value)
+}
+
+const formatLeasedPropertyValue = () => {
+  if (formData.value.leasedPropertyValue) {
+    formattedLeasedPropertyValue.value = formatNumber(formData.value.leasedPropertyValue)
+  }
+}
+
+// 申请额度输入处理
+const handleLeaseAmountInput = (value: string) => {
+  // 实时更新原始数值
+  formData.value.leaseAmount = removeFormat(value)
+}
+
+const formatLeaseAmount = () => {
+  if (formData.value.leaseAmount) {
+    formattedLeaseAmount.value = formatNumber(formData.value.leaseAmount)
+  }
+}
+
 /** 获取上传组件的模式 */
 const getUploadMode = () => {
   if (formType.value === 'create') return 'create'
@@ -304,6 +371,9 @@ const open = async (type: string, id?: number) => {
         ...data,
         fileList: data.fileList ? (typeof data.fileList === 'string' ? data.fileList.split(',').filter(id => id.trim() !== '') : data.fileList) : []
       }
+      // 初始化格式化的金额值
+      formattedLeasedPropertyValue.value = data.leasedPropertyValue ? formatNumber(data.leasedPropertyValue) : ''
+      formattedLeaseAmount.value = data.leaseAmount ? formatNumber(data.leaseAmount) : ''
     } finally {
       formLoading.value = false
     }

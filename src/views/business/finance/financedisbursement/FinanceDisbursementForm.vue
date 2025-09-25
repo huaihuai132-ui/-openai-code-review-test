@@ -68,10 +68,24 @@
         </div>
         <div class="form-row">
           <el-form-item label="本次金额" prop="thistimeAmount">
-            <el-input v-model="formData.thistimeAmount" placeholder="请输入本次金额" />
+            <el-input
+              v-model="formData.thistimeAmount"
+              placeholder="请输入本次金额" 
+              :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+              :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+            >
+              <template #append>元</template>
+            </el-input>
           </el-form-item>
           <el-form-item label="累计金额" prop="accruedAmount">
-            <el-input v-model="formData.accruedAmount" placeholder="请输入累计金额" />
+            <el-input
+              v-model="formData.accruedAmount"
+              placeholder="请输入累计金额" 
+              :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+              :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+            >
+              <template #append>元</template>
+            </el-input>
           </el-form-item>
           <el-form-item label="" prop="">
             <div></div>
@@ -96,12 +110,22 @@
             <div class="form-section">
               <div class="form-row">
                 <el-form-item label="租赁本金" prop="leaseAmount">
-                  <el-input v-model="formData.leaseAmount" placeholder="请输入租赁本金"  type="number" >
+                  <el-input
+                    v-model="formData.leaseAmount"
+                    placeholder="请输入租赁本金" 
+                    :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+                  >
                     <template #append>元</template>
                   </el-input>
                 </el-form-item>
                 <el-form-item label="保证金" prop="depositAmount">
-                  <el-input v-model="formData.depositAmount" placeholder="请输入保证金"  type="number" >
+                  <el-input
+                    v-model="formData.depositAmount"
+                    placeholder="请输入保证金" 
+                    :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+                  >
                     <template #append>元</template>
                   </el-input>
                 </el-form-item>
@@ -157,12 +181,22 @@
               </div>
               <div class="form-row">
                 <el-form-item label="标的物原值" prop="propertyOriginalValue">
-                  <el-input v-model="formData.propertyOriginalValue" placeholder="请输入标的物原值"  type="number" >
+                  <el-input
+                    v-model="formData.propertyOriginalValue"
+                    placeholder="标的物原值" 
+                    :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+                  >
                     <template #append>元</template>
                   </el-input>
                 </el-form-item>
                 <el-form-item label="标的物估值" prop="propertyAssessmentValue">
-                  <el-input v-model="formData.propertyAssessmentValue" placeholder="请输入标的物估值"  type="number" >
+                  <el-input
+                    v-model="formData.propertyAssessmentValue"
+                    placeholder="请输入标的物估值" 
+                    :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+                  >
                     <template #append>元</template>
                   </el-input>
                 </el-form-item>
