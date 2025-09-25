@@ -167,7 +167,7 @@
         label="承租时间"
         align="center"
         prop="leaseDate"
-        :formatter="dateFormatter"
+        :formatter="dateFormatter2"
         width="180px"
       />
       <el-table-column label="承租租期" align="center" prop="leaseTerm" />
@@ -248,7 +248,7 @@
 
 <script setup lang="ts">
 import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
-import { dateFormatter } from '@/utils/formatTime'
+import { dateFormatter2 } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { FinanceLeaseApi, FinanceLeaseVO } from '@/api/business/finance/financelease'
 import { FinanceDeviceApi } from '@/api/business/finance/financedevice'

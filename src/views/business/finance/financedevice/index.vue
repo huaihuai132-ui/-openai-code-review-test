@@ -50,7 +50,7 @@
       <el-table-column label="设备名称" align="center" prop="deviceName" />
       <el-table-column label="规格型号" align="center" prop="deviceSpecification" />
       <el-table-column label="生产厂家" align="center" prop="deviceManufacturers" />
-      <el-table-column label="购买日期" align="center" prop="buyDate" :formatter="dateFormatter" width="180px" />
+      <el-table-column label="购买日期" align="center" prop="buyDate" :formatter="dateFormatter2" width="180px" />
       <el-table-column label="数量" align="center" prop="quantity" />
       <el-table-column label="原值" align="center" prop="originalWorth" />
       <el-table-column label="净值" align="center" prop="netWorth" />
@@ -59,8 +59,8 @@
           {{ getDictLabel(DICT_TYPE.DEVICE_STATUS, scope.row.deviceStatus) }}
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter" width="180px" />
-      <el-table-column label="部门id" align="center" prop="deptId" />
+      <!-- <el-table-column label="创建时间" align="center" prop="createTime" :formatter="dateFormatter2" width="180px" /> -->
+      <!-- <el-table-column label="部门id" align="center" prop="deptId" /> -->
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
           <el-button link type="primary" @click="openForm('update', scope.row.id)"
@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { dateFormatter } from '@/utils/formatTime'
+import { dateFormatter2 } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { DICT_TYPE, getStrDictOptions, getDictLabel } from '@/utils/dict'
 import { FinanceDeviceApi, FinanceDeviceVO } from 'src/api/business/finance/financedevice'
