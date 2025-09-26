@@ -288,7 +288,7 @@ const formData = ref({
   leaseAmount: undefined,
   leaseTerm: undefined,
   depositAmount: undefined,
-  putNumbers: undefined,
+  putNumbers: undefined as number|undefined,
   interestRate: undefined,
   serveRate: undefined,
   repaymentMode: undefined,
@@ -448,7 +448,10 @@ const submitForm = async () => {
     } as unknown as FinanceDisbursementVO
 
     if (formType.value === 'create') {
-      await FinanceDisbursementApi.createFinanceDisbursement(data)
+      const id = await FinanceDisbursementApi.createFinanceDisbursement(data)
+
+      if (id)
+        repaymentPlanRef.value?.saveGeneratedPlans(id)
       message.success(t('common.createSuccess'))
     } else {
       await FinanceDisbursementApi.updateFinanceDisbursement(data)

@@ -2,14 +2,14 @@
   <div class="py-3">
     <div class="mb-3 border-b border-gray-200">
       <el-tooltip
-        :content="!props.disbursementId ? '请先保存放款信息' : !canGenerate ? '已有正式的还款计划，无法重新生成' : '生成还款计划'"
+        :content="!canGenerate ? '已有正式的还款计划，无法重新生成' : '生成还款计划'"
         placement="bottom"
       >
         <el-button
           type="primary"
-          @click="generateRepaymentPlan"
+          @click="generateRepaymentPlan()"
           :loading="repaymentLoading"
-          :disabled="!props.disbursementId || !canGenerate"
+          :disabled="!canGenerate"
         >
           {{ repaymentPlans.length > 0 ? '重新生成还款计划' : '生成还款计划' }}
         </el-button>
@@ -104,9 +104,14 @@ const loadExistingPlans = async () => {
   }
 }
 
-const canGenerate = computed(() => repaymentPlans.value.some((item) => item.temporaryFlag))
+const canGenerate = computed(
+  () =>
+    !props.disbursementId ||
+    repaymentPlans.value.length === 0 ||
+    repaymentPlans.value.some((item) => item.temporaryFlag)
+)
 
-const generateRepaymentPlan = async () => {
+const generateRepaymentPlan = async (disbursementId: number | undefined = props.disbursementId) => {
   if (!canGenerate.value) {
     message.error('已有正式的还款计划，无法重新生成')
     return
@@ -136,7 +141,7 @@ const generateRepaymentPlan = async () => {
   repaymentLoading.value = true
   try {
     const repaymentData: GenerateRepaymentPlanReqVO = {
-      disbursementId: props.disbursementId,
+      disbursementId,
       companyId: props.companyId,
       deptId: props.deptId,
       leaseAmount: parseFloat(String(props.leaseAmount)),
@@ -147,7 +152,7 @@ const generateRepaymentPlan = async () => {
 
     const result = await FinanceRepaymentApi.generateRepaymentPlan(repaymentData)
     if (result) {
-      loadExistingPlans()
+      repaymentPlans.value = result
       message.success('还款计划生成成功')
     }
   } catch (error) {
@@ -156,6 +161,11 @@ const generateRepaymentPlan = async () => {
   } finally {
     repaymentLoading.value = false
   }
+}
+
+const saveGeneratedPlans = async (disbursementId: number) => {
+  if (!props.disbursementId && disbursementId && repaymentPlans.value.length)
+    await generateRepaymentPlan(disbursementId)
 }
 
 const resetPlans = () => {
@@ -181,6 +191,7 @@ watch(
 
 defineExpose({
   resetPlans,
-  loadExistingPlans
+  loadExistingPlans,
+  saveGeneratedPlans
 })
 </script>
