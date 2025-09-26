@@ -1,5 +1,5 @@
 <script lang="tsx">
-import { defineComponent, computed, ref } from 'vue'
+import { defineComponent, computed, ref, onMounted } from 'vue'
 import { Message } from '@/layout/components//Message'
 import { Collapse } from '@/layout/components/Collapse'
 import { UserInfo } from '@/layout/components/UserInfo'
@@ -11,7 +11,8 @@ import RouterSearch from '@/components/RouterSearch/index.vue'
 import { useAppStore } from '@/store/modules/app'
 import { useDesign } from '@/hooks/web/useDesign'
 import { ElTooltip } from 'element-plus'
-import appImage from '@/assets/app.png'
+import { Qrcode } from '@/components/Qrcode'
+import * as ConfigApi from '@/api/infra/config'
 
 const { getPrefixCls, variables } = useDesign()
 
@@ -48,6 +49,33 @@ export default defineComponent({
   name: 'ToolHeader',
   setup() {
     const showAppImage = ref(false)
+
+    // 动态下载地址
+    const url = ref<string>('')
+    const loading = ref<boolean>(true)
+
+    // 对中文等字符进行百分号转义，优先按 URL 处理
+    const encodedText = computed(() => {
+      const text = (url.value || '').trim()
+      if (!text) return ''
+      const isUrl = /^https?:\/\//i.test(text)
+      try {
+        return isUrl ? encodeURI(text) : encodeURIComponent(text)
+      } catch {
+        return text
+      }
+    })
+
+    onMounted(async () => {
+      try {
+        const data = await ConfigApi.getConfigKey('app.downloadurl')
+        if (data && (Array.isArray(data) ? data.length > 0 : String(data).length > 0)) {
+          url.value = Array.isArray(data) ? data[0] : String(data)
+        }
+      } finally {
+        loading.value = false
+      }
+    })
 
     const handleAppClick = () => {
       showAppImage.value = !showAppImage.value
@@ -96,11 +124,17 @@ export default defineComponent({
             </div>
             {showAppImage.value && (
               <div class="absolute top-full left-0 mt-2 z-50 bg-white rounded-lg shadow-lg border p-2">
-                <img
-                  src={appImage}
-                  alt="App"
-                  class="w-48 h-auto rounded"
-                />
+                {loading.value ? (
+                  <div class="w-[200px] h-[200px] flex items-center justify-center text-gray-400">加载中...</div>
+                ) : encodedText.value ? (
+                  <Qrcode
+                    text={encodedText.value}
+                    width={200}
+                    options={{ margin: 2, color: { dark: '#1f8dd6', light: '#ffffff' } }}
+                  />
+                ) : (
+                  <div class="w-[200px] h-[200px] flex items-center justify-center text-gray-400">未配置下载地址</div>
+                )}
               </div>
             )}
           </div>
