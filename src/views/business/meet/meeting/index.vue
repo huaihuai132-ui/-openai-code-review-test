@@ -97,6 +97,11 @@
 <!--      <el-table-column label="结束时间" align="center" prop="endTime" :formatter="dateFormatter" width="180px" />-->
 <!--      <el-table-column label="会议室ID" align="center" prop="meetRoomId" />-->
       <el-table-column label="会议事由" align="center" prop="reason" />
+      <el-table-column label="提醒状态" align="center" prop="reminderStatus">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.REMINDER_STATUS" :value="scope.row.reminderStatus || '-'" />
+        </template>
+      </el-table-column>
 <!--      <el-table-column label="会议概述" align="center" prop="description" />-->
       <el-table-column label="会议状态" align="center" prop="status">
         <template #default="scope">
@@ -128,22 +133,22 @@
             type="primary"
             @click="openForm('update', scope.row.id)"
             v-hasPermi="['business:oa-meeting:update']"
-            v-if="scope.row.status === -1"
+            v-if="scope.row.status === 2"
             :disabled="sendApproveLoading[scope.row.id]"
           >
             编辑
           </el-button>
-          <el-button
-            link
-            type="warning"
-            @click="sendApprove(scope.row.id)"
-            v-hasPermi="['business:oa-meeting:sendApprove']"
-            :disabled="sendApproveLoading[scope.row.id]"
-            :loading="sendApproveLoading[scope.row.id]"
-            v-if="scope.row.status === -1"
-          >
-            送审
-          </el-button>
+<!--          <el-button-->
+<!--            link-->
+<!--            type="warning"-->
+<!--            @click="sendApprove(scope.row.id)"-->
+<!--            v-hasPermi="['business:oa-meeting:sendApprove']"-->
+<!--            :disabled="sendApproveLoading[scope.row.id]"-->
+<!--            :loading="sendApproveLoading[scope.row.id]"-->
+<!--            v-if="scope.row.status === -1"-->
+<!--          >-->
+<!--            送审-->
+<!--          </el-button>-->
           <el-button
             link
             type="success"
@@ -152,7 +157,16 @@
             v-if="scope.row.status === 2"
             :disabled="startMeetingLoading[scope.row.id]"
           >
-            通知
+            通知参会人
+          </el-button>
+          <el-button
+            link
+            type="warning"
+            @click="handleNotifyRelevantDepts(scope.row.id)"
+            v-if="scope.row.status === 2 && scope.row.reminderStatus == 0"
+            v-hasPermi="['business:oa-meeting:notify']"
+          >
+            议题申报提醒
           </el-button>
           <el-button
             link
@@ -640,6 +654,19 @@ const sendApprove = async (id: number | string) => {
   } finally {
     sendApproveLoading.value[id] = false
   }
+}
+
+/** 通知部门负责人按钮操作 */
+const handleNotifyRelevantDepts = async (id) => {
+  try {
+    // 通知的二次确认
+    await message.confirm('确定要通知全部部门负责人吗？')
+    // 发起通知
+    await OaMeetingApi.notifyRelevantDepts(id)
+    message.success('已通知全部部门负责人')
+    // 刷新列表
+    await getList()
+  } catch {}
 }
 
 /** 导出按钮操作 */

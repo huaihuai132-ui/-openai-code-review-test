@@ -266,4 +266,5 @@ export enum DICT_TYPE {
   SUPPLYCHAIN_PRODUCT = 'supplychain_product',
   SUPPLYCHAIN_APPLYSTATUS = 'supplychain_applystatus',
   SUP_REPT_STATUS = 'sup_rept_status',
+  REMINDER_STATUS = 'reminder_status',
 }
