@@ -52,4 +52,9 @@ export const SupplychainRepaymentApi = {
   exportSupplychainRepayment: async (params) => {
     return await request.download({ url: `/business/supplychain-repayment/export-excel`, params })
   },
+  
+  // 送审供应链金融付款申请
+  sendApprove: async (id: number) => {
+    return await request.post({ url: `/business/supplychain-repayment/send-approve?id=` + id })
+  }
 }

@@ -123,10 +123,10 @@
       <el-table-column label="备注" align="center" prop="remark" />
       <el-table-column label="单据状态" align="center" prop="status">
         <template #default="scope">
-          <dict-tag :type="DICT_TYPE.SUP_REPT_STATUS" :value="scope.row.status || 0" />
+          <dict-tag :type="DICT_TYPE.BPM_PROCESS_INSTANCE_STATUS" :value="scope.row.status || 0" />
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" min-width="120px">
+      <el-table-column label="操作" align="center" min-width="150px">
         <template #default="scope">
           <el-button
             link
@@ -135,6 +135,15 @@
             v-hasPermi="['business:supplychain-repayment:update']"
           >
             编辑
+          </el-button>
+          <el-button
+            link
+            type="success"
+            @click="handleSendApprove(scope.row.id)"
+            v-hasPermi="['business:supplychain-repayment:sendApprove']"
+            :disabled="scope.row.status !== -1"
+          >
+            送审
           </el-button>
           <el-button
             link
@@ -339,6 +348,19 @@ const handleDelete = async (id: number) => {
     // 发起删除
     await SupplychainRepaymentApi.deleteSupplychainRepayment(id)
     message.success(t('common.delSuccess'))
+    // 刷新列表
+    await getList()
+  } catch {}
+}
+
+/** 送审按钮操作 */
+const handleSendApprove = async (id: number) => {
+  try {
+    // 送审的二次确认
+    await message.confirm('确定要送审该申请吗？')
+    // 发起送审
+    await SupplychainRepaymentApi.sendApprove(id)
+    message.success(t('送审成功'))
     // 刷新列表
     await getList()
   } catch {}

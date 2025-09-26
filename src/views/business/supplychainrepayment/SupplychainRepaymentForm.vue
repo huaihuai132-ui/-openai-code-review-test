@@ -156,6 +156,14 @@
     </el-form>
     <template #footer>
       <el-button @click="submitForm" type="primary" :disabled="formLoading">确 定</el-button>
+      <el-button 
+        v-if="formType === 'update' && formData.status === -1" 
+        @click="handleSendApprove" 
+        type="success" 
+        :disabled="formLoading"
+      >
+        送 审
+      </el-button>
       <el-button @click="dialogVisible = false">取 消</el-button>
     </template>
   </Dialog>
@@ -413,6 +421,22 @@ const handleSupplierAccountChange = async (val: string) => {
   const supplierAccountListResponse = await SupplychainSupplierApi.getSupplychainSupplierAccount(val)
   formData.value.accountNum = supplierAccountListResponse.accountNum
   formData.value.accountBanklocation = supplierAccountListResponse.accountBanklocation
+}
+
+/** 送审操作 */
+const handleSendApprove = async () => {
+  if (!formData.value.id) return
+  
+  try {
+    // 送审的二次确认
+    await message.confirm('确定要送审该申请吗？')
+    // 发起送审
+    await SupplychainRepaymentApi.sendApprove(formData.value.id)
+    message.success('送审成功')
+    dialogVisible.value = false
+    // 发送操作成功的事件
+    emit('success')
+  } catch {}
 }
 
 /** 提交表单 */
