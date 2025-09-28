@@ -77,6 +77,6 @@ export const OaMeetingApi = {
   },
   // 通知部门负责人
   notifyRelevantDepts: async (id) => {
-    return await request.post({ url: `/business/oa-meeting/notifyRelevantDepts?id=`+id })
+    return await request.get({ url: `/business/oa-meeting/notifyRelevantDepts?id=`+id })
   },
 }
