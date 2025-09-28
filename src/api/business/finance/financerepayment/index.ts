@@ -28,6 +28,7 @@ export interface GenerateRepaymentPlanReqVO {
   leaseTerm: number // 承租租期-月数 (必填，必须大于0)
   interestRate: number // 年租息率-百分比 (必填，必须大于0)
   repaymentMode: number // 还租方式 (必填，1=等额本息，2=等额本金，3=到期一次性还款)
+  leaseDate: number // 放款日期 (必填)
 }
 
 // 融资租赁放款 API

@@ -64,13 +64,8 @@ export const FinanceDisbursementApi = {
     return await request.download({ url: `/business/finance-disbursement/fill-word-template?id=`+ id })
   },
 
-   // 融资租赁放款送审
+  // 融资租赁申请送审
   sendApprove: async (id: number) => {
     return await request.post({ url: `/business/finance-disbursement/sendApprove?id=` + id })
   },
-
-    // 融资租赁申请送审
-    sendApprove: async (id: number) => {
-      return await request.post({ url: `/business/finance-disbursement/sendApprove?id=` + id })
-    },
 }

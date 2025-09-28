@@ -66,6 +66,7 @@ interface Props {
   leaseTerm?: string | number
   interestRate?: string | number
   repaymentMode?: number
+  leaseDate?: number
   projectName?: string
   companyId?: number
   deptId?: number
@@ -133,6 +134,10 @@ const generateRepaymentPlan = async (disbursementId: number | undefined = props.
     message.error('请先选择还租方式')
     return
   }
+  if (!props.leaseDate) {
+    message.error('请先选择放款日期')
+    return
+  }
   if (!props.companyId) {
     message.error('企业信息不完整')
     return
@@ -147,7 +152,8 @@ const generateRepaymentPlan = async (disbursementId: number | undefined = props.
       leaseAmount: parseFloat(String(props.leaseAmount)),
       leaseTerm: parseInt(String(props.leaseTerm)),
       interestRate: parseFloat(String(props.interestRate)),
-      repaymentMode: props.repaymentMode
+      repaymentMode: props.repaymentMode,
+      leaseDate: props.leaseDate
     }
 
     const result = await FinanceRepaymentApi.generateRepaymentPlan(repaymentData)

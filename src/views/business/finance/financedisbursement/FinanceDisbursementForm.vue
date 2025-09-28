@@ -70,7 +70,7 @@
           <el-form-item label="本次金额" prop="thistimeAmount">
             <el-input
               v-model="formData.thistimeAmount"
-              placeholder="请输入本次金额" 
+              placeholder="请输入本次金额"
               :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
               :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
             >
@@ -80,15 +80,12 @@
           <el-form-item label="累计金额" prop="accruedAmount">
             <el-input
               v-model="formData.accruedAmount"
-              placeholder="请输入累计金额" 
+              placeholder="请输入累计金额"
               :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
               :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
             >
               <template #append>元</template>
             </el-input>
-          </el-form-item>
-          <el-form-item label="" prop="">
-            <div></div>
           </el-form-item>
         </div>
         <div class="form-row">
@@ -99,7 +96,10 @@
             <el-input v-model="formData.beneficiaryName" placeholder="请输入收款单位账户名称" />
           </el-form-item>
           <el-form-item label="收款账户开户行" prop="beneficiaryBanklocation">
-            <el-input v-model="formData.beneficiaryBanklocation" placeholder="请输入收款单位账开户行" />
+            <el-input
+              v-model="formData.beneficiaryBanklocation"
+              placeholder="请输入收款单位账开户行"
+            />
           </el-form-item>
         </div>
       </div>
@@ -112,17 +112,25 @@
                 <el-form-item label="租赁本金" prop="leaseAmount">
                   <el-input
                     v-model="formData.leaseAmount"
-                    placeholder="请输入租赁本金" 
+                    placeholder="请输入租赁本金"
                     :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
                   >
                     <template #append>元</template>
                   </el-input>
                 </el-form-item>
+                <el-form-item label="放款时间" prop="leaseDate">
+                  <el-date-picker
+                    v-model="formData.leaseDate"
+                    type="date"
+                    value-format="x"
+                    placeholder="选择放款时间"
+                  />
+                </el-form-item>
                 <el-form-item label="保证金" prop="depositAmount">
                   <el-input
                     v-model="formData.depositAmount"
-                    placeholder="请输入保证金" 
+                    placeholder="请输入保证金"
                     :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
                   >
@@ -132,7 +140,7 @@
               </div>
               <div class="form-row">
                 <el-form-item label="承租租期" prop="leaseTerm">
-                  <el-input v-model="formData.leaseTerm" placeholder="请输入承租租期"  type="number" >
+                  <el-input v-model="formData.leaseTerm" placeholder="请输入承租租期" type="number">
                     <template #append>月</template>
                   </el-input>
                 </el-form-item>
@@ -147,7 +155,12 @@
               </div>
               <div class="form-row">
                 <el-form-item label="投放期数" prop="putNumbers">
-                  <el-input v-model="formData.putNumbers" readonly placeholder="请输入投放期数"  type="number" >
+                  <el-input
+                    v-model="formData.putNumbers"
+                    readonly
+                    placeholder="请输入投放期数"
+                    type="number"
+                  >
                     <template #append>期</template>
                   </el-input>
                 </el-form-item>
@@ -157,12 +170,20 @@
               </div>
               <div class="form-row">
                 <el-form-item label="年租息率" prop="interestRate">
-                  <el-input v-model="formData.interestRate" placeholder="请输入年租息率"  type="number" >
+                  <el-input
+                    v-model="formData.interestRate"
+                    placeholder="请输入年租息率"
+                    type="number"
+                  >
                     <template #append>%</template>
                   </el-input>
                 </el-form-item>
                 <el-form-item label="服务费比率" prop="serveRate">
-                  <el-input v-model="formData.serveRate" placeholder="请输入服务费比率"  type="number" >
+                  <el-input
+                    v-model="formData.serveRate"
+                    placeholder="请输入服务费比率"
+                    type="number"
+                  >
                     <template #append>%</template>
                   </el-input>
                 </el-form-item>
@@ -183,7 +204,7 @@
                 <el-form-item label="标的物原值" prop="propertyOriginalValue">
                   <el-input
                     v-model="formData.propertyOriginalValue"
-                    placeholder="标的物原值" 
+                    placeholder="标的物原值"
                     :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
                   >
@@ -193,7 +214,7 @@
                 <el-form-item label="标的物估值" prop="propertyAssessmentValue">
                   <el-input
                     v-model="formData.propertyAssessmentValue"
-                    placeholder="请输入标的物估值" 
+                    placeholder="请输入标的物估值"
                     :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
                   >
@@ -201,7 +222,11 @@
                   </el-input>
                 </el-form-item>
                 <el-form-item label="平均使用年限" prop="usefulLife">
-                  <el-input v-model="formData.usefulLife" placeholder="请输入平均使用年限"  type="number" >
+                  <el-input
+                    v-model="formData.usefulLife"
+                    placeholder="请输入平均使用年限"
+                    type="number"
+                  >
                     <template #append>年</template>
                   </el-input>
                 </el-form-item>
@@ -229,6 +254,7 @@
               :lease-term="formData.leaseTerm"
               :interest-rate="formData.interestRate"
               :repayment-mode="formData.repaymentMode"
+              :lease-date="formData.leaseDate"
               :project-name="formData.projectName"
               :company-id="formData.companyId"
               :dept-id="formData.deptId"
@@ -247,12 +273,15 @@
 
 <script setup lang="ts">
 import { getStrDictOptions, DICT_TYPE } from '@/utils/dict'
-import { FinanceDisbursementApi, FinanceDisbursementVO } from '@/api/business/finance/financedisbursement'
-import {FinanceCompanyApi, FinanceCompanyVO} from "@/api/business/finance/financecompany";
+import {
+  FinanceDisbursementApi,
+  FinanceDisbursementVO
+} from '@/api/business/finance/financedisbursement'
+import { FinanceCompanyApi, FinanceCompanyVO } from '@/api/business/finance/financecompany'
 import RepaymentPlan from './components/RepaymentPlan.vue'
-import { useUserStore } from '@/store/modules/user';
+import { useUserStore } from '@/store/modules/user'
 import { FinanceLeaseApi } from '@/api/business/finance/financelease'
-import * as UserApi from "@/api/system/user";
+import * as UserApi from '@/api/system/user'
 
 /** 融资租赁放款 表单 */
 defineOptions({ name: 'FinanceDisbursementForm' })
@@ -279,6 +308,7 @@ const formData = ref({
   userId: userStore.getUser?.id,
   companyId: undefined,
   disbursementCode: undefined,
+  leaseDate: undefined,
   projectName: undefined,
   leaseMode: undefined,
   propertyMain: undefined,
@@ -288,7 +318,7 @@ const formData = ref({
   leaseAmount: undefined,
   leaseTerm: undefined,
   depositAmount: undefined,
-  putNumbers: undefined as number|undefined,
+  putNumbers: undefined as number | undefined,
   interestRate: undefined,
   serveRate: undefined,
   repaymentMode: undefined,
@@ -301,7 +331,7 @@ const formData = ref({
   sequenceCode: undefined,
   status: -1,
   processInstanceId: undefined,
-  deptId: undefined,
+  deptId: undefined
 })
 
 const formRules = reactive({
@@ -309,6 +339,7 @@ const formRules = reactive({
   userId: [{ required: true, message: '申请人的用户编号不能为空', trigger: 'blur' }],
   companyId: [{ required: true, message: '企业id不能为空', trigger: 'change' }],
   disbursementCode: [{ required: true, message: '放款申请编码不能为空', trigger: 'blur' }],
+  leaseDate: [{ required: true, message: '放款日期不能为空', trigger: 'change' }],
   projectName: [{ required: true, message: '项目名称不能为空', trigger: 'blur' }],
   leaseMode: [{ required: true, message: '租赁模式不能为空', trigger: 'change' }],
   propertyMain: [{ required: true, message: '主要租赁物名称不能为空', trigger: 'blur' }],
@@ -320,8 +351,10 @@ const formRules = reactive({
   repaymentMode: [{ required: true, message: '还租方式不能为空', trigger: 'change' }],
   thistimeAmount: [{ required: true, message: '本次金额不能为空', trigger: 'blur' }],
   beneficiaryName: [{ required: true, message: '收款单位账户名称不能为空', trigger: 'blur' }],
-  beneficiaryBanklocation: [{ required: true, message: '收款单位账开户行不能为空', trigger: 'blur' }],
-  beneficiaryAccount: [{ required: true, message: '收款单位账号不能为空', trigger: 'blur' }],
+  beneficiaryBanklocation: [
+    { required: true, message: '收款单位账开户行不能为空', trigger: 'blur' }
+  ],
+  beneficiaryAccount: [{ required: true, message: '收款单位账号不能为空', trigger: 'blur' }]
 })
 
 const formRef = ref() // 表单 Ref
@@ -373,6 +406,7 @@ const handleLeaseIdChange = async (leaseId: number) => {
       formData.value.leaseAmount = leaseDetail.leaseAmount
       formData.value.leaseTerm = leaseDetail.leaseTerm
       formData.value.interestRate = leaseDetail.interestRate
+      formData.value.leaseDate = leaseDetail.leaseDate
     }
   } catch (error) {
     console.error('获取融资租赁详情失败:', error)
@@ -393,7 +427,11 @@ const open = async (type: string, id?: number) => {
       const data = await FinanceDisbursementApi.getFinanceDisbursement(id)
       formData.value = {
         ...data,
-        fileList: data.fileList ? (typeof data.fileList === 'string' ? data.fileList.split(',').filter(id => id.trim() !== '') : data.fileList) : []
+        fileList: data.fileList
+          ? typeof data.fileList === 'string'
+            ? data.fileList.split(',').filter((id) => id.trim() !== '')
+            : data.fileList
+          : []
       }
     } finally {
       formLoading.value = false
@@ -404,21 +442,20 @@ const open = async (type: string, id?: number) => {
   userList.value = await UserApi.getSimpleUserList()
   // 加载租赁单编号选项
   await loadFinanceLeaseOptions()
-
 }
 
 // 1. 定义还租方式 → 每期多少月的映射
 const repaymentModeMap: Record<number, number> = {
-  1: 1,   // 每月
-  2: 3,   // 每三个月
-  3: 6,   // 每半年
-  4: 12,  // 每年
+  1: 1, // 每月
+  2: 3, // 每三个月
+  3: 6, // 每半年
+  4: 12 // 每年
 }
 // 2. 计算属性：自动得出投放期数
 const putNumbers = computed<number>(() => {
-  const leaseTerm = Number(formData.value.leaseTerm)   // 承租租期（月）
-  const mode = Number(formData.value.repaymentMode)    // 还租方式
-  const months = repaymentModeMap[mode] || 1           // 每期多少月
+  const leaseTerm = Number(formData.value.leaseTerm) // 承租租期（月）
+  const mode = Number(formData.value.repaymentMode) // 还租方式
+  const months = repaymentModeMap[mode] || 1 // 每期多少月
 
   if (!leaseTerm || !months || months <= 0) return 0
 
@@ -442,16 +479,16 @@ const submitForm = async () => {
   try {
     const data = {
       ...formData.value,
-      fileList: Array.isArray(formData.value.fileList) && formData.value.fileList.length > 0
-        ? formData.value.fileList.join(',')
-        : ''
+      fileList:
+        Array.isArray(formData.value.fileList) && formData.value.fileList.length > 0
+          ? formData.value.fileList.join(',')
+          : ''
     } as unknown as FinanceDisbursementVO
 
     if (formType.value === 'create') {
       const id = await FinanceDisbursementApi.createFinanceDisbursement(data)
 
-      if (id)
-        repaymentPlanRef.value?.saveGeneratedPlans(id)
+      if (id) repaymentPlanRef.value?.saveGeneratedPlans(id)
       message.success(t('common.createSuccess'))
     } else {
       await FinanceDisbursementApi.updateFinanceDisbursement(data)
@@ -473,6 +510,7 @@ const resetForm = () => {
     userId: userStore.getUser?.id,
     companyId: undefined,
     disbursementCode: undefined,
+    leaseDate: undefined,
     projectName: undefined,
     leaseMode: undefined,
     propertyMain: undefined,
@@ -495,7 +533,7 @@ const resetForm = () => {
     sequenceCode: undefined,
     status: 1,
     processInstanceId: undefined,
-    deptId: undefined,
+    deptId: undefined
   }
   // 重置还款计划
   repaymentPlanRef.value?.resetPlans()
@@ -504,7 +542,6 @@ const resetForm = () => {
 </script>
 
 <style scoped>
-
 /* Tab组件样式 */
 .form-tabs {
   margin-top: 20px;
