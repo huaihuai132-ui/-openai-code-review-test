@@ -35,7 +35,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="rent" label="租金" align="center" />
-        <el-table-column prop="interestRate" label="利率" align="center" />
+        <el-table-column prop="interestRate" label="利率（%）" align="center" />
         <el-table-column prop="capital" label="还款本金" align="center" />
         <el-table-column prop="interest" label="还款利息" align="center" />
       </el-table>

@@ -176,6 +176,7 @@ const queryParams = reactive({
   repaymentStatus: undefined,
   fileList: undefined,
   createTime: [],
+  temporaryFlag: 0,
   deptId: undefined
 })
 const queryFormRef = ref() // 搜索的表单

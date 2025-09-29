@@ -55,7 +55,7 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="申请人" prop="userId">
+          <el-form-item label="经办人" prop="userId">
             <el-select v-model="formData.userId" readonly :disabled="true">
               <el-option
                 v-for="user in userList"
@@ -87,6 +87,9 @@
               <template #append>元</template>
             </el-input>
           </el-form-item>
+          <el-form-item label="" prop="">
+            <div></div>
+          </el-form-item>
         </div>
         <div class="form-row">
           <el-form-item label="收款账号" prop="beneficiaryAccount">
@@ -109,16 +112,6 @@
           <el-tab-pane label="租赁项目方案" name="lease">
             <div class="form-section">
               <div class="form-row">
-                <el-form-item label="租赁本金" prop="leaseAmount">
-                  <el-input
-                    v-model="formData.leaseAmount"
-                    placeholder="请输入租赁本金"
-                    :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
-                    :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
-                  >
-                    <template #append>元</template>
-                  </el-input>
-                </el-form-item>
                 <el-form-item label="放款时间" prop="leaseDate">
                   <el-date-picker
                     v-model="formData.leaseDate"
@@ -127,10 +120,10 @@
                     placeholder="选择放款时间"
                   />
                 </el-form-item>
-                <el-form-item label="保证金" prop="depositAmount">
+                <el-form-item label="租赁本金" prop="leaseAmount">
                   <el-input
-                    v-model="formData.depositAmount"
-                    placeholder="请输入保证金"
+                    v-model="formData.leaseAmount"
+                    placeholder="请输入租赁本金"
                     :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
                     :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
                   >
@@ -164,8 +157,15 @@
                     <template #append>期</template>
                   </el-input>
                 </el-form-item>
-                <el-form-item label="" prop="">
-                  <div></div>
+                <el-form-item label="保证金" prop="depositAmount">
+                  <el-input
+                    v-model="formData.depositAmount"
+                    placeholder="请输入保证金"
+                    :formatter="(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
+                    :parser="(value) => value.replace(/\$\s?|(,*)/g, '')"
+                  >
+                    <template #append>元</template>
+                  </el-input>
                 </el-form-item>
               </div>
               <div class="form-row">
@@ -336,7 +336,7 @@ const formData = ref({
 
 const formRules = reactive({
   leaseId: [{ required: true, message: '融资租赁单编号不能为空', trigger: 'blur' }],
-  userId: [{ required: true, message: '申请人的用户编号不能为空', trigger: 'blur' }],
+  userId: [{ required: true, message: '经办人的用户编号不能为空', trigger: 'blur' }],
   companyId: [{ required: true, message: '企业id不能为空', trigger: 'change' }],
   disbursementCode: [{ required: true, message: '放款申请编码不能为空', trigger: 'blur' }],
   leaseDate: [{ required: true, message: '放款日期不能为空', trigger: 'change' }],
@@ -492,6 +492,7 @@ const submitForm = async () => {
       message.success(t('common.createSuccess'))
     } else {
       await FinanceDisbursementApi.updateFinanceDisbursement(data)
+      if (formData.value.id) repaymentPlanRef.value?.saveGeneratedPlans(formData.value.id)
       message.success(t('common.updateSuccess'))
     }
     dialogVisible.value = false
@@ -531,7 +532,7 @@ const resetForm = () => {
     beneficiaryAccount: undefined,
     fileList: [],
     sequenceCode: undefined,
-    status: 1,
+    status: -1,
     processInstanceId: undefined,
     deptId: undefined
   }

@@ -5,7 +5,7 @@ export interface FinanceLeaseVO {
   id: number // 融资租赁表单主键
   leasedCode: string // 融资租赁项目申请编码
   applicationId: number // 融资租赁立项编号
-  userId: number // 申请人的用户编号
+  userId: number // 经办人的用户编号
   companyId: number // 企业id
   leasedProperty: string // 融资标的物名称
   leasedPropertyNum: number // 融资标的物数量

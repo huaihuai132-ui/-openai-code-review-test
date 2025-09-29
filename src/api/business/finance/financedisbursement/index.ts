@@ -4,7 +4,7 @@ import request from '@/config/axios'
 export interface FinanceDisbursementVO {
   id: number // 融资租赁放款表单主键
   leaseId: number // 融资租赁单编号
-  userId: number // 申请人的用户编号
+  userId: number // 经办人的用户编号
   companyId: number // 企业id
   disbursementCode: string // 放款申请编码
   projectName: string // 项目名称

@@ -13,6 +13,11 @@
           <el-form-item label="立项申请名称" prop="applicationName">
             <el-input v-model="formData.applicationName" placeholder="请输入立项申请名称" />
           </el-form-item>
+          <el-form-item label="" prop="">
+            <div></div>
+          </el-form-item>
+        </div>
+        <div class="form-row">
           <el-form-item label="企业名称" prop="companyId">
             <el-select v-model="formData.companyId" placeholder="请选择企业">
               <el-option

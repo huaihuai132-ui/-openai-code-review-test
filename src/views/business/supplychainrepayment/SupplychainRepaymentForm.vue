@@ -9,8 +9,8 @@
     >
       <div class="form-section">
         <div class="form-row">
-          <el-form-item label="申请人" prop="userId">
-            <el-input v-model="userName" placeholder="请输入申请人" :disabled="formType === 'create'" />
+          <el-form-item label="经办人" prop="userId">
+            <el-input v-model="userName" placeholder="请输入经办人" :disabled="formType === 'create'" />
           </el-form-item>
           <el-form-item label="申请部门" prop="applyDept">
             <el-input v-model="deptName" placeholder="请输入申请部门" :disabled="formType === 'create'" />
