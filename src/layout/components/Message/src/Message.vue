@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { ref, onMounted, h } from 'vue'
 import { formatDate } from '@/utils/formatTime'
 import * as NotifyMessageApi from '@/api/system/notify/message'
 import { useUserStoreWithOut } from '@/store/modules/user'
@@ -25,33 +26,50 @@ const notificationQueue = ref<any[]>([]) // 通知队列
 
 // 获得消息列表
 const getList = async () => {
-  const newList = await NotifyMessageApi.getUnreadNotifyMessageList()
-
-  // 检查新消息并显示通知
-  if (list.value.length > 0) {
-    const newMessages = newList.filter(
-      (newItem) => !list.value.find((oldItem) => oldItem.id === newItem.id)
-    )
-    if (newMessages.length > 0) {
-      handleNewMessages(newMessages)
+  try {
+    const newList = await NotifyMessageApi.getUnreadNotifyMessageList()
+    console.log('Message.vue - 获取到的消息数据:', newList)
+    
+    // 确保返回的数据是数组
+    const messageList = Array.isArray(newList) ? newList : []
+    
+    // 检查新消息并显示通知
+    if (list.value.length > 0) {
+      const newMessages = messageList.filter(
+        (newItem) => !list.value.find((oldItem) => oldItem.id === newItem.id)
+      )
+      if (newMessages.length > 0) {
+        handleNewMessages(newMessages)
+      }
     }
-  }
 
-  list.value = newList
-  // 强制设置 unreadCount 为 0，避免小红点因为轮询太慢，不消除
-  unreadCount.value = 0
-  
-  // 通知父组件更新徽章
-  emit('messageUpdate')
+    list.value = messageList
+    console.log('Message.vue - 设置后的消息列表:', list.value)
+    
+    // 强制设置 unreadCount 为 0，避免小红点因为轮询太慢，不消除
+    unreadCount.value = 0
+    
+    // 通知父组件更新徽章
+    emit('messageUpdate')
+  } catch (error) {
+    console.error('Message.vue - 获取消息列表失败:', error)
+    // 设置空数组，避免显示错误
+    list.value = []
+  }
 }
 
 // 获得未读消息数
 const getUnreadCount = async () => {
-  NotifyMessageApi.getUnreadNotifyMessageCount().then((data) => {
-    unreadCount.value = data
+  try {
+    const data = await NotifyMessageApi.getUnreadNotifyMessageCount()
+    console.log('Message.vue - 获取到的未读消息数量:', data)
+    unreadCount.value = data || 0
     // 通知父组件更新徽章
     emit('messageUpdate')
-  })
+  } catch (error) {
+    console.error('Message.vue - 获取未读消息数量失败:', error)
+    unreadCount.value = 0
+  }
 }
 
 // 跳转我的站内信
@@ -166,13 +184,13 @@ onMounted(() => {
       </template>
       <ElTabs v-model="activeName">
         <ElTabPane label="我的站内信" name="notice">
-          <el-scrollbar class="message-list">
+          <el-scrollbar class="message-list" v-if="list.length > 0">
             <template v-for="item in list" :key="item.id">
               <div class="message-item">
                 <img alt="" class="message-icon" src="@/assets/imgs/avatar.gif" />
                 <div class="message-content">
                   <span class="message-title">
-                    {{ item.templateNickname }}：{{ item.templateContent }}
+                    {{ item.templateNickname || item.title || '系统通知' }}：{{ item.templateContent || item.content || '消息内容' }}
                   </span>
                   <span class="message-date">
                     {{ formatDate(item.createTime) }}
@@ -186,6 +204,10 @@ onMounted(() => {
               </div>
             </template>
           </el-scrollbar>
+          <div v-else class="message-empty">
+            <Icon icon="ep:bell" :size="60" color="#d0d0d0" />
+            <div>暂无消息</div>
+          </div>
         </ElTabPane>
       </ElTabs>
       <!-- 更多 -->
