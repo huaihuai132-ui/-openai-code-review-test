@@ -7,6 +7,15 @@ import { ElNotification } from 'element-plus'
 
 defineOptions({ name: 'Message' })
 
+// 定义 props 和 emits
+const props = defineProps<{
+  color?: string
+}>()
+
+const emit = defineEmits<{
+  messageUpdate: []
+}>()
+
 const { push } = useRouter()
 const userStore = useUserStoreWithOut()
 const activeName = ref('notice')
@@ -31,12 +40,17 @@ const getList = async () => {
   list.value = newList
   // 强制设置 unreadCount 为 0，避免小红点因为轮询太慢，不消除
   unreadCount.value = 0
+  
+  // 通知父组件更新徽章
+  emit('messageUpdate')
 }
 
 // 获得未读消息数
 const getUnreadCount = async () => {
   NotifyMessageApi.getUnreadNotifyMessageCount().then((data) => {
     unreadCount.value = data
+    // 通知父组件更新徽章
+    emit('messageUpdate')
   })
 }
 
@@ -112,6 +126,11 @@ const handleNewMessages = (newMessages: any[]) => {
   })
 }
 
+// 点击消息图标时的处理
+const handleMessageClick = () => {
+  getList()
+}
+
 // ========== 初始化 =========
 onMounted(() => {
   // 首次加载消息列表和小红点
@@ -137,9 +156,13 @@ onMounted(() => {
   <div class="message">
     <ElPopover :width="400" placement="bottom" trigger="click">
       <template #reference>
-        <ElBadge :is-dot="unreadCount > 0" class="item">
-          <Icon :size="18" class="cursor-pointer" icon="ep:bell" @click="getList" />
-        </ElBadge>
+        <Icon 
+          :size="18" 
+          class="cursor-pointer" 
+          icon="ep:bell" 
+          :color="props.color"
+          @click="handleMessageClick" 
+        />
       </template>
       <ElTabs v-model="activeName">
         <ElTabPane label="我的站内信" name="notice">

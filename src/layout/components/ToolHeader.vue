@@ -10,9 +10,10 @@ import { LocaleDropdown } from '@/layout/components/LocaleDropdown'
 import RouterSearch from '@/components/RouterSearch/index.vue'
 import { useAppStore } from '@/store/modules/app'
 import { useDesign } from '@/hooks/web/useDesign'
-import { ElTooltip } from 'element-plus'
+import { ElTooltip, ElBadge } from 'element-plus'
 import { Qrcode } from '@/components/Qrcode'
 import * as ConfigApi from '@/api/infra/config'
+import * as NotifyMessageApi from '@/api/system/notify/message'
 
 const { getPrefixCls, variables } = useDesign()
 
@@ -49,6 +50,7 @@ export default defineComponent({
   name: 'ToolHeader',
   setup() {
     const showAppImage = ref(false)
+    const unreadMessageCount = ref(0) // 未读消息数量
 
     // 动态下载地址
     const url = ref<string>('')
@@ -66,6 +68,17 @@ export default defineComponent({
       }
     })
 
+    // 获取未读消息数量
+    const getUnreadMessageCount = async () => {
+      try {
+        const count = await NotifyMessageApi.getUnreadNotifyMessageCount()
+        unreadMessageCount.value = count || 0
+      } catch (error) {
+        console.error('获取未读消息数量失败:', error)
+        unreadMessageCount.value = 0
+      }
+    }
+
     onMounted(async () => {
       try {
         const data = await ConfigApi.getConfigKey('app.downloadurl')
@@ -75,6 +88,14 @@ export default defineComponent({
       } finally {
         loading.value = false
       }
+
+      // 获取未读消息数量
+      getUnreadMessageCount()
+
+      // 定时刷新未读消息数量
+      setInterval(() => {
+        getUnreadMessageCount()
+      }, 1000 * 60 * 2) // 每2分钟刷新一次
     })
 
     const handleAppClick = () => {
@@ -152,7 +173,19 @@ export default defineComponent({
             ></LocaleDropdown>
           ) : undefined}
           {message.value ? (
-            <Message class="custom-hover" color="var(--top-header-text-color)"></Message>
+            <ElBadge 
+              value={unreadMessageCount.value} 
+              max={99} 
+              class="item"
+              type={unreadMessageCount.value > 0 ? 'danger' : 'info'}
+              hidden={unreadMessageCount.value === 0}
+            >
+              <Message 
+                class="custom-hover" 
+                color="var(--top-header-text-color)"
+                onMessageUpdate={getUnreadMessageCount}
+              ></Message>
+            </ElBadge>
           ) : undefined}
           <UserInfo></UserInfo>
         </div>
