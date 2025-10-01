@@ -133,7 +133,7 @@ const getMenuTree = async () => {
 }
 
 /** 菜单选择变化处理 */
-const handleMenuChange = (menuId: number) => {
+const handleMenuChange = async (menuId: number) => {
   if (menuId) {
     // 根据选中的菜单ID查找菜单信息并构建完整路径
     const findMenuWithPath = (menus: any[], id: number, parentPath: string = ''): { menu: any, fullPath: string } | null => {
@@ -169,11 +169,42 @@ const handleMenuChange = (menuId: number) => {
       formData.value.name = selectedMenu.name
       formData.value.icon = selectedMenu.icon
       formData.value.url = fullPath
-      // 基于菜单路径生成权限标识，去掉开头的/并将/替换为:
-      const permissionId = fullPath.startsWith('/') ? fullPath.substring(1).replace(/\//g, ':') : fullPath.replace(/\//g, ':')
-      formData.value.permission = permissionId
       
-      console.log('选中菜单:', selectedMenu.name, '完整路径:', fullPath, '权限标识:', permissionId)
+      // 调用后端接口获取权限标识
+      try {
+        const systemCommonEntrances = await SystemCommonEntrancesApi.getSystemCommonEntrances(menuId)
+        
+        // 优先从childMenus中获取第一个子菜单的permission
+        if (systemCommonEntrances && systemCommonEntrances.childMenus && systemCommonEntrances.childMenus.length > 0) {
+          const firstChildMenu = systemCommonEntrances.childMenus[0]
+          if (firstChildMenu.permission) {
+            formData.value.permission = firstChildMenu.permission
+            console.log('从第一个子菜单获取的权限标识:', firstChildMenu.permission)
+          } else {
+            // 如果第一个子菜单没有权限标识，使用基于菜单路径生成的权限标识作为备用
+            const permissionId = fullPath.startsWith('/') ? fullPath.substring(1).replace(/\//g, ':') : fullPath.replace(/\//g, ':')
+            formData.value.permission = permissionId
+            console.log('第一个子菜单无权限标识，使用生成的权限标识:', permissionId)
+          }
+        } else if (systemCommonEntrances && systemCommonEntrances.permission) {
+          // 如果没有子菜单，但有直接的权限标识，使用它
+          formData.value.permission = systemCommonEntrances.permission
+          console.log('从后端获取的权限标识:', systemCommonEntrances.permission)
+        } else {
+          // 如果都没有，使用基于菜单路径生成的权限标识作为备用
+          const permissionId = fullPath.startsWith('/') ? fullPath.substring(1).replace(/\//g, ':') : fullPath.replace(/\//g, ':')
+          formData.value.permission = permissionId
+          console.log('使用生成的权限标识:', permissionId)
+        }
+      } catch (error) {
+        console.error('获取权限标识失败:', error)
+        // 如果接口调用失败，使用基于菜单路径生成的权限标识作为备用
+        const permissionId = fullPath.startsWith('/') ? fullPath.substring(1).replace(/\//g, ':') : fullPath.replace(/\//g, ':')
+        formData.value.permission = permissionId
+        console.log('接口调用失败，使用生成的权限标识:', permissionId)
+      }
+      
+      console.log('选中菜单:', selectedMenu.name, '完整路径:', fullPath)
     }
   }
 }

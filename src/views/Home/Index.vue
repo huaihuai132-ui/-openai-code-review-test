@@ -177,97 +177,15 @@ const getShortcut = async () => {
       console.log('排序后的数据:', sortedData)
       shortcut.value = sortedData
     } else {
-      console.log('getMenu返回的数据不是数组或为空')
-      // 如果接口返回的数据有问题，使用默认数据
-      useDefaultShortcutData()
+      console.log('getMenu返回的数据不是数组或为空，显示空状态')
+      // 如果接口返回的数据为空，保持空状态，不使用默认数据
+      shortcut.value = []
     }
   } catch (error) {
     console.error('调用getMenu接口失败:', error)
-    // 如果接口调用失败，使用默认数据
-    useDefaultShortcutData()
+    // 如果接口调用失败，也保持空状态，不使用默认数据
+    shortcut.value = []
   }
-}
-
-// 使用默认快捷入口数据的函数
-const useDefaultShortcutData = () => {
-  const defaultData = [
-    {
-      id: 1,
-      order: 1,
-      name: '项目管理',
-      icon: 'ep:document',
-      url: '/project/manage',
-      color: '#409EFF'
-    },
-    {
-      id: 2,
-      order: 2,
-      name: '客户管理',
-      icon: 'ep:office-building',
-      url: '/beisen/system',
-      color: '#67C23A'
-    },
-    {
-      id: 3,
-      order: 3,
-      name: '审批中心',
-      icon: 'ep:message',
-      url: '/timesheet/manage',
-      color: '#E6A23C'
-    },
-    {
-      id: 4,
-      order: 4,
-      name: '邮箱',
-      icon: 'ep:message',
-      url: '/mail/box',
-      color: '#F56C6C'
-    },
-    {
-      id: 5,
-      order: 5,
-      name: '报销系统',
-      icon: 'ep:money',
-      url: '/expense/system',
-      color: '#909399'
-    },
-    {
-      id: 6,
-      order: 6,
-      name: '档案系统',
-      icon: 'ep:folder',
-      url: '/archive/system',
-      color: '#409EFF'
-    },
-    {
-      id: 7,
-      order: 7,
-      name: 'HR系统',
-      icon: 'ep:user',
-      url: '/hr/system',
-      color: '#67C23A'
-    },
-    {
-      id: 8,
-      order: 8,
-      name: '考勤系统',
-      icon: 'ep:calendar',
-      url: '/attendance/system',
-      color: '#E6A23C'
-    },
-    {
-      id: 9,
-      order: 9,
-      name: '资产管理',
-      icon: 'ep:box',
-      url: '/asset/manage',
-      color: '#F56C6C'
-    }
-  ]
-  
-  // 按照order字段排序
-  const sortedData = defaultData.sort((a, b) => a.order - b.order)
-  shortcut.value = sortedData
 }
 
 // 用户来源
