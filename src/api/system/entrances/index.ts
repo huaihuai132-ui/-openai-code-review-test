@@ -7,10 +7,9 @@ export const getMenu = (id: number) => {
 }
 
 // 更新用户常用入口详情
-export const updateMenu = (shortcutList: Shortcut[]) => {
+export const updateMenu = (shortcutList: Shortcut[], userId: number) => {
   return request.put({ 
-    url: '/business/user-common-entrances/update-list', 
+    url: '/business/user-common-entrances/update-list?userId=' + userId, 
     data: shortcutList
-    
   })
 }

@@ -17,6 +17,14 @@
           </el-button>
           <template v-else>
             <el-button 
+              type="primary" 
+              size="small" 
+              @click="openAddForm"
+            >
+              <Icon icon="ep:plus" class="mr-1" />
+              新增
+            </el-button>
+            <el-button 
               type="success" 
               size="small" 
               @click="saveOrder"
@@ -37,53 +45,69 @@
       </div>
     </template>
     <el-skeleton :loading="loading" animated>
-      <draggable
-        :list="localShortcut"
-        :group="{ name: 'shortcuts' }"
-        :animation="200"
-        :disabled="!isEditing"
-        item-key="id"
-        class="shortcuts-grid"
-        @start="dragStart"
-        @end="dragEnd"
-      >
-        <template #item="{ element: item, index }">
-          <div class="shortcut-item">
-            <el-card 
-              shadow="hover" 
-              class="cursor-pointer shortcut-card"
-              :class="{ 'editing': isEditing }"
-              @click="!isEditing && handleShortcutClick(item.url)"
-            >
-              <div class="flex items-center justify-between">
-                <div class="flex items-center flex-1">
-                  <Icon :icon="item.icon" class="mr-8px" :style="{ color: item.color }" />
-                  {{ item.name }}
+      <!-- 当有数据时才显示卡片 -->
+      <template v-if="localShortcut.length > 0">
+        <draggable
+          :list="localShortcut"
+          :group="{ name: 'shortcuts' }"
+          :animation="200"
+          :disabled="!isEditing"
+          item-key="id"
+          class="shortcuts-grid"
+          @start="dragStart"
+          @end="dragEnd"
+        >
+          <template #item="{ element: item, index }">
+            <div class="shortcut-item">
+              <el-card 
+                shadow="hover" 
+                class="cursor-pointer shortcut-card"
+                :class="{ 'editing': isEditing }"
+                @click="!isEditing && handleShortcutClick(item.url)"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center flex-1">
+                    <Icon :icon="item.icon" class="mr-8px" :style="{ color: item.color }" />
+                    {{ item.name }}
+                  </div>
+                  <!-- 编辑模式下显示排序序号 -->
+                  <div v-if="isEditing" class="order-number">{{ index + 1 }}</div>
+                  <!-- 编辑模式下的删除按钮 -->
+                  <el-button
+                    v-if="isEditing"
+                    type="danger"
+                    size="small"
+                    circle
+                    @click.stop="removeShortcut(index)"
+                    class="delete-btn"
+                  >
+                    <Icon icon="ep:delete" />
+                  </el-button>
+                  <!-- 拖拽手柄 -->
+                  <div 
+                    v-if="isEditing" 
+                    class="drag-handle cursor-move"
+                    @mousedown="startDrag"
+                  >
+                    <Icon icon="ep:rank" />
+                  </div>
                 </div>
-                <!-- 编辑模式下的删除按钮 -->
-                <el-button
-                  v-if="isEditing"
-                  type="danger"
-                  size="small"
-                  circle
-                  @click.stop="removeShortcut(index)"
-                  class="delete-btn"
-                >
-                  <Icon icon="ep:delete" />
-                </el-button>
-                <!-- 拖拽手柄 -->
-                <div 
-                  v-if="isEditing" 
-                  class="drag-handle cursor-move"
-                  @mousedown="startDrag"
-                >
-                  <Icon icon="ep:rank" />
-                </div>
-              </div>
-            </el-card>
-          </div>
-        </template>
-      </draggable>
+              </el-card>
+            </div>
+          </template>
+        </draggable>
+      </template>
+      <!-- 没有数据时显示空状态 -->
+      <template v-else>
+        <div class="empty-state">
+          <el-empty description="暂无常用系统入口" :image-size="100">
+            <el-button v-if="isEditing" type="primary" @click="openAddForm">
+              <Icon icon="ep:plus" class="mr-1" />
+              添加入口
+            </el-button>
+          </el-empty>
+        </div>
+      </template>
       
       <!-- 查看全部按钮 -->
       <!-- <div class="view-all-item">
@@ -95,6 +119,16 @@
         </el-card>
       </div> -->
     </el-skeleton>
+    
+    <!-- 用户常用入口新增表单 -->
+    <UserCommonEntrancesForm 
+      ref="formRef" 
+      :preset-user-id="userStore.getUser.id"
+      :preset-user-name="userStore.getUser.nickname"
+      :preset-dept-id="userStore.getUser.deptId"
+      :preset-dept-name="currentUserDeptName"
+      @success="handleAddSuccess" 
+    />
   </el-card>
 </template>
 
@@ -103,11 +137,16 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import draggable from 'vuedraggable'
+import { useUserStore } from '@/store/modules/user'
+import * as DeptApi from '@/api/system/dept'
+import { getMenu } from '@/api/system/entrances/index'
+import UserCommonEntrancesForm from '@/views/business/usercommonentrances/UserCommonEntrancesForm.vue'
 import type { Shortcut } from './types'
 
 defineOptions({ name: 'SystemShortcuts' })
 
 const router = useRouter()
+const userStore = useUserStore()
 
 // 定义props
 interface Props {
@@ -130,18 +169,36 @@ const emit = defineEmits<{
 const isEditing = ref(false)
 const localShortcut = ref<Shortcut[]>([])
 const originalShortcut = ref<Shortcut[]>([])
+const formRef = ref()
+const currentUserDeptName = ref('')
+
+// 获取当前用户部门名称
+const getCurrentUserDeptName = async () => {
+  try {
+    const currentUser = userStore.getUser
+    if (currentUser.deptId) {
+      const dept = await DeptApi.getDept(currentUser.deptId)
+      currentUserDeptName.value = dept.name || ''
+    } else {
+      currentUserDeptName.value = '未设置部门'
+    }
+  } catch (error) {
+    console.error('获取部门信息失败:', error)
+    currentUserDeptName.value = '获取部门信息失败'
+  }
+}
 
 // 监听props变化，同步到本地数据
 watch(() => props.shortcut, (newVal) => {
-  // 按照order字段排序
-  const sortedShortcuts = [...newVal].sort((a, b) => a.order - b.order)
+  // 按照customOrder字段排序
+  const sortedShortcuts = [...newVal].sort((a, b) => a.customOrder - b.customOrder)
   localShortcut.value = sortedShortcuts
   originalShortcut.value = sortedShortcuts
 }, { immediate: true, deep: true })
 
-// 计算属性：按order排序的快捷入口
+// 计算属性：按customOrder排序的快捷入口
 const sortedShortcuts = computed(() => {
-  return [...localShortcut.value].sort((a, b) => a.order - b.order)
+  return [...localShortcut.value].sort((a, b) => a.customOrder - b.customOrder)
 })
 
 // 开始编辑模式
@@ -153,9 +210,27 @@ const startEdit = () => {
 // 保存排序
 const saveOrder = async () => {
   try {
-    // 确保order字段是最新的
+    const currentUser = userStore.getUser
+    
+    // 确保必要字段存在
     localShortcut.value.forEach((item, index) => {
-      item.order = index + 1
+      // 确保customOrder字段是最新的
+      item.customOrder = index + 1
+      
+      // 确保userId字段存在
+      if (!item.userId) {
+        item.userId = currentUser.id
+      }
+      
+      // 确保deptId字段存在
+      if (!item.deptId) {
+        item.deptId = currentUser.deptId
+      }
+      
+      // 确保hidden字段存在
+      if (item.hidden === undefined) {
+        item.hidden = false
+      }
     })
     
     // 这里可以调用API保存新的排序
@@ -192,6 +267,10 @@ const removeShortcut = async (index: number) => {
     )
     
     localShortcut.value.splice(index, 1)
+    
+    // 更新父组件数据
+    emit('update:shortcut', localShortcut.value)
+    
     ElMessage.success('删除成功')
   } catch {
     // 用户取消删除
@@ -206,10 +285,17 @@ const dragStart = () => {
 // 拖拽结束
 const dragEnd = () => {
   console.log('拖拽结束')
-  // 更新每个项目的order字段，根据当前顺序
+  // 更新每个项目的排序字段，根据当前顺序
   localShortcut.value.forEach((item, index) => {
+    // 同时更新customOrder和defaultOrder字段
+    item.customOrder = index + 1
+    item.defaultOrder = index + 1
+    // 同时更新order字段，确保与Home/Index.vue中使用的字段一致
     item.order = index + 1
   })
+  
+  // 实时更新父组件数据，确保拖拽后的顺序被记录
+  emit('update:shortcut', [...localShortcut.value])
 }
 
 // 开始拖拽（拖拽手柄）
@@ -221,6 +307,33 @@ const startDrag = (event: MouseEvent) => {
 const handleShortcutClick = (url: string) => {
   if (!isEditing.value) {
     router.push(url)
+  }
+}
+
+// 打开新增表单
+const openAddForm = async () => {
+  // 先获取当前用户的部门名称
+  await getCurrentUserDeptName()
+  formRef.value?.open('create')
+}
+
+// 处理新增成功
+const handleAddSuccess = async () => {
+  ElMessage.success('新增成功')
+  // 重新获取最新数据，确保包含新增的项目
+  try {
+    const userId = userStore.getUser.id
+    const response = await getMenu(userId)
+    if (response && Array.isArray(response) && response.length > 0) {
+      const sortedData = response.sort((a: any, b: any) => a.order - b.order)
+      localShortcut.value = sortedData
+      // 更新父组件数据
+      emit('update:shortcut', localShortcut.value)
+    }
+  } catch (error) {
+    console.error('重新获取数据失败:', error)
+    // 如果获取失败，仍然发送当前数据
+    emit('update:shortcut', localShortcut.value)
   }
 }
 </script>
@@ -263,22 +376,37 @@ const handleShortcutClick = (url: string) => {
 .delete-btn {
   opacity: 0;
   transition: opacity 0.3s ease;
-  transform: scale(0.8); // 稍微缩小删除按钮
-  
-  .shortcut-card:hover & {
-    opacity: 1;
-  }
+  margin-left: 8px;
 }
 
 .drag-handle {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  margin-left: 8px;
   color: #909399;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    color: #409eff;
-    background-color: #f0f9ff;
+}
+
+// 添加排序序号样式
+.order-number {
+  background-color: #409eff;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  margin-right: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.shortcut-card.editing {
+  .delete-btn,
+  .drag-handle,
+  .order-number {
+    opacity: 1;
   }
 }
 
@@ -301,6 +429,15 @@ const handleShortcutClick = (url: string) => {
 .sortable-drag {
   opacity: 0.8;
   transform: rotate(5deg);
+}
+
+// 空状态样式
+.empty-state {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 150px;
 }
 
 // 响应式设计

@@ -53,7 +53,7 @@
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="创建时间" prop="createTime">
+      <!-- <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
           value-format="YYYY-MM-DD HH:mm:ss"
@@ -63,8 +63,8 @@
           :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
           class="!w-220px"
         />
-      </el-form-item>
-      <el-form-item label="部门编号" prop="deptId">
+      </el-form-item> -->
+      <!-- <el-form-item label="部门编号" prop="deptId">
         <el-input
           v-model="queryParams.deptId"
           placeholder="请输入部门编号"
@@ -72,7 +72,7 @@
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="显示端：WEB、APP、ALL（都显示）" prop="platform">
         <el-input
           v-model="queryParams.platform"
@@ -109,20 +109,38 @@
   <!-- 列表 -->
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
-      <el-table-column label="主键ID" align="center" prop="id" />
+      <!-- <el-table-column label="主键ID" align="center" prop="id" /> -->
       <el-table-column label="入口名称" align="center" prop="name" />
-      <el-table-column label="图标标识（如：ep:box）" align="center" prop="icon" />
+      <el-table-column label="图标标识（如：ep:box）" align="center" prop="icon">
+        <template #default="scope">
+          <div class="flex items-center justify-center">
+            <Icon :icon="scope.row.icon" class="mr-2" v-if="scope.row.icon" />
+            <span>{{ scope.row.icon }}</span>
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column label="跳转链接" align="center" prop="url" />
-      <el-table-column label="显示颜色（如：#F56C6C）" align="center" prop="color" />
+      <el-table-column label="显示颜色（如：#F56C6C）" align="center" prop="color">
+        <template #default="scope">
+          <div class="flex items-center justify-center">
+            <div 
+              class="w-4 h-4 rounded mr-2 border border-gray-300" 
+              :style="{ backgroundColor: scope.row.color }"
+              v-if="scope.row.color"
+            ></div>
+            <span>{{ scope.row.color }}</span>
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column label="默认排序，值越小越靠前" align="center" prop="defaultOrder" />
-      <el-table-column
+      <!-- <el-table-column
         label="创建时间"
         align="center"
         prop="createTime"
         :formatter="dateFormatter"
         width="180px"
-      />
-      <el-table-column label="部门编号" align="center" prop="deptId" />
+      /> -->
+      <!-- <el-table-column label="部门编号" align="center" prop="deptId" /> -->
       <el-table-column label="显示端：WEB、APP、ALL（都显示）" align="center" prop="platform" />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
@@ -159,8 +177,9 @@
 </template>
 
 <script setup lang="ts">
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
-import download from '@/utils/download'
 import { SystemCommonEntrancesApi, SystemCommonEntrancesVO } from '@/api/business/systemcommonentrances'
 import SystemCommonEntrancesForm from './SystemCommonEntrancesForm.vue'
 

@@ -8,25 +8,25 @@
       :inline="true"
       label-width="128px"
     >
-      <el-form-item label="用户ID" prop="userId">
+      <el-form-item label="用户名称" prop="userId">
         <el-input
           v-model="queryParams.userId"
-          placeholder="请输入用户ID"
+          placeholder="请输入用户名称"
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="关联 system_common_entrances.id" prop="entranceId">
+      <el-form-item label="系统常用入口" prop="entranceId">
         <el-input
           v-model="queryParams.entranceId"
-          placeholder="请输入关联 system_common_entrances.id"
+          placeholder="请输入系统常用入口名称"
           clearable
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
       </el-form-item>
-      <el-form-item label="用户自定义排序，值越小越靠前" prop="customOrder">
+      <!-- <el-form-item label="用户自定义排序，值越小越靠前" prop="customOrder">
         <el-input
           v-model="queryParams.customOrder"
           placeholder="请输入用户自定义排序，值越小越靠前"
@@ -34,8 +34,8 @@
           @keyup.enter="handleQuery"
           class="!w-240px"
         />
-      </el-form-item>
-      <el-form-item label="是否隐藏该入口" prop="hidden">
+      </el-form-item> -->
+      <!-- <el-form-item label="是否隐藏该入口" prop="hidden">
         <el-select
           v-model="queryParams.hidden"
           placeholder="请选择是否隐藏该入口"
@@ -44,7 +44,7 @@
         >
           <el-option label="请选择字典生成" value="" />
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
@@ -92,18 +92,18 @@
   <!-- 列表 -->
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
-      <el-table-column label="主键ID" align="center" prop="id" />
-      <el-table-column label="用户ID" align="center" prop="userId" />
-      <el-table-column label="关联 system_common_entrances.id" align="center" prop="entranceId" />
+      <!-- <el-table-column label="主键ID" align="center" prop="id" /> -->
+      <el-table-column label="用户名称" align="center" prop="userName" />
+      <el-table-column label="系统常用入口" align="center" prop="entranceName" />
       <el-table-column label="用户自定义排序，值越小越靠前" align="center" prop="customOrder" />
       <el-table-column label="是否隐藏该入口" align="center" prop="hidden" />
-      <el-table-column
+      <!-- <el-table-column
         label="创建时间"
         align="center"
         prop="createTime"
         :formatter="dateFormatter"
         width="180px"
-      />
+      /> -->
       <el-table-column label="部门编号" align="center" prop="deptId" />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
@@ -143,6 +143,8 @@
 import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { UserCommonEntrancesApi, UserCommonEntrancesVO } from '@/api/business/usercommonentrances'
+import { SystemCommonEntrancesApi, SystemCommonEntrancesVO } from '@/api/business/systemcommonentrances'
+import { getSimpleUserList, UserVO } from '@/api/system/user'
 import UserCommonEntrancesForm from './UserCommonEntrancesForm.vue'
 
 /** 用户常用入口维护表（个性化配置） 列表 */
@@ -154,6 +156,8 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<UserCommonEntrancesVO[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
+const userMap = ref(new Map()) // 用户ID到用户名的映射
+const entranceMap = ref(new Map()) // 入口ID到入口名称的映射
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -167,12 +171,45 @@ const queryParams = reactive({
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 
+/** 获取用户映射关系 */
+const getUserMap = async () => {
+  try {
+    const users = await getSimpleUserList()
+    const map = new Map()
+    users.forEach(user => {
+      map.set(user.id, user.nickname || user.username)
+    })
+    userMap.value = map
+  } catch (error) {
+    console.error('获取用户映射关系失败:', error)
+  }
+}
+
+/** 获取系统常用入口映射关系 */
+const getEntranceMap = async () => {
+  try {
+    const data = await SystemCommonEntrancesApi.getSystemCommonEntrancesPage({ pageNo: 1, pageSize: 100 })
+    const map = new Map()
+    data.list.forEach(entrance => {
+      map.set(entrance.id, entrance.name)
+    })
+    entranceMap.value = map
+  } catch (error) {
+    console.error('获取系统常用入口映射关系失败:', error)
+  }
+}
+
 /** 查询列表 */
 const getList = async () => {
   loading.value = true
   try {
     const data = await UserCommonEntrancesApi.getUserCommonEntrancesPage(queryParams)
-    list.value = data.list
+    // 为每个记录添加用户名称和入口名称
+    list.value = data.list.map(item => ({
+      ...item,
+      userName: userMap.value.get(item.userId) || `用户ID: ${item.userId}`,
+      entranceName: entranceMap.value.get(item.entranceId) || `入口ID: ${item.entranceId}`
+    }))
     total.value = data.total
   } finally {
     loading.value = false
@@ -226,7 +263,8 @@ const handleExport = async () => {
 }
 
 /** 初始化 **/
-onMounted(() => {
+onMounted(async () => {
+  await Promise.all([getUserMap(), getEntranceMap()])
   getList()
 })
 </script>

@@ -46,6 +46,15 @@
           <el-option label="ALL（都显示）" value="ALL" />
         </el-select>
       </el-form-item>
+      <el-form-item label="是否为所有人添加" prop="isForAll">
+        <el-switch 
+          v-model="formData.isForAll" 
+          active-text="是" 
+          inactive-text="否"
+          :active-value="true"
+          :inactive-value="false"
+        />
+      </el-form-item>
     </el-form>
     <template #footer>
       <el-button @click="submitForm" type="primary" :disabled="formLoading">确 定</el-button>
@@ -79,6 +88,7 @@ const formData = ref({
   defaultOrder: undefined,
   deptId: undefined,
   platform: undefined,
+  isForAll: false,
 })
 
 // 菜单树数据
@@ -227,6 +237,7 @@ const resetForm = () => {
     defaultOrder: undefined,
     deptId: undefined,
     platform: undefined,
+    isForAll: false,
   }
   formRef.value?.resetFields()
 }
