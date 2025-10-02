@@ -102,6 +102,7 @@ import { SystemCommonEntrancesApi, SystemCommonEntrancesVO } from '@/api/busines
 import { getSimpleUserList, UserVO } from '@/api/system/user'
 import { getSimpleDeptList, DeptVO } from '@/api/system/dept'
 import { DICT_TYPE, getIntDictOptions, getStrDictOptions } from '@/utils/dict'
+import { getMenu } from '@/api/system/entrances'
 
 /** 用户常用入口维护表（个性化配置） 表单 */
 defineOptions({ name: 'UserCommonEntrancesForm' })
@@ -112,13 +113,15 @@ interface Props {
   presetUserName?: string // 预设的用户名称
   presetDeptId?: number // 预设的部门ID
   presetDeptName?: string // 预设的部门名称
+  delayCreate?: boolean // 是否延迟创建（不立即发送API请求）
 }
 
 const props = withDefaults(defineProps<Props>(), {
   presetUserId: undefined,
   presetUserName: '',
   presetDeptId: undefined,
-  presetDeptName: ''
+  presetDeptName: '',
+  delayCreate: false
 })
 
 const { t } = useI18n() // 国际化
@@ -168,9 +171,38 @@ const deptCascaderProps = {
 // 获取系统常用入口列表
 const getEntranceList = async () => {
   try {
+    // 获取所有系统常用入口
     const data = await SystemCommonEntrancesApi.getSystemCommonEntrancesPage({ pageNo: 1, pageSize: 100 })
     console.log('系统常用入口数据:', data.list)
-    entranceOptions.value = data.list
+    
+    // 如果有预设用户ID，则过滤掉该用户已经添加的入口
+    if (props.presetUserId) {
+      try {
+        // 获取用户已有的常用入口
+        const userEntrances = await getMenu(props.presetUserId)
+        console.log('用户已有常用入口:', userEntrances)
+        
+        if (userEntrances && Array.isArray(userEntrances) && userEntrances.length > 0) {
+          // 获取用户已有入口的ID集合
+          const existingEntranceIds = userEntrances.map(item => item.id)
+          console.log('用户已有入口ID:', existingEntranceIds)
+          
+          // 过滤掉用户已有的入口
+          entranceOptions.value = data.list.filter(entrance => !existingEntranceIds.includes(entrance.id))
+          console.log('过滤后的入口数据:', entranceOptions.value)
+        } else {
+          // 用户没有已有入口，显示全部
+          entranceOptions.value = data.list
+        }
+      } catch (error) {
+        console.error('获取用户已有入口失败:', error)
+        // 出错时显示全部入口
+        entranceOptions.value = data.list
+      }
+    } else {
+      // 没有预设用户ID，显示全部入口
+      entranceOptions.value = data.list
+    }
   } catch (error) {
     console.error('获取系统常用入口列表失败:', error)
   }
@@ -238,9 +270,10 @@ const open = async (type: string, id?: number) => {
     formData.value.userId = props.presetUserId
   }
   
-  // 如果有预设部门ID，则设置到表单数据中
+  // 如果有预设部门ID，则设置到表单数据中（在 resetForm 之后设置，避免被重置）
   if (props.presetDeptId) {
     formData.value.deptId = props.presetDeptId
+    console.log('设置预设部门ID:', props.presetDeptId)
   }
   
   // 加载基础数据
@@ -267,7 +300,20 @@ const emit = defineEmits(['success']) // 定义 success 事件，用于操作成
 const submitForm = async () => {
   // 校验表单
   await formRef.value.validate()
-  // 提交请求
+  
+  // 如果是延迟创建模式，直接返回表单数据而不发送API请求
+  if (props.delayCreate && formType.value === 'create') {
+    const data = formData.value as unknown as UserCommonEntrancesVO
+    console.log('延迟创建模式，返回表单数据:', data)
+    console.log('表单数据中的部门ID:', data.deptId)
+    message.success('数据已准备，将在保存时创建')
+    dialogVisible.value = false
+    // 发送操作成功的事件，并传递表单数据
+    emit('success', data)
+    return
+  }
+  
+  // 正常模式：提交请求
   formLoading.value = true
   try {
     const data = formData.value as unknown as UserCommonEntrancesVO

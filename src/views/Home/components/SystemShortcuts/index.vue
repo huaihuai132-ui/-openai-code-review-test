@@ -15,6 +15,15 @@
             <Icon icon="ep:edit" class="mr-1" />
             编辑
           </el-button>
+          <el-button 
+            v-if="!isEditing" 
+            type="info" 
+            size="small" 
+            @click="refreshShortcuts"
+          >
+            <Icon icon="ep:refresh" class="mr-1" />
+            刷新
+          </el-button>
           <template v-else>
             <el-button 
               type="primary" 
@@ -67,29 +76,34 @@
               >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center flex-1">
-                    <Icon :icon="item.icon" class="mr-8px" :style="{ color: item.color }" />
+                    <Icon 
+                      :icon="item.icon || 'ep:menu'" 
+                      class="mr-8px" 
+                      :style="{ color: item.color && item.color !== '#FFFFFF' ? item.color : '#409eff' }" 
+                    />
                     {{ item.name }}
                   </div>
                   <!-- 编辑模式下显示排序序号 -->
                   <div v-if="isEditing" class="order-number">{{ index + 1 }}</div>
-                  <!-- 编辑模式下的删除按钮 -->
-                  <el-button
-                    v-if="isEditing"
-                    type="danger"
-                    size="small"
-                    circle
-                    @click.stop="removeShortcut(index)"
-                    class="delete-btn"
-                  >
-                    <Icon icon="ep:delete" />
-                  </el-button>
-                  <!-- 拖拽手柄 -->
-                  <div 
-                    v-if="isEditing" 
-                    class="drag-handle cursor-move"
-                    @mousedown="startDrag"
-                  >
-                    <Icon icon="ep:rank" />
+                  <!-- 编辑模式下的操作按钮 -->
+                  <div v-if="isEditing" class="edit-actions">
+                    <!-- 删除按钮 -->
+                    <el-button
+                      type="danger"
+                      size="small"
+                      circle
+                      @click.stop="removeShortcut(index)"
+                      class="delete-btn"
+                    >
+                      <Icon icon="ep:delete" />
+                    </el-button>
+                    <!-- 拖拽手柄 -->
+                    <div 
+                      class="drag-handle cursor-move"
+                      @mousedown="startDrag"
+                    >
+                      <Icon icon="ep:rank" />
+                    </div>
                   </div>
                 </div>
               </el-card>
@@ -127,6 +141,7 @@
       :preset-user-name="userStore.getUser.nickname"
       :preset-dept-id="userStore.getUser.deptId"
       :preset-dept-name="currentUserDeptName"
+      :delay-create="true"
       @success="handleAddSuccess" 
     />
   </el-card>
@@ -135,11 +150,12 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
 import draggable from 'vuedraggable'
 import { useUserStore } from '@/store/modules/user'
 import * as DeptApi from '@/api/system/dept'
-import { getMenu } from '@/api/system/entrances/index'
+import { getMenu, updateMenu } from '@/api/system/entrances/index'
+import { UserCommonEntrancesApi } from '@/api/business/usercommonentrances'
 import UserCommonEntrancesForm from '@/views/business/usercommonentrances/UserCommonEntrancesForm.vue'
 import type { Shortcut } from './types'
 
@@ -171,6 +187,8 @@ const localShortcut = ref<Shortcut[]>([])
 const originalShortcut = ref<Shortcut[]>([])
 const formRef = ref()
 const currentUserDeptName = ref('')
+const pendingDeletes = ref<Array<{ entranceId: number, userEntranceId: number, name: string }>>([]) // 待删除的项目
+const pendingAdds = ref<Array<any>>([]) // 待新增的项目
 
 // 获取当前用户部门名称
 const getCurrentUserDeptName = async () => {
@@ -212,52 +230,197 @@ const saveOrder = async () => {
   try {
     const currentUser = userStore.getUser
     
-    // 确保必要字段存在
-    localShortcut.value.forEach((item, index) => {
-      // 确保customOrder字段是最新的
-      item.customOrder = index + 1
+    // 首先处理待删除的项目
+    if (pendingDeletes.value.length > 0) {
+      console.log('开始执行删除操作，待删除项目:', pendingDeletes.value)
       
-      // 确保userId字段存在
-      if (!item.userId) {
-        item.userId = currentUser.id
+      for (const deleteItem of pendingDeletes.value) {
+        try {
+          console.log('删除用户常用入口记录，ID:', deleteItem.userEntranceId)
+          await UserCommonEntrancesApi.deleteUserCommonEntrances(deleteItem.userEntranceId)
+          console.log(`成功删除"${deleteItem.name}"`)
+        } catch (error) {
+          console.error(`删除"${deleteItem.name}"失败:`, error)
+          ElMessage.error(`删除"${deleteItem.name}"失败，请重试`)
+          return // 如果删除失败，停止保存操作
+        }
       }
       
+      console.log('所有删除操作执行完成')
+    }
+    
+    // 直接使用update-list接口，不单独创建新项目
+    console.log('准备保存所有项目，包括新增项目')
+    
+    // 确保所有项目的必要字段存在，并更新排序
+    const dataToSave = localShortcut.value.map((item, index) => {
+      // 创建新对象，避免修改原对象
+      const newItem = { ...item };
+      
+      // 确保customOrder字段是最新的
+      newItem.customOrder = index + 1;
+      
+      // 强制设置userId字段，确保每个项目都有userId
+      newItem.userId = currentUser.id;
+      
       // 确保deptId字段存在
-      if (!item.deptId) {
-        item.deptId = currentUser.deptId
+      if (!newItem.deptId) {
+        newItem.deptId = currentUser.deptId;
       }
       
       // 确保hidden字段存在
-      if (item.hidden === undefined) {
-        item.hidden = false
+      if (newItem.hidden === undefined) {
+        newItem.hidden = false;
       }
-    })
+      
+      // 确保showType字段存在
+      if (!newItem.showType) {
+        newItem.showType = 'WEB';
+      }
+      
+      // 确保entranceId字段存在（必需字段）
+      if (!newItem.entranceId && newItem.id) {
+        // 如果没有entranceId但有id，则使用id作为entranceId
+        newItem.entranceId = newItem.id;
+      }
+      
+      // 如果是临时ID（以temp_开头的字符串），则删除id字段，让数据库自动生成
+      if (typeof newItem.id === 'string' && newItem.id.startsWith('temp_')) {
+        delete newItem.id;
+      }
+      
+      return newItem;
+    });
     
-    // 这里可以调用API保存新的排序
-    // await saveShortcutOrder(localShortcut.value)
+    // 删除操作完成后，清空待删除列表
+    pendingDeletes.value = []
     
-    // 更新父组件数据
-    emit('update:shortcut', localShortcut.value)
+    // 现在所有项目都有真实ID，可以安全地保存排序
+    console.log('使用 update-list 接口保存排序数据:', dataToSave)
+    // 注释掉直接调用updateMenu，改为通过事件让父组件处理
+    // await updateMenu(dataToSave, currentUser.id)
+    console.log('准备通过事件触发父组件保存数据')
+    
+    // 保存成功后，更新本地数据，但不重新请求
+    // 将处理后的数据直接用于更新
+    localShortcut.value = [...dataToSave]
+    // 更新父组件数据，只触发一次事件
+    // 注意：只使用shortcut-change事件，因为Home/Index.vue中会监听此事件并调用updateMenu接口
+    // 不再调用update:shortcut，避免重复触发请求
     emit('shortcut-change', localShortcut.value)
     
     isEditing.value = false
-    ElMessage.success('排序保存成功')
+    // 移除成功消息，让父组件处理
+    // ElMessage.success('保存成功')
   } catch (error) {
+    console.error('保存失败:', error)
     ElMessage.error('保存失败，请重试')
   }
 }
 
 // 取消编辑
-const cancelEdit = () => {
-  localShortcut.value = [...originalShortcut.value]
+const cancelEdit = async () => {
+  // 清空编辑状态
+  pendingDeletes.value = [] // 清空待删除列表
+  pendingAdds.value = [] // 清空待新增列表
   isEditing.value = false
+  
+  // 调用刷新函数获取最新数据
+  await refreshShortcuts()
+}
+
+// 刷新常用系统入口
+const refreshShortcuts = async () => {
+  try {
+    const currentUser = userStore.getUser
+    const userId = currentUser.id
+    
+    // 使用 ElLoading 服务显示加载状态
+    const loadingInstance = ElLoading.service({
+      lock: true,
+      text: '正在刷新数据...',
+      background: 'rgba(0, 0, 0, 0.7)'
+    })
+    
+    try {
+      // 重新获取最新数据
+      const response = await getMenu(userId)
+      
+      // 无论是否有数据，都清空当前数据
+      localShortcut.value = []
+      originalShortcut.value = []
+      
+      if (response && Array.isArray(response) && response.length > 0) {
+        // 确保所有必要字段都存在
+        const processedData = response.map((item: any, index: number) => {
+          // 创建新对象，避免修改原对象
+          const newItem = { ...item };
+          
+          // 确保customOrder字段是最新的
+          newItem.customOrder = index + 1;
+          
+          // 强制设置userId字段
+          newItem.userId = currentUser.id;
+          
+          // 确保deptId字段存在
+          if (!newItem.deptId) {
+            newItem.deptId = currentUser.deptId || 0;
+          }
+          
+          // 确保hidden字段存在
+          if (newItem.hidden === undefined) {
+            newItem.hidden = false;
+          }
+          
+          // 确保showType字段存在
+          if (!newItem.showType) {
+            newItem.showType = 'WEB';
+          }
+          
+          // 确保entranceId字段存在
+          if (!newItem.entranceId && newItem.id) {
+            newItem.entranceId = newItem.id;
+          }
+          
+          return newItem;
+        });
+        
+        const sortedData = processedData.sort((a: any, b: any) => a.customOrder - b.customOrder)
+        localShortcut.value = sortedData
+        originalShortcut.value = JSON.parse(JSON.stringify(sortedData))
+        
+        ElMessage.success('刷新成功')
+      } else {
+        // 数据为空时，确保显示为空
+        ElMessage.info('暂无常用系统入口数据')
+      }
+      
+      // 注释掉所有emit调用，避免重复触发API请求
+      // 最后一次性更新父组件数据，避免多次触发更新
+      // 使用update:shortcut事件更新数据，但不触发shortcut-change事件
+      // 这样可以避免在Home/Index.vue中触发updateMenu API调用
+      // emit('update:shortcut', [...localShortcut.value])
+      // 不再发送shortcut-change事件，避免触发update-list请求
+      // emit('shortcut-change', [...localShortcut.value])
+    } finally {
+      // 关闭加载提示
+      loadingInstance.close()
+    }
+  } catch (error) {
+    console.error('刷新数据失败:', error)
+    ElMessage.error('刷新失败，请重试')
+  }
 }
 
 // 删除快捷入口
 const removeShortcut = async (index: number) => {
   try {
+    const itemToDelete = localShortcut.value[index]
+    
+    console.log('准备删除的项目数据:', itemToDelete)
+    
     await ElMessageBox.confirm(
-      `确定要删除"${localShortcut.value[index].name}"吗？`,
+      `确定要删除"${itemToDelete.name}"吗？删除操作将在保存时生效。`,
       '确认删除',
       {
         confirmButtonText: '确定',
@@ -266,12 +429,59 @@ const removeShortcut = async (index: number) => {
       }
     )
     
-    localShortcut.value.splice(index, 1)
+    try {
+      // 由于/business/user-common-entrances/get-list接口返回的是系统表数据
+      // 缺少用户表的主键ID，我们需要通过entranceId查找对应的用户表记录
+      const entranceId = itemToDelete.id // 这是system_common_entrances表的主键
+      const userId = userStore.getUser.id
+      
+      console.log('查找用户常用入口记录 - entranceId:', entranceId, 'userId:', userId)
+      
+      // 通过分页接口查找对应的用户表记录
+      const pageData = await UserCommonEntrancesApi.getUserCommonEntrancesPage({
+        pageNo: 1,
+        pageSize: 100,
+        userId: userId,
+        entranceId: entranceId
+      })
+      
+      if (!pageData.list || pageData.list.length === 0) {
+        console.error('未找到对应的用户常用入口记录')
+        ElMessage.warning('未找到对应的用户常用入口记录，无法删除')
+        return
+      }
+      
+      // 获取用户表的主键ID
+      const userEntranceRecord = pageData.list[0]
+      const userEntranceId = userEntranceRecord.id
+      
+      console.log('找到用户常用入口记录，主键ID:', userEntranceId)
+      
+      // 将删除操作添加到待删除列表，而不是立即执行
+      pendingDeletes.value.push({
+        entranceId: entranceId,
+        userEntranceId: userEntranceId,
+        name: itemToDelete.name
+      })
+      
+      console.log('已添加到待删除列表，将在保存时执行删除')
+      ElMessage.success(`"${itemToDelete.name}"已标记为删除，将在保存时生效`)
+      
+      // 从本地数组中移除（仅UI显示）
+      localShortcut.value.splice(index, 1)
+      
+      // 删除操作不立即触发API调用，只在点击保存时才执行
+      // 注释掉所有事件触发，避免立即发送请求
+      // emit('update:shortcut', localShortcut.value)
+      // emit('shortcut-change', localShortcut.value)
+      
+      console.log('删除操作已标记，等待保存时执行')
+      
+    } catch (error) {
+      console.error('准备删除失败:', error)
+      ElMessage.error('准备删除失败，请重试')
+    }
     
-    // 更新父组件数据
-    emit('update:shortcut', localShortcut.value)
-    
-    ElMessage.success('删除成功')
   } catch {
     // 用户取消删除
   }
@@ -294,8 +504,10 @@ const dragEnd = () => {
     item.order = index + 1
   })
   
-  // 实时更新父组件数据，确保拖拽后的顺序被记录
-  emit('update:shortcut', [...localShortcut.value])
+  // 仅更新本地数据，不触发父组件更新和保存
+  // 注释掉emit('update:shortcut')调用，避免触发不必要的请求
+  // 当用户点击保存按钮时才会触发一次update-list请求
+  // emit('update:shortcut', [...localShortcut.value])
 }
 
 // 开始拖拽（拖拽手柄）
@@ -318,22 +530,88 @@ const openAddForm = async () => {
 }
 
 // 处理新增成功
-const handleAddSuccess = async () => {
-  ElMessage.success('新增成功')
-  // 重新获取最新数据，确保包含新增的项目
-  try {
-    const userId = userStore.getUser.id
-    const response = await getMenu(userId)
-    if (response && Array.isArray(response) && response.length > 0) {
-      const sortedData = response.sort((a: any, b: any) => a.order - b.order)
-      localShortcut.value = sortedData
-      // 更新父组件数据
-      emit('update:shortcut', localShortcut.value)
+const handleAddSuccess = async (newItemData?: any) => {
+  console.log('新增表单提交成功，接收到的数据:', newItemData)
+  
+  if (newItemData) {
+    try {
+      // 从系统常用入口获取完整的显示信息
+      const { SystemCommonEntrancesApi } = await import('@/api/business/systemcommonentrances')
+      const entranceInfo = await SystemCommonEntrancesApi.getSystemCommonEntrances(newItemData.entranceId)
+      
+      console.log('获取到的系统常用入口信息:', entranceInfo)
+      
+      // 确保部门ID正确设置
+      const currentUser = userStore.getUser
+      if (!newItemData.deptId && currentUser.deptId) {
+        newItemData.deptId = currentUser.deptId
+        console.log('补充设置部门ID:', currentUser.deptId)
+      }
+      
+      // 确保userId字段存在
+      if (!newItemData.userId) {
+        newItemData.userId = currentUser.id
+      }
+      
+      // 确保hidden字段存在
+      if (newItemData.hidden === undefined || newItemData.hidden === 'false') {
+        newItemData.hidden = false
+      }
+      
+      // 构建完整的快捷入口数据，包含显示所需的所有字段
+      const completeShortcutData = {
+        id: newItemData.id || `temp_${Date.now()}`, // 临时ID，保存后会被后端返回的真实ID替换
+        userId: newItemData.userId,
+        deptId: newItemData.deptId,
+        entranceId: newItemData.entranceId,
+        customOrder: newItemData.customOrder || localShortcut.value.length + 1,
+        hidden: newItemData.hidden,
+        // 从系统常用入口获取显示相关字段
+        name: entranceInfo.name,
+        icon: entranceInfo.icon,
+        url: entranceInfo.url,
+        color: entranceInfo.color,
+        order: newItemData.customOrder || localShortcut.value.length + 1,
+        // 兼容字段
+        defaultOrder: newItemData.customOrder || localShortcut.value.length + 1
+      }
+      
+      console.log('构建的完整快捷入口数据:', completeShortcutData)
+      
+      // 根据指定的序号插入卡片
+      const targetOrder = completeShortcutData.customOrder
+      
+      // 如果指定了序号，则按序号插入，否则添加到末尾
+      if (targetOrder && targetOrder <= localShortcut.value.length) {
+        console.log(`按指定序号 ${targetOrder} 插入卡片`)
+        
+        // 先将新卡片插入到指定位置
+        localShortcut.value.splice(targetOrder - 1, 0, completeShortcutData)
+        
+        // 更新所有卡片的序号
+        localShortcut.value.forEach((item, index) => {
+          item.customOrder = index + 1
+          item.order = index + 1
+          item.defaultOrder = index + 1
+        })
+      } else {
+        // 如果序号超出范围或未指定，则添加到末尾
+        localShortcut.value.push(completeShortcutData)
+      }
+      
+      // 仅更新本地数据，不触发父组件更新和保存
+      // 注释掉emit('update:shortcut')调用，避免重复触发update-list请求
+      // 当用户点击保存按钮时才会触发一次update-list请求
+      
+      console.log('已立即显示新增的卡片，等待用户手动保存')
+      ElMessage.success('新增成功，请点击保存按钮保存更改')
+    } catch (error) {
+      console.error('获取系统常用入口信息失败:', error)
+      ElMessage.error('获取入口信息失败，请重试')
     }
-  } catch (error) {
-    console.error('重新获取数据失败:', error)
-    // 如果获取失败，仍然发送当前数据
-    emit('update:shortcut', localShortcut.value)
+  } else {
+    // 如果没有传递数据，显示提示信息
+    ElMessage.success('新增成功')
   }
 }
 </script>
@@ -376,7 +654,6 @@ const handleAddSuccess = async () => {
 .delete-btn {
   opacity: 0;
   transition: opacity 0.3s ease;
-  margin-left: 8px;
 }
 
 .drag-handle {
@@ -384,6 +661,12 @@ const handleAddSuccess = async () => {
   transition: opacity 0.3s ease;
   margin-left: 8px;
   color: #909399;
+}
+
+.edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 // 添加排序序号样式
@@ -406,7 +689,16 @@ const handleAddSuccess = async () => {
   .delete-btn,
   .drag-handle,
   .order-number {
-    opacity: 1;
+    opacity: 1 !important;
+  }
+}
+
+// 确保编辑模式下的元素始终可见
+.editing {
+  .delete-btn,
+  .drag-handle,
+  .order-number {
+    opacity: 1 !important;
   }
 }
 

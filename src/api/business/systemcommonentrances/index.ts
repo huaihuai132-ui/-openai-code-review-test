@@ -3,13 +3,16 @@ import request from '@/config/axios'
 // 系统常用入口（全局配置） VO
 export interface SystemCommonEntrancesVO {
   id: number // 主键ID
+  menuId: number // 菜单ID
   name: string // 入口名称
   icon: string // 图标标识（如：ep:box）
   url: string // 跳转链接
   color: string // 显示颜色（如：#F56C6C）
+  permission: string // 权限标识
   defaultOrder: number // 默认排序，值越小越靠前
   deptId: number // 部门编号
   platform: string // 显示端：WEB、APP、ALL（都显示）
+  isForAll: boolean // 是否为所有人添加
 }
 
 // 系统常用入口（全局配置） API
@@ -21,7 +24,7 @@ export const SystemCommonEntrancesApi = {
 
   // 查询系统常用入口（全局配置）详情
   getSystemCommonEntrances: async (id: number) => {
-    return await request.get({ url: `/business/system-common-entrances/get?id=` + id })
+    return await request.get({ url: `/business/system-common-entrances/get?id=${id}` })
   },
 
   // 新增系统常用入口（全局配置）
@@ -43,4 +46,4 @@ export const SystemCommonEntrancesApi = {
   exportSystemCommonEntrances: async (params) => {
     return await request.download({ url: `/business/system-common-entrances/export-excel`, params })
   },
-}
+}

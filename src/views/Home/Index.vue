@@ -64,7 +64,6 @@
         :loading="loading"
         :shortcut="shortcut"
         @shortcut-change="handleShortcutChange"
-        @update:shortcut="shortcut = $event"
       />
     </el-col>
 
@@ -170,8 +169,9 @@ const getShortcut = async () => {
     const response = await getMenu(userId)
     console.log('getMenu接口返回数据:', response)
     
-    // 由于request.get()自动返回res.data，所以response直接就是data数组
     if (response && Array.isArray(response) && response.length > 0) {
+      console.log('API返回数据缺少用户表主键ID，需要后端修复接口返回结构')
+      console.log('当前返回的是系统表数据，缺少business_user_common_entrances表的主键ID')
       // 按照order字段排序
       const sortedData = response.sort((a: any, b: any) => a.order - b.order)
       console.log('排序后的数据:', sortedData)
@@ -425,6 +425,10 @@ const handleBannerClick = (item: any) => {
 
 // 处理快捷入口变化
 const handleShortcutChange = async (newShortcuts: Shortcut[]) => {
+  console.log('🔥 handleShortcutChange 被调用了！', new Date().toISOString())
+  console.log('🔥 调用堆栈:', new Error().stack)
+  console.log('🔥 传入的数据:', newShortcuts)
+  
   try {
     // 按照order字段排序
     const sortedShortcuts = newShortcuts.sort((a, b) => a.order - b.order)
@@ -433,22 +437,24 @@ const handleShortcutChange = async (newShortcuts: Shortcut[]) => {
     shortcut.value = sortedShortcuts
     
     // 调用API保存新的排序到后端
-    console.log('准备保存到后端的快捷入口数据:', shortcut.value)
+    console.log('🔥 准备调用 updateMenu API')
+    console.log('🔥 准备保存到后端的快捷入口数据:', shortcut.value)
     
     // 获取当前用户ID
     const userId = userStore.getUser.id
-    console.log('当前用户ID:', userId)
+    console.log('🔥 当前用户ID:', userId)
     
-    console.log('发送给后端的数据结构:', shortcut.value)
+    console.log('🔥 发送给后端的数据结构:', shortcut.value)
     
     // 调用updateMenu接口保存数据，userId通过URL传递
+    console.log('🔥 正在调用 updateMenu API...')
     const response = await updateMenu(shortcut.value, userId)
-    console.log('updateMenu接口返回:', response)
+    console.log('🔥 updateMenu API 调用完成，返回结果:', response)
     
-    console.log('快捷入口顺序已更新并保存到后端:', shortcut.value)
+    console.log('🔥 快捷入口顺序已更新并保存到后端:', shortcut.value)
     ElMessage.success('快捷入口顺序保存成功')
   } catch (error) {
-    console.error('保存快捷入口顺序失败:', error)
+    console.error('🔥 保存快捷入口顺序失败:', error)
     // 如果保存失败，可以显示错误提示
     ElMessage.error('保存失败，请重试')
   }

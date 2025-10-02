@@ -142,6 +142,7 @@
       /> -->
       <!-- <el-table-column label="部门编号" align="center" prop="deptId" /> -->
       <el-table-column label="显示端：WEB、APP、ALL（都显示）" align="center" prop="platform" />
+      <el-table-column label="是否给所有人显示" align="center" prop="isForAll" />
       <el-table-column label="操作" align="center" min-width="120px">
         <template #default="scope">
           <el-button

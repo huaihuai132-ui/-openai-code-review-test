@@ -22,7 +22,7 @@
         <el-input v-model="formData.name" placeholder="请输入入口名称" />
       </el-form-item>
       <el-form-item label="图标标识" prop="icon">
-        <IconSelect v-model="formData.icon" clearable />
+        <IconSelect v-model="formData.icon" clearable @change="handleIconChange" />
       </el-form-item>
       <el-form-item label="跳转链接" prop="url">
         <el-input v-model="formData.url" placeholder="请输入跳转链接" />
@@ -36,9 +36,9 @@
       <el-form-item label="默认排序，值越小越靠前" prop="defaultOrder">
         <el-input v-model="formData.defaultOrder" placeholder="请输入默认排序，值越小越靠前" />
       </el-form-item>
-      <el-form-item label="部门编号" prop="deptId">
+      <!-- <el-form-item label="部门编号" prop="deptId">
         <el-input v-model="formData.deptId" placeholder="请输入部门编号" />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="显示端" prop="platform">
         <el-select v-model="formData.platform" placeholder="请选择显示端" style="width: 100%">
           <el-option label="WEB" value="WEB" />
@@ -83,11 +83,11 @@ const formData = ref({
   name: undefined,
   icon: undefined,
   url: undefined,
-  color: undefined,
+  color: '#FFFFFF',
   permission: undefined,
-  defaultOrder: undefined,
+  defaultOrder: 1,
   deptId: undefined,
-  platform: undefined,
+  platform: 'ALL',
   isForAll: false,
 })
 
@@ -103,7 +103,7 @@ const cascaderProps = {
 }
 const formRules = reactive({
   name: [{ required: true, message: '入口名称不能为空', trigger: 'blur' }],
-  icon: [{ required: true, message: '图标标识（如：ep:box）不能为空', trigger: 'blur' }],
+  icon: [{ required: true, message: '图标标识（如：ep:box）不能为空', trigger: 'change' }],
   url: [{ required: true, message: '跳转链接不能为空', trigger: 'blur' }],
   color: [{ required: true, message: '显示颜色（如：#F56C6C）不能为空', trigger: 'blur' }],
   permission: [{ required: false, message: '权限标识不能为空', trigger: 'blur' }],
@@ -170,38 +170,51 @@ const handleMenuChange = async (menuId: number) => {
       formData.value.icon = selectedMenu.icon
       formData.value.url = fullPath
       
-      // 调用后端接口获取权限标识
+      // 前端处理权限标识赋值
       try {
+        // 先获取选中菜单的信息
         const systemCommonEntrances = await SystemCommonEntrancesApi.getSystemCommonEntrances(menuId)
+        console.log('获取到的菜单信息:', systemCommonEntrances)
         
-        // 优先从childMenus中获取第一个子菜单的permission
-        if (systemCommonEntrances && systemCommonEntrances.childMenus && systemCommonEntrances.childMenus.length > 0) {
-          const firstChildMenu = systemCommonEntrances.childMenus[0]
+        // 从全局菜单数据中筛选子菜单
+        const findChildMenus = (menus) => {
+          return menus.filter(menu => menu.parentId === menuId)
+        }
+        
+        // 获取所有菜单数据
+        const allMenus = await MenuApi.getMenuList({})
+        
+        // 筛选出子菜单
+        const childMenus = findChildMenus(allMenus)
+        console.log('筛选出的子菜单数据:', childMenus)
+        
+        // 先查询子类，如果有子类则选择子类的第一个permission进行赋值
+        if (childMenus && childMenus.length > 0) {
+          const firstChildMenu = childMenus[0]
           if (firstChildMenu.permission) {
             formData.value.permission = firstChildMenu.permission
             console.log('从第一个子菜单获取的权限标识:', firstChildMenu.permission)
           } else {
-            // 如果第一个子菜单没有权限标识，使用基于菜单路径生成的权限标识作为备用
-            const permissionId = fullPath.startsWith('/') ? fullPath.substring(1).replace(/\//g, ':') : fullPath.replace(/\//g, ':')
-            formData.value.permission = permissionId
-            console.log('第一个子菜单无权限标识，使用生成的权限标识:', permissionId)
+            // 如果第一个子菜单没有权限标识，则赋空值
+            formData.value.permission = ''
+            console.log('第一个子菜单无权限标识，赋空值')
           }
-        } else if (systemCommonEntrances && systemCommonEntrances.permission) {
-          // 如果没有子菜单，但有直接的权限标识，使用它
-          formData.value.permission = systemCommonEntrances.permission
-          console.log('从后端获取的权限标识:', systemCommonEntrances.permission)
         } else {
-          // 如果都没有，使用基于菜单路径生成的权限标识作为备用
-          const permissionId = fullPath.startsWith('/') ? fullPath.substring(1).replace(/\//g, ':') : fullPath.replace(/\//g, ':')
-          formData.value.permission = permissionId
-          console.log('使用生成的权限标识:', permissionId)
+          // 如果没有子类，且选中的菜单的permission为空值，则赋空值
+          if (!systemCommonEntrances.permission) {
+            formData.value.permission = ''
+            console.log('选中菜单无权限标识，赋空值')
+          } else {
+            // 如果选中的菜单有权限标识，则使用它
+            formData.value.permission = systemCommonEntrances.permission
+            console.log('从选中菜单获取的权限标识:', systemCommonEntrances.permission)
+          }
         }
       } catch (error) {
         console.error('获取权限标识失败:', error)
-        // 如果接口调用失败，使用基于菜单路径生成的权限标识作为备用
-        const permissionId = fullPath.startsWith('/') ? fullPath.substring(1).replace(/\//g, ':') : fullPath.replace(/\//g, ':')
-        formData.value.permission = permissionId
-        console.log('接口调用失败，使用生成的权限标识:', permissionId)
+        // 如果接口调用失败，赋空值
+        formData.value.permission = ''
+        console.log('接口调用失败，赋空值')
       }
       
       console.log('选中菜单:', selectedMenu.name, '完整路径:', fullPath)
@@ -209,12 +222,20 @@ const handleMenuChange = async (menuId: number) => {
   }
 }
 
+/**
+ * 处理图标选择变化事件
+ * 当用户选择图标时触发表单验证，清除错误提示
+ */
+const handleIconChange = () => {
+  // 手动触发图标字段的验证，清除错误提示
+  formRef.value?.validateField('icon')
+}
+
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
   dialogVisible.value = true
   dialogTitle.value = t('action.' + type)
   formType.value = type
-  resetForm()
   
   // 获取菜单数据
   await getMenuTree()
@@ -223,10 +244,38 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await SystemCommonEntrancesApi.getSystemCommonEntrances(id)
+      const response = await SystemCommonEntrancesApi.getSystemCommonEntrances(id)
+      
+      // 检查响应数据结构 - 后端返回的是 CommonResult 结构
+      const data = response.data || response
+      
+      if (data && data.id !== null && data.id !== undefined) {
+        // 手动赋值每个字段，确保数据正确绑定
+        formData.value.id = data.id
+        formData.value.menuId = data.menuId
+        formData.value.name = data.name
+        formData.value.icon = data.icon
+        formData.value.url = data.url
+        formData.value.color = data.color || '#FFFFFF'
+        formData.value.permission = data.permission
+        formData.value.defaultOrder = data.defaultOrder || 1
+        formData.value.deptId = data.deptId
+        formData.value.platform = data.platform || 'ALL'
+        formData.value.isForAll = data.isForAll || false
+        
+        message.success('数据加载成功')
+      } else {
+        message.error('获取数据失败，记录可能不存在')
+      }
+    } catch (error) {
+      console.error('API调用失败:', error)
+      message.error('获取数据失败: ' + (error.message || '未知错误'))
     } finally {
       formLoading.value = false
     }
+  } else {
+    // 新增时才重置表单
+    resetForm()
   }
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
@@ -263,11 +312,11 @@ const resetForm = () => {
     name: undefined,
     icon: undefined,
     url: undefined,
-    color: undefined,
+    color: '#FFFFFF',
     permission: undefined,
-    defaultOrder: undefined,
+    defaultOrder: 1,
     deptId: undefined,
-    platform: undefined,
+    platform: 'ALL',
     isForAll: false,
   }
   formRef.value?.resetFields()

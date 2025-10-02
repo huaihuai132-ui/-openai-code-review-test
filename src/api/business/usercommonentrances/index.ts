@@ -41,4 +41,4 @@ export const UserCommonEntrancesApi = {
   exportUserCommonEntrances: async (params) => {
     return await request.download({ url: `/business/user-common-entrances/export-excel`, params })
   },
-}
+}
