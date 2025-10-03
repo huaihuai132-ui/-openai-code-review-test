@@ -232,25 +232,16 @@ const saveOrder = async () => {
     
     // 首先处理待删除的项目
     if (pendingDeletes.value.length > 0) {
-      console.log('开始执行删除操作，待删除项目:', pendingDeletes.value)
-      
       for (const deleteItem of pendingDeletes.value) {
         try {
-          console.log('删除用户常用入口记录，ID:', deleteItem.userEntranceId)
           await UserCommonEntrancesApi.deleteUserCommonEntrances(deleteItem.userEntranceId)
-          console.log(`成功删除"${deleteItem.name}"`)
         } catch (error) {
           console.error(`删除"${deleteItem.name}"失败:`, error)
           ElMessage.error(`删除"${deleteItem.name}"失败，请重试`)
           return // 如果删除失败，停止保存操作
         }
       }
-      
-      console.log('所有删除操作执行完成')
     }
-    
-    // 直接使用update-list接口，不单独创建新项目
-    console.log('准备保存所有项目，包括新增项目')
     
     // 确保所有项目的必要字段存在，并更新排序
     const dataToSave = localShortcut.value.map((item, index) => {
@@ -295,23 +286,12 @@ const saveOrder = async () => {
     // 删除操作完成后，清空待删除列表
     pendingDeletes.value = []
     
-    // 现在所有项目都有真实ID，可以安全地保存排序
-    console.log('使用 update-list 接口保存排序数据:', dataToSave)
-    // 注释掉直接调用updateMenu，改为通过事件让父组件处理
-    // await updateMenu(dataToSave, currentUser.id)
-    console.log('准备通过事件触发父组件保存数据')
-    
-    // 保存成功后，更新本地数据，但不重新请求
-    // 将处理后的数据直接用于更新
+    // 保存成功后，更新本地数据
     localShortcut.value = [...dataToSave]
-    // 更新父组件数据，只触发一次事件
-    // 注意：只使用shortcut-change事件，因为Home/Index.vue中会监听此事件并调用updateMenu接口
-    // 不再调用update:shortcut，避免重复触发请求
+    // 通过事件触发父组件保存数据
     emit('shortcut-change', localShortcut.value)
     
     isEditing.value = false
-    // 移除成功消息，让父组件处理
-    // ElMessage.success('保存成功')
   } catch (error) {
     console.error('保存失败:', error)
     ElMessage.error('保存失败，请重试')
@@ -346,64 +326,31 @@ const refreshShortcuts = async () => {
       // 重新获取最新数据
       const response = await getMenu(userId)
       
-      // 无论是否有数据，都清空当前数据
+      // 清空当前数据
       localShortcut.value = []
       originalShortcut.value = []
       
       if (response && Array.isArray(response) && response.length > 0) {
-        // 确保所有必要字段都存在
-        const processedData = response.map((item: any, index: number) => {
-          // 创建新对象，避免修改原对象
-          const newItem = { ...item };
-          
-          // 确保customOrder字段是最新的
-          newItem.customOrder = index + 1;
-          
-          // 强制设置userId字段
-          newItem.userId = currentUser.id;
-          
-          // 确保deptId字段存在
-          if (!newItem.deptId) {
-            newItem.deptId = currentUser.deptId || 0;
-          }
-          
-          // 确保hidden字段存在
-          if (newItem.hidden === undefined) {
-            newItem.hidden = false;
-          }
-          
-          // 确保showType字段存在
-          if (!newItem.showType) {
-            newItem.showType = 'WEB';
-          }
-          
-          // 确保entranceId字段存在
-          if (!newItem.entranceId && newItem.id) {
-            newItem.entranceId = newItem.id;
-          }
-          
-          return newItem;
-        });
+        // 处理数据，确保所有必要字段都存在
+        const processedData = response.map((item: any, index: number) => ({
+          ...item,
+          customOrder: index + 1,
+          userId: currentUser.id,
+          deptId: item.deptId || currentUser.deptId || 0,
+          hidden: item.hidden === undefined ? false : item.hidden,
+          showType: item.showType || 'WEB',
+          entranceId: item.entranceId || item.id
+        }));
         
         const sortedData = processedData.sort((a: any, b: any) => a.customOrder - b.customOrder)
         localShortcut.value = sortedData
         originalShortcut.value = JSON.parse(JSON.stringify(sortedData))
         
-        ElMessage.success('刷新成功')
+        // ElMessage.success('刷新成功')
       } else {
-        // 数据为空时，确保显示为空
         ElMessage.info('暂无常用系统入口数据')
       }
-      
-      // 注释掉所有emit调用，避免重复触发API请求
-      // 最后一次性更新父组件数据，避免多次触发更新
-      // 使用update:shortcut事件更新数据，但不触发shortcut-change事件
-      // 这样可以避免在Home/Index.vue中触发updateMenu API调用
-      // emit('update:shortcut', [...localShortcut.value])
-      // 不再发送shortcut-change事件，避免触发update-list请求
-      // emit('shortcut-change', [...localShortcut.value])
     } finally {
-      // 关闭加载提示
       loadingInstance.close()
     }
   } catch (error) {
@@ -416,8 +363,6 @@ const refreshShortcuts = async () => {
 const removeShortcut = async (index: number) => {
   try {
     const itemToDelete = localShortcut.value[index]
-    
-    console.log('准备删除的项目数据:', itemToDelete)
     
     await ElMessageBox.confirm(
       `确定要删除"${itemToDelete.name}"吗？删除操作将在保存时生效。`,
@@ -434,8 +379,6 @@ const removeShortcut = async (index: number) => {
       // 缺少用户表的主键ID，我们需要通过entranceId查找对应的用户表记录
       const entranceId = itemToDelete.id // 这是system_common_entrances表的主键
       const userId = userStore.getUser.id
-      
-      console.log('查找用户常用入口记录 - entranceId:', entranceId, 'userId:', userId)
       
       // 通过分页接口查找对应的用户表记录
       const pageData = await UserCommonEntrancesApi.getUserCommonEntrancesPage({
@@ -455,8 +398,6 @@ const removeShortcut = async (index: number) => {
       const userEntranceRecord = pageData.list[0]
       const userEntranceId = userEntranceRecord.id
       
-      console.log('找到用户常用入口记录，主键ID:', userEntranceId)
-      
       // 将删除操作添加到待删除列表，而不是立即执行
       pendingDeletes.value.push({
         entranceId: entranceId,
@@ -464,18 +405,10 @@ const removeShortcut = async (index: number) => {
         name: itemToDelete.name
       })
       
-      console.log('已添加到待删除列表，将在保存时执行删除')
       ElMessage.success(`"${itemToDelete.name}"已标记为删除，将在保存时生效`)
       
       // 从本地数组中移除（仅UI显示）
       localShortcut.value.splice(index, 1)
-      
-      // 删除操作不立即触发API调用，只在点击保存时才执行
-      // 注释掉所有事件触发，避免立即发送请求
-      // emit('update:shortcut', localShortcut.value)
-      // emit('shortcut-change', localShortcut.value)
-      
-      console.log('删除操作已标记，等待保存时执行')
       
     } catch (error) {
       console.error('准备删除失败:', error)
@@ -489,12 +422,11 @@ const removeShortcut = async (index: number) => {
 
 // 拖拽开始
 const dragStart = () => {
-  console.log('开始拖拽')
+  // 拖拽开始处理
 }
 
 // 拖拽结束
 const dragEnd = () => {
-  console.log('拖拽结束')
   // 更新每个项目的排序字段，根据当前顺序
   localShortcut.value.forEach((item, index) => {
     // 同时更新customOrder和defaultOrder字段
@@ -503,16 +435,6 @@ const dragEnd = () => {
     // 同时更新order字段，确保与Home/Index.vue中使用的字段一致
     item.order = index + 1
   })
-  
-  // 仅更新本地数据，不触发父组件更新和保存
-  // 注释掉emit('update:shortcut')调用，避免触发不必要的请求
-  // 当用户点击保存按钮时才会触发一次update-list请求
-  // emit('update:shortcut', [...localShortcut.value])
-}
-
-// 开始拖拽（拖拽手柄）
-const startDrag = (event: MouseEvent) => {
-  event.preventDefault()
 }
 
 // 处理快捷入口点击
@@ -531,21 +453,16 @@ const openAddForm = async () => {
 
 // 处理新增成功
 const handleAddSuccess = async (newItemData?: any) => {
-  console.log('新增表单提交成功，接收到的数据:', newItemData)
-  
   if (newItemData) {
     try {
       // 从系统常用入口获取完整的显示信息
       const { SystemCommonEntrancesApi } = await import('@/api/business/systemcommonentrances')
       const entranceInfo = await SystemCommonEntrancesApi.getSystemCommonEntrances(newItemData.entranceId)
       
-      console.log('获取到的系统常用入口信息:', entranceInfo)
-      
       // 确保部门ID正确设置
       const currentUser = userStore.getUser
       if (!newItemData.deptId && currentUser.deptId) {
         newItemData.deptId = currentUser.deptId
-        console.log('补充设置部门ID:', currentUser.deptId)
       }
       
       // 确保userId字段存在
@@ -576,15 +493,11 @@ const handleAddSuccess = async (newItemData?: any) => {
         defaultOrder: newItemData.customOrder || localShortcut.value.length + 1
       }
       
-      console.log('构建的完整快捷入口数据:', completeShortcutData)
-      
       // 根据指定的序号插入卡片
       const targetOrder = completeShortcutData.customOrder
       
       // 如果指定了序号，则按序号插入，否则添加到末尾
       if (targetOrder && targetOrder <= localShortcut.value.length) {
-        console.log(`按指定序号 ${targetOrder} 插入卡片`)
-        
         // 先将新卡片插入到指定位置
         localShortcut.value.splice(targetOrder - 1, 0, completeShortcutData)
         
@@ -599,21 +512,20 @@ const handleAddSuccess = async (newItemData?: any) => {
         localShortcut.value.push(completeShortcutData)
       }
       
-      // 仅更新本地数据，不触发父组件更新和保存
-      // 注释掉emit('update:shortcut')调用，避免重复触发update-list请求
-      // 当用户点击保存按钮时才会触发一次update-list请求
+      ElMessage.success(`"${entranceInfo.name}"已添加到常用入口，请点击保存按钮保存更改`)
       
-      console.log('已立即显示新增的卡片，等待用户手动保存')
-      ElMessage.success('新增成功，请点击保存按钮保存更改')
     } catch (error) {
       console.error('获取系统常用入口信息失败:', error)
-      ElMessage.error('获取入口信息失败，请重试')
+      ElMessage.error('获取系统常用入口信息失败，请重试')
     }
   } else {
-    // 如果没有传递数据，显示提示信息
-    ElMessage.success('新增成功')
+    // 如果没有传入数据，则刷新列表
+    await refreshShortcuts()
   }
 }
+
+// 初始化时获取部门名称
+getCurrentUserDeptName()
 </script>
 
 <style lang="scss" scoped>
