@@ -96,7 +96,7 @@
       <el-table-column label="用户名称" align="center" prop="userName" />
       <el-table-column label="系统常用入口" align="center" prop="entranceName" />
       <el-table-column label="用户自定义排序，值越小越靠前" align="center" prop="customOrder" />
-      <el-table-column label="是否隐藏该入口" align="center" prop="hidden" />
+      <!-- <el-table-column label="是否隐藏该入口" align="center" prop="hidden" /> -->
       <!-- <el-table-column
         label="创建时间"
         align="center"

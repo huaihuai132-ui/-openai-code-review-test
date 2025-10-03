@@ -64,12 +64,12 @@
       <el-form-item label="用户自定义排序，值越小越靠前" prop="customOrder">
         <el-input-number v-model="formData.customOrder" placeholder="请输入用户自定义排序，值越小越靠前" style="width: 100%" />
       </el-form-item>
-      <el-form-item label="是否隐藏该入口" prop="hidden">
+      <!-- <el-form-item label="是否隐藏该入口" prop="hidden">
         <el-select v-model="formData.hidden" placeholder="请选择入口状态" clearable class="!w-240px">
           <el-option v-for="dict in getStrDictOptions(DICT_TYPE.INFRA_BOOLEAN_STRING)" :key="dict.value"
             :label="dict.label" :value="dict.value" />
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="部门编号" prop="deptId" v-if="!presetDeptId">
         <el-cascader
           v-model="formData.deptId"
@@ -147,7 +147,7 @@ const formRules = reactive({
   userId: [{ required: true, message: '用户不能为空', trigger: 'blur' }],
   entranceId: [{ required: true, message: '系统常用入口不能为空', trigger: 'blur' }],
   customOrder: [{ required: true, message: '用户自定义排序，值越小越靠前不能为空', trigger: 'blur' }],
-  hidden: [{ required: true, message: '是否隐藏该入口不能为空', trigger: 'blur' }],
+  // hidden: [{ required: true, message: '是否隐藏该入口不能为空', trigger: 'blur' }],
 })
 
 const formRef = ref() // 表单 Ref
