@@ -171,36 +171,29 @@ const deptCascaderProps = {
 // 获取系统常用入口列表
 const getEntranceList = async () => {
   try {
-    // 获取所有系统常用入口
-    const data = await SystemCommonEntrancesApi.getSystemCommonEntrancesPage({ pageNo: 1, pageSize: 100 })
-    console.log('系统常用入口数据:', data.list)
-    
-    // 如果有预设用户ID，则过滤掉该用户已经添加的入口
+    // 如果有预设用户ID，则使用新的接口获取过滤后的剩余菜单
     if (props.presetUserId) {
       try {
-        // 获取用户已有的常用入口
-        const userEntrances = await getMenu(props.presetUserId)
-        console.log('用户已有常用入口:', userEntrances)
+        // 使用新的接口获取过滤掉已有系统入口后的剩余菜单
+        const remainingMenus = await SystemCommonEntrancesApi.getRemainingSystemMenus()
+        console.log('剩余菜单数据:', remainingMenus)
         
-        if (userEntrances && Array.isArray(userEntrances) && userEntrances.length > 0) {
-          // 获取用户已有入口的ID集合
-          const existingEntranceIds = userEntrances.map(item => item.id)
-          console.log('用户已有入口ID:', existingEntranceIds)
-          
-          // 过滤掉用户已有的入口
-          entranceOptions.value = data.list.filter(entrance => !existingEntranceIds.includes(entrance.id))
-          console.log('过滤后的入口数据:', entranceOptions.value)
+        if (remainingMenus && Array.isArray(remainingMenus) && remainingMenus.length > 0) {
+          entranceOptions.value = remainingMenus
+          console.log('使用剩余菜单数据:', entranceOptions.value)
         } else {
-          // 用户没有已有入口，显示全部
-          entranceOptions.value = data.list
+          entranceOptions.value = []
+          console.log('没有剩余菜单可选择')
         }
       } catch (error) {
-        console.error('获取用户已有入口失败:', error)
+        console.error('获取剩余菜单失败:', error)
         // 出错时显示全部入口
+        const data = await SystemCommonEntrancesApi.getSystemCommonEntrancesPage({ pageNo: 1, pageSize: 100 })
         entranceOptions.value = data.list
       }
     } else {
       // 没有预设用户ID，显示全部入口
+      const data = await SystemCommonEntrancesApi.getSystemCommonEntrancesPage({ pageNo: 1, pageSize: 100 })
       entranceOptions.value = data.list
     }
   } catch (error) {

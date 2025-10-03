@@ -46,4 +46,9 @@ export const SystemCommonEntrancesApi = {
   exportSystemCommonEntrances: async (params) => {
     return await request.download({ url: `/business/system-common-entrances/export-excel`, params })
   },
+
+  // 获取剩余的系统菜单列表（过滤掉已有系统入口后的菜单）
+  getRemainingSystemMenus: async () => {
+    return await request.get({ url: `/business/system-common-entrances/remaining-menus` })
+  },
 }
