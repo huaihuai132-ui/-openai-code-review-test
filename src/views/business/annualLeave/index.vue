@@ -11,7 +11,7 @@
       <el-form-item label="用户名称" prop="userId">
         <el-input
           v-model="queryParams.userId"
-          placeholder="请输入用户名称"
+          placeholder="请输入用户名称1"
           clearable
           @keyup.enter="handleQuery"
         />
